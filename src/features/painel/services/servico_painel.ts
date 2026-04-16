@@ -278,6 +278,35 @@ export async function alternarOnline(userId: string, online: boolean) {
     .eq("id", userId);
 }
 
+async function invocarDispatch(action: "accept" | "reject" | "timeout", dispatchId: string) {
+  const { data, error } = await supabase.functions.invoke("dispatch-ride", {
+    body: { action, dispatch_id: dispatchId },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function aceitarDispatch(dispatchId: string) {
+  return invocarDispatch("accept", dispatchId);
+}
+
+export async function recusarDispatch(dispatchId: string) {
+  return invocarDispatch("reject", dispatchId);
+}
+
+export async function marcarDispatchTimeout(dispatchId: string) {
+  return invocarDispatch("timeout", dispatchId);
+}
+
+export async function buscarTimeoutDispatch(tenantId: string): Promise<number> {
+  const { data } = await supabase
+    .from("tenant_settings")
+    .select("dispatch_timeout_sec")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  return data?.dispatch_timeout_sec ?? 28;
+}
+
 export async function buscarTenantDoMotorista(userId: string) {
   const { data } = await supabase
     .from("users")
