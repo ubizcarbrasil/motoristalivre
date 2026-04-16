@@ -19,14 +19,45 @@ export type StatusCorrida =
 
 export interface CorridaHistorico {
   id: string;
+  ride_request_id: string | null;
   created_at: string;
   completed_at: string | null;
   status: StatusCorrida;
   price_paid: number | null;
   origin_address: string | null;
   dest_address: string | null;
+  motorista_id: string | null;
   motorista_nome: string;
   motorista_avatar: string | null;
+}
+
+export interface DetalhesCorrida {
+  id: string;
+  ride_request_id: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  status: StatusCorrida;
+  price_paid: number | null;
+  payment_method: string | null;
+  distance_km: number | null;
+  estimated_min: number | null;
+  duration_min: number | null;
+  origin_address: string | null;
+  dest_address: string | null;
+  origin_lat: number | null;
+  origin_lng: number | null;
+  dest_lat: number | null;
+  dest_lng: number | null;
+  motorista: {
+    id: string | null;
+    nome: string;
+    avatar: string | null;
+    telefone: string | null;
+    veiculo_modelo: string | null;
+    veiculo_placa: string | null;
+    veiculo_cor: string | null;
+  };
 }
 
 export const STATUS_CORRIDA_LABELS: Record<StatusCorrida, { label: string; cor: string }> = {
