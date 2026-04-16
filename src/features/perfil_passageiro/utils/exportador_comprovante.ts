@@ -260,6 +260,46 @@ export async function exportarComprovanteCorrida(
     cursorY += alturaCaixa + 6;
   }
 
+  // QR Code de validação
+  const urlValidacao = urlValidacaoCorrida(detalhes.id);
+  const qrDataUrl = await gerarQrCodeDataUrl(urlValidacao);
+  if (qrDataUrl) {
+    const tamanhoQr = 28;
+    const xQr = margem;
+    const yQr = cursorY;
+
+    try {
+      doc.addImage(qrDataUrl, "PNG", xQr, yQr, tamanhoQr, tamanhoQr);
+    } catch {
+      // ignora se imagem falhar
+    }
+
+    const xTexto = xQr + tamanhoQr + 4;
+    const larguraTexto = larguraPagina - margem - xTexto;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30);
+    doc.text("Valide este comprovante", xTexto, yQr + 5);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    const linhasInstrucao = doc.splitTextToSize(
+      "Escaneie o QR Code com a câmera do celular para acessar a página pública de validação desta corrida.",
+      larguraTexto
+    );
+    doc.text(linhasInstrucao, xTexto, yQr + 10);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(29, 184, 101);
+    const linhasUrl = doc.splitTextToSize(urlValidacao, larguraTexto);
+    doc.text(linhasUrl, xTexto, yQr + tamanhoQr - 2);
+
+    cursorY += tamanhoQr + 6;
+  }
+
   // Rodapé
   doc.setFont("helvetica", "italic");
   doc.setFontSize(8);
