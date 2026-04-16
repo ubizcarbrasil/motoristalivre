@@ -8,10 +8,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { LogOut } from "lucide-react";
 import { MENU_ADMIN } from "../constants/constantes_admin";
 import type { SecaoAdmin } from "../types/tipos_admin";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface SidebarAdminProps {
   secaoAtiva: SecaoAdmin;
