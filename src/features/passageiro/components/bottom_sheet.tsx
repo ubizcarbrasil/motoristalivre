@@ -6,6 +6,7 @@ import { SeletorVeiculo } from "./seletor_veiculo";
 import { ChipsFavoritosRapidos } from "@/features/favoritos_passageiro/components/chips_favoritos_rapidos";
 import { saudacaoPorHorario } from "../utils/utilitarios_passageiro";
 import type { FavoritoEndereco, TipoFavorito } from "@/features/favoritos_passageiro/types/tipos_favoritos";
+import type { EnderecoRecente } from "@/features/favoritos_passageiro/types/tipos_recentes";
 import type {
   DadosMotorista,
   DadosAfiliado,
@@ -40,6 +41,7 @@ interface BottomSheetProps {
   onVoltarEnderecos: () => void;
   confirmando?: boolean;
   favoritos?: FavoritoEndereco[];
+  recentes?: EnderecoRecente[];
   onUsarFavorito?: (favorito: FavoritoEndereco) => void;
   onAdicionarFavoritoTipo?: (tipo: TipoFavorito) => void;
   onFavoritarEndereco?: (endereco: { address: string; lat: number; lng: number }) => void;
@@ -69,6 +71,7 @@ export function BottomSheet({
   onVoltarEnderecos,
   confirmando = false,
   favoritos = [],
+  recentes = [],
   onUsarFavorito,
   onAdicionarFavoritoTipo,
   onFavoritarEndereco,
@@ -116,6 +119,7 @@ export function BottomSheet({
                 placeholder="De onde?"
                 onGeolocalizarOrigem={onGeolocalizarOrigem}
                 favoritos={favoritos}
+                recentes={recentes}
                 onFavoritarResultado={onFavoritarEndereco}
                 identificarFavorito={identificarFavorito}
               />
@@ -125,6 +129,7 @@ export function BottomSheet({
                 onSelecionar={onSelecionarDestino}
                 placeholder="Para onde?"
                 favoritos={favoritos}
+                recentes={recentes}
                 onFavoritarResultado={onFavoritarEndereco}
                 identificarFavorito={identificarFavorito}
               />
