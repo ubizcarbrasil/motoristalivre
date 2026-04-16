@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { NavegacaoInferior } from "../components/navegacao_inferior";
 import { AbaInicio } from "../components/aba_inicio";
@@ -5,6 +6,7 @@ import { AbaPerfil } from "../components/aba_perfil";
 import { AbaTribo } from "../components/aba_tribo";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaPrecos } from "../components/aba_precos";
+import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
 
 export default function PaginaPainel() {
@@ -25,9 +27,11 @@ export default function PaginaPainel() {
     recusarDispatch,
     timeoutDispatch,
     userId,
-    corridaAtivaId,
+    corridaAtiva,
     localizacao,
   } = usePainel();
+
+  const [mostraChat, setMostraChat] = useState(false);
 
   if (carregando) {
     return (
@@ -61,9 +65,10 @@ export default function PaginaPainel() {
           dispatch={dispatch}
           timeoutSec={timeoutSec}
           realtimeAtivo={realtimeAtivo}
-          corridaAtivaId={corridaAtivaId}
+          temCorridaAtiva={!!corridaAtiva}
           localizacaoAtiva={localizacao.ativo}
           onToggleLocalizacao={localizacao.toggle}
+          onAbrirChat={() => setMostraChat(true)}
           onToggleOnline={toggleOnline}
           onAceitarDispatch={aceitarDispatch}
           onRecusarDispatch={recusarDispatch}
@@ -101,6 +106,19 @@ export default function PaginaPainel() {
 
       {aba !== "precos" && (
         <NavegacaoInferior abaAtiva={aba} onMudar={setAba} />
+      )}
+
+      {mostraChat && corridaAtiva && (
+        <TelaChat
+          rideId={corridaAtiva.ride_id}
+          meuId={userId}
+          meuPapel="driver"
+          outroNome={corridaAtiva.passenger_nome}
+          outroAvatar={corridaAtiva.passenger_avatar}
+          outroSubtitulo="Passageiro"
+          outroTelefone={corridaAtiva.passenger_telefone}
+          onVoltar={() => setMostraChat(false)}
+        />
       )}
     </div>
   );

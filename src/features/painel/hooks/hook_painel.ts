@@ -29,18 +29,18 @@ export function usePainel() {
   const [tenant, setTenant] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [timeoutSec, setTimeoutSec] = useState<number>(TIMEOUT_DISPATCH_SEG);
   const [carregando, setCarregando] = useState(true);
-  const [corridaAtivaId, setCorridaAtivaId] = useState<string | null>(null);
+  const [corridaAtiva, setCorridaAtiva] = useState<Awaited<ReturnType<typeof buscarCorridaAtiva>>>(null);
 
   const userId = usuario?.id;
 
   const { dispatchAtivo, realtimeAtivo, limparDispatch } = useDispatchRealtime(userId, dispatchInicial);
-  const localizacao = useCompartilharLocalizacao(corridaAtivaId);
+  const localizacao = useCompartilharLocalizacao(corridaAtiva?.ride_id ?? null);
 
   const carregar = useCallback(async () => {
     if (!userId) return;
     setCarregando(true);
     try {
-      const [p, s, c, d, t, rideId] = await Promise.all([
+      const [p, s, c, d, t, ride] = await Promise.all([
         buscarPerfilMotorista(userId),
         buscarEstatisticasHoje(userId),
         buscarCorridasRecentes(userId),
@@ -53,7 +53,7 @@ export function usePainel() {
       setCorridasRecentes(c);
       setDispatchInicial(d);
       setTenant(t);
-      setCorridaAtivaId(rideId);
+      setCorridaAtiva(ride);
       if (t?.id) {
         const sec = await buscarTimeoutDispatch(t.id);
         setTimeoutSec(sec);
@@ -125,7 +125,7 @@ export function usePainel() {
     timeoutDispatch,
     userId,
     recarregar: carregar,
-    corridaAtivaId,
+    corridaAtiva,
     localizacao,
   };
 }

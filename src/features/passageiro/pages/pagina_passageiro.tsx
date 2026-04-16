@@ -6,6 +6,7 @@ import { OverlayBusca } from "../components/overlay_busca";
 import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { TelaRastreamento } from "../components/tela_rastreamento";
+import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -45,6 +46,7 @@ export default function PaginaPassageiro() {
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
+  const [mostraChat, setMostraChat] = useState(false);
 
   const rastreamento = useRastreamento(
     corridaAceita?.ride_id ?? null,
@@ -59,10 +61,11 @@ export default function PaginaPassageiro() {
     }
   }, [corridaAceita, etapa, setEtapa]);
 
-  // Fechar rastreamento se corrida terminou
+  // Fechar overlays se corrida terminou
   useEffect(() => {
     if (corridaAceita?.status === "completed" || corridaAceita?.status === "cancelled") {
       setMostraRastreamento(false);
+      setMostraChat(false);
     }
   }, [corridaAceita?.status]);
 
@@ -148,11 +151,11 @@ export default function PaginaPassageiro() {
 
       {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
 
-      {etapa === "aceita" && corridaAceita && !mostraRastreamento && (
+      {etapa === "aceita" && corridaAceita && !mostraRastreamento && !mostraChat && (
         <SheetCorridaAceita
           corrida={corridaAceita}
           onRastrear={abrirRastreamento}
-          onChat={() => toast.info("Chat em breve")}
+          onChat={() => setMostraChat(true)}
         />
       )}
 
@@ -164,6 +167,19 @@ export default function PaginaPassageiro() {
           etaMin={rastreamento.etaMin}
           conectado={rastreamento.conectado}
           onVoltar={fecharRastreamento}
+        />
+      )}
+
+      {mostraChat && corridaAceita && passengerId && (
+        <TelaChat
+          rideId={corridaAceita.ride_id ?? ""}
+          meuId={passengerId}
+          meuPapel="passenger"
+          outroNome={corridaAceita.motorista.nome}
+          outroAvatar={corridaAceita.motorista.avatar_url}
+          outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
+          outroTelefone={corridaAceita.motorista.telefone}
+          onVoltar={() => setMostraChat(false)}
         />
       )}
 

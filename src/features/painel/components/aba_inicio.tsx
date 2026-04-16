@@ -4,6 +4,8 @@ import { GridStats } from "../components/grid_stats";
 import { ListaCorridas } from "../components/lista_corridas";
 import { AcessoRapido } from "../components/acesso_rapido";
 import { ToggleLocalizacao } from "../components/toggle_localizacao";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 import type { PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo, AbaPainel } from "../types/tipos_painel";
 
 interface AbaInicioProps {
@@ -14,9 +16,10 @@ interface AbaInicioProps {
   dispatch: DispatchAtivo | null;
   timeoutSec: number;
   realtimeAtivo: boolean;
-  corridaAtivaId: string | null;
+  temCorridaAtiva: boolean;
   localizacaoAtiva: boolean;
   onToggleLocalizacao: () => void;
+  onAbrirChat: () => void;
   onToggleOnline: () => void;
   onAceitarDispatch: () => void | Promise<void>;
   onRecusarDispatch: () => void | Promise<void>;
@@ -33,9 +36,10 @@ export function AbaInicio({
   dispatch,
   timeoutSec,
   realtimeAtivo,
-  corridaAtivaId,
+  temCorridaAtiva,
   localizacaoAtiva,
   onToggleLocalizacao,
+  onAbrirChat,
   onToggleOnline,
   onAceitarDispatch,
   onRecusarDispatch,
@@ -52,9 +56,13 @@ export function AbaInicio({
         onToggleOnline={onToggleOnline}
       />
 
-      {corridaAtivaId && (
-        <div className="px-4">
+      {temCorridaAtiva && (
+        <div className="px-4 flex items-center gap-2">
           <ToggleLocalizacao ativo={localizacaoAtiva} onToggle={onToggleLocalizacao} />
+          <Button variant="outline" size="sm" className="gap-2" onClick={onAbrirChat}>
+            <MessageCircle className="w-4 h-4" />
+            Chat
+          </Button>
         </div>
       )}
 
