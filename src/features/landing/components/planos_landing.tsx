@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Plano = Tables<"plans">;
@@ -37,14 +38,20 @@ export function PlanosLanding() {
   return (
     <section className="py-20 px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center space-y-4 mb-16">
+        <motion.div
+          className="text-center space-y-4 mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
             Escolha seu plano
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Comece pequeno e escale conforme seu grupo cresce.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {planos.map((plano, index) => {
@@ -52,13 +59,17 @@ export function PlanosLanding() {
             const features = Array.isArray(plano.features) ? plano.features as string[] : [];
 
             return (
-              <div
+              <motion.div
                 key={plano.id}
                 className={`relative rounded-xl border p-8 flex flex-col transition-colors ${
                   destaque
                     ? "border-primary bg-primary/5"
                     : "border-border bg-card hover:border-primary/30"
                 }`}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.4, delay: index * 0.15 }}
               >
                 {destaque && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground">
@@ -97,7 +108,7 @@ export function PlanosLanding() {
                 >
                   <Link to="/cadastro">Comecar com {plano.name}</Link>
                 </Button>
-              </div>
+              </motion.div>
             );
           })}
         </div>
