@@ -9,19 +9,25 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
 
+type TipoCadastro = "grupo" | "passageiro" | "afiliado";
+
+function resolverTipoInicial(valor: string | null): TipoCadastro {
+  if (valor === "passageiro") return "passageiro";
+  if (valor === "afiliado") return "afiliado";
+  return "grupo";
+}
+
 export default function PaginaCadastro() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const tipoQuery = searchParams.get("tipo");
-  const tipoInicial: "passageiro" | "grupo" =
-    tipoQuery === "passageiro" ? "passageiro" : "grupo";
+  const tipoInicial = resolverTipoInicial(searchParams.get("tipo"));
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [slugGrupo, setSlugGrupo] = useState("");
-  const [tipoCadastro, setTipoCadastro] = useState<"passageiro" | "grupo">(tipoInicial);
+  const [tipoCadastro, setTipoCadastro] = useState<TipoCadastro>(tipoInicial);
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
@@ -38,13 +44,15 @@ export default function PaginaCadastro() {
     return <Navigate to="/painel" replace />;
   }
 
+  const precisaSlug = tipoCadastro === "passageiro" || tipoCadastro === "afiliado";
+
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
     if (!nome.trim() || !email.trim() || !senha.trim()) {
       toast({ title: "Preencha todos os campos", variant: "destructive" });
       return;
     }
-    if (tipoCadastro === "passageiro" && !slugGrupo.trim()) {
+    if (precisaSlug && !slugGrupo.trim()) {
       toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
@@ -55,8 +63,11 @@ export default function PaginaCadastro() {
     setCarregando(true);
 
     const metadata: Record<string, string> = { full_name: nome.trim() };
-    if (tipoCadastro === "passageiro" && slugGrupo.trim()) {
+    if (precisaSlug && slugGrupo.trim()) {
       metadata.tenant_slug = slugGrupo.trim();
+    }
+    if (tipoCadastro === "afiliado") {
+      metadata.role = "affiliate";
     }
 
     const { error } = await supabase.auth.signUp({
@@ -76,12 +87,15 @@ export default function PaginaCadastro() {
   }
 
   async function handleGoogle() {
-    if (tipoCadastro === "passageiro" && !slugGrupo.trim()) {
+    if (precisaSlug && !slugGrupo.trim()) {
       toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
-    if (tipoCadastro === "passageiro" && slugGrupo.trim()) {
+    if (precisaSlug && slugGrupo.trim()) {
       localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
+    }
+    if (tipoCadastro === "afiliado") {
+      localStorage.setItem("tribocar_signup_role", "affiliate");
     }
     setCarregandoGoogle(true);
     const redirectPath = tipoCadastro === "grupo" ? "/onboarding" : "/painel";
@@ -116,6 +130,12 @@ export default function PaginaCadastro() {
     );
   }
 
+  const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
+    { valor: "grupo", label: "Criar grupo" },
+    { valor: "passageiro", label: "Passageiro" },
+    { valor: "afiliado", label: "Afiliado" },
+  ];
+
   return (
     <div className="fixed inset-0 bg-background flex items-center justify-center px-6 overflow-y-auto">
       <div className="w-full max-w-sm space-y-6 py-10">
@@ -125,33 +145,25 @@ export default function PaginaCadastro() {
         </div>
 
         {/* Tipo de cadastro */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setTipoCadastro("grupo")}
-            className={`rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
-              tipoCadastro === "grupo"
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
-            }`}
-          >
-            Criar meu grupo
-          </button>
-          <button
-            type="button"
-            onClick={() => setTipoCadastro("passageiro")}
-            className={`rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
-              tipoCadastro === "passageiro"
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
-            }`}
-          >
-            Entrar em um grupo
-          </button>
+        <div className="grid grid-cols-3 gap-2">
+          {opcoes.map((opcao) => (
+            <button
+              key={opcao.valor}
+              type="button"
+              onClick={() => setTipoCadastro(opcao.valor)}
+              className={`rounded-lg border px-2 py-3 text-xs font-medium transition-all ${
+                tipoCadastro === opcao.valor
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
+              }`}
+            >
+              {opcao.label}
+            </button>
+          ))}
         </div>
 
         <form onSubmit={handleCadastro} className="space-y-4">
-          {tipoCadastro === "passageiro" && (
+          {precisaSlug && (
             <div className="space-y-2">
               <Label htmlFor="slugGrupo" className="text-foreground">Slug do grupo</Label>
               <Input
@@ -162,6 +174,11 @@ export default function PaginaCadastro() {
                 onChange={(e) => setSlugGrupo(e.target.value)}
                 required
               />
+              {tipoCadastro === "afiliado" && (
+                <p className="text-xs text-muted-foreground">
+                  Voce sera cadastrado como afiliado neste grupo.
+                </p>
+              )}
             </div>
           )}
 
