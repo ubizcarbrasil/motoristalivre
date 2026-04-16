@@ -66,8 +66,30 @@ export function CampoUploadImagem({ label, valor, pasta, aspecto, dimensoesMinim
 
     setEnviando(true);
 
+    // Resolver tenant_id do usuário autenticado para respeitar a RLS do bucket
+    // (estrutura obrigatória: {tenant_id}/{pasta}/{arquivo})
+    const { data: sessao } = await supabase.auth.getUser();
+    const userId = sessao.user?.id;
+    if (!userId) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      setEnviando(false);
+      return;
+    }
+
+    const { data: perfil, error: erroPerfil } = await supabase
+      .from("users")
+      .select("tenant_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (erroPerfil || !perfil?.tenant_id) {
+      toast.error("Não foi possível identificar seu grupo");
+      setEnviando(false);
+      return;
+    }
+
     const ext = arquivo.name.split(".").pop() ?? "jpg";
-    const nomeArquivo = `${pasta}/${crypto.randomUUID()}.${ext}`;
+    const nomeArquivo = `${perfil.tenant_id}/${pasta}/${crypto.randomUUID()}.${ext}`;
 
     const { error } = await supabase.storage
       .from("branding")
