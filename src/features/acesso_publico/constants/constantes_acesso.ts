@@ -1,0 +1,52 @@
+export const URL_BASE_PUBLICA = "https://motoristalivre.lovable.app";
+
+export interface LinkAcesso {
+  id: string;
+  titulo: string;
+  descricao: string;
+  caminho: string;
+  categoria: "passageiro" | "motorista" | "dev";
+}
+
+export const LINKS_ACESSO: LinkAcesso[] = [
+  {
+    id: "passageiro_demo",
+    titulo: "App do passageiro (grupo demo)",
+    descricao: "Lista de motoristas do grupo demo",
+    caminho: "/demo",
+    categoria: "passageiro",
+  },
+  {
+    id: "passageiro_motorista_demo",
+    titulo: "Passageiro direto no motorista demo",
+    descricao: "Solicitar corrida direto pra motorista-demo",
+    caminho: "/demo/motorista-demo",
+    categoria: "passageiro",
+  },
+  {
+    id: "motorista_login",
+    titulo: "Login do motorista",
+    descricao: "Entrar com conta de motorista",
+    caminho: "/entrar",
+    categoria: "motorista",
+  },
+  {
+    id: "motorista_painel",
+    titulo: "Painel do motorista",
+    descricao: "Acesso direto ao painel (precisa estar logado)",
+    caminho: "/painel",
+    categoria: "motorista",
+  },
+  {
+    id: "dev_personas",
+    titulo: "Contas de teste prontas",
+    descricao: "Login direto nas personas demo (motorista, passageiro, admin)",
+    caminho: "/dev/personas",
+    categoria: "dev",
+  },
+];
+
+export const CREDENCIAIS_DEMO = [
+  { papel: "Motorista", email: "motorista@tribocar.test", senha: "Tribo@2025" },
+  { papel: "Passageiro", email: "passageiro@tribocar.test", senha: "Tribo@2025" },
+];
