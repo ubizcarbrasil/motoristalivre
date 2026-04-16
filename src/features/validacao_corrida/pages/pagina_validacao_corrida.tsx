@@ -5,6 +5,7 @@ import { CabecalhoValidacao } from "../components/cabecalho_validacao";
 import { DetalhesValidacaoCorrida } from "../components/detalhes_validacao_corrida";
 import { SeloAutenticidade } from "../components/selo_autenticidade";
 import { EstadoNaoEncontrado } from "../components/estado_nao_encontrado";
+import { BotaoCompartilharValidacao } from "../components/botao_compartilhar_validacao";
 
 export default function PaginaValidacaoCorrida() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,11 @@ export default function PaginaValidacaoCorrida() {
           <>
             <SeloAutenticidade cor={cor} />
             <DetalhesValidacaoCorrida corrida={resposta.corrida} cor={cor} />
+            <BotaoCompartilharValidacao
+              rideId={resposta.corrida.id}
+              nomeEmpresa={resposta.branding?.nome_empresa ?? null}
+              cor={cor}
+            />
             <p className="text-[10px] text-center text-muted-foreground pt-2">
               Identificador da corrida
               <br />
