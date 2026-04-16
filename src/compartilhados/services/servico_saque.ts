@@ -43,10 +43,30 @@ export async function buscarHistoricoSaques(
 
   const { data, error } = await supabase
     .from("payouts")
-    .select("id, amount, pix_key, pix_key_type, status, requested_at, processed_at")
+    .select("id, amount, pix_key, pix_key_type, status, requested_at, processed_at, processed_by")
     .eq("wallet_id", wallet.id)
     .order("requested_at", { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as import("../types/tipos_saque").HistoricoSaque[];
+  if (!data || data.length === 0) return [];
+
+  const processorIds = Array.from(
+    new Set(data.map((d) => d.processed_by).filter((id): id is string => !!id))
+  );
+
+  const mapaNomes = new Map<string, string>();
+  if (processorIds.length > 0) {
+    const { data: usuarios } = await supabase
+      .from("users")
+      .select("id, full_name, email")
+      .in("id", processorIds);
+    (usuarios ?? []).forEach((u) => {
+      mapaNomes.set(u.id, u.full_name || u.email || "Administrador");
+    });
+  }
+
+  return data.map((d) => ({
+    ...d,
+    processed_by_name: d.processed_by ? mapaNomes.get(d.processed_by) ?? "Administrador" : null,
+  })) as import("../types/tipos_saque").HistoricoSaque[];
 }
