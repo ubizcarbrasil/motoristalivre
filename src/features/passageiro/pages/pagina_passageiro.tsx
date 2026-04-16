@@ -151,11 +151,11 @@ export default function PaginaPassageiro() {
 
       {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
 
-      {etapa === "aceita" && corridaAceita && !mostraRastreamento && (
+      {etapa === "aceita" && corridaAceita && !mostraRastreamento && !mostraChat && (
         <SheetCorridaAceita
           corrida={corridaAceita}
           onRastrear={abrirRastreamento}
-          onChat={() => toast.info("Chat em breve")}
+          onChat={() => setMostraChat(true)}
         />
       )}
 
@@ -167,6 +167,19 @@ export default function PaginaPassageiro() {
           etaMin={rastreamento.etaMin}
           conectado={rastreamento.conectado}
           onVoltar={fecharRastreamento}
+        />
+      )}
+
+      {mostraChat && corridaAceita && passengerId && (
+        <TelaChat
+          rideId={corridaAceita.ride_id ?? ""}
+          meuId={passengerId}
+          meuPapel="passenger"
+          outroNome={corridaAceita.motorista.nome}
+          outroAvatar={corridaAceita.motorista.avatar_url}
+          outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
+          outroTelefone={corridaAceita.motorista.telefone}
+          onVoltar={() => setMostraChat(false)}
         />
       )}
 
