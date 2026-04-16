@@ -1,72 +1,61 @@
 
-## Diagnóstico
-
-A tela que você está vendo (`/admin`) está **correta para o seu papel atual** — você é `tenant_admin` do grupo "turbo". O `hook_redirecionamento.ts` te manda pro `/admin` automaticamente porque é onde admins trabalham.
-
-Pra testar o fluxo de **receber corridas**, você precisa estar logado como uma conta com role `driver`. Você tem 3 caminhos possíveis:
-
-## Opções pra desbloquear o teste
-
-**Opção A — Logar com motorista demo existente**
-As contas `carlos-silva` e `ana-souza` já existem no banco (criadas pelo `seed-personas`). Preciso descobrir/resetar a senha delas via SQL e te passar pra você logar em outro navegador/aba anônima.
-
-**Opção B — Criar página /dev/personas (recomendado)**
-Já existe a feature `dev_personas` no projeto (`src/features/dev_personas/`). Vou verificar se ela tem botão "Logar como" funcional. Se sim, é só te indicar a rota. Se não, implemento.
-
-**Opção C — Criar uma segunda conta sua de motorista**
-Você cria outro email (ex: `valquiria+motorista@...`), cadastra em `/cadastro?tipo=motorista` com slug `turbo`, depois loga como admin no `valquiria.ubizcar@gmail.com`, vai em `/admin → Motoristas`, aprova a solicitação. Aí loga com o segundo email e cai em `/painel`.
-
-## Plano sugerido
-
-1. **Verificar a feature `dev_personas`** — ler `pagina_personas.tsx` e `hook_personas.ts` pra ver se já existe troca rápida funcional.
-2. **Se existir e funcionar**: te passar a URL e a senha padrão das personas demo.
-3. **Se não existir/funcionar**: implementar botão "Logar como" usando admin API ou senha fixa demo (`tribocar123` por exemplo) pra trocar entre contas em 1 clique durante testes.
-4. **Documentar no chat**: deixar claro que `/admin` ≠ `/painel` e que cada papel tem sua tela.
-
-## Resumo curto
-
-Sim, a tela de `/admin` está certa pra quem é admin do grupo. **Não é bug.** Pra ver a tela de receber corridas (`/painel`), precisa logar com conta de motorista. Recomendo eu finalizar a `/dev/personas` pra você alternar entre admin/motorista/passageiro/afiliado em 1 clique durante os testes.
-
-<lov-actions>
-<lov-suggestion message="Verifique a feature dev_personas existente e finalize a página /dev/personas com botão 'Logar como' funcional pra eu trocar entre admin/motorista/passageiro/afiliado em 1 clique durante testes. Use uma senha demo fixa tipo 'tribocar123' pra todas as personas.">Finalizar /dev/personas com troca rápida</lov-suggestion>
-<lov-suggestion message="Reseta a senha das contas demo carlos-silva@tribocar.test e ana-souza@tribocar.test pra 'tribocar123' via SQL e me passa o email pra eu logar em aba anônima e testar o /painel">Resetar senha das contas demo</lov-suggestion>
-<lov-suggestion message="Adicione no /admin um botão 'Visualizar como motorista' que faça login impersonado em uma das contas de motorista do grupo só pra fins de teste/preview, sem perder a sessão admin">Botão 'Visualizar como motorista'</lov-suggestion>
-</lov-actions><lov-plan>
 
 ## Diagnóstico
 
-A tela `/admin` que você está vendo **está correta** — você é `tenant_admin` do grupo "turbo" e o `hook_redirecionamento.ts` te leva pra lá automaticamente. Não é bug.
+Olhando o print de novo com atenção: a URL no topo do Safari é **`motoristalivre.lovable.app`** e o painel do motorista renderiza normalmente. Ou seja — **o app já abre direto no Safari do iPhone**, não está preso ao preview do Lovable.
 
-`/admin` ≠ `/painel`. São papéis diferentes:
+O que provavelmente está te confundindo são os **controles do iOS na tela**, que parecem "moldura do Lovable" mas não são:
 
-| Papel | Rota | Função |
-|---|---|---|
-| `tenant_admin` (você) | `/admin` | Gerencia grupo, aprova motoristas |
-| `driver` | `/painel` | Recebe e aceita corridas |
+- O **X** no canto superior esquerdo é o botão de fechar a aba do Safari
+- O ícone à direita no topo é o seletor de abas do Safari
+- A barra inferior com **seta voltar / compartilhar / refresh / bússola** é a **toolbar nativa do Safari iOS**, não do Lovable
 
-Uma mesma conta **não pode ser admin e motorista ao mesmo tempo** (role é única). Pra testar receber corridas, precisa logar com outra conta.
+Isso aparece em qualquer site aberto no Safari mobile. O conteúdo entre o topo e a toolbar (Boa noite Motorista, cards, navegação Início/Links/Carteira/Perfil/Config) **é o seu app rodando como site web normal**.
 
-## Caminho recomendado
+## Como confirmar que está tudo certo
 
-A feature `dev_personas` já existe no projeto (`src/features/dev_personas/`). Vou:
+1. Abrir `motoristalivre.lovable.app` no Safari → vê landing
+2. Logar como motorista → cai em `/painel`
+3. A barra inferior do Safari **sempre vai aparecer** porque é do navegador, não tem como esconder via CSS
 
-1. **Auditar** o que já está implementado em `pagina_personas.tsx`, `hook_personas.ts` e `servico_personas.ts`.
-2. **Garantir que a rota `/dev/personas`** está registrada no `App.tsx` e acessível.
-3. **Implementar/corrigir o botão "Logar como"** pra trocar entre as personas demo (`carlos-silva`, `ana-souza`, admins, passageiros, afiliados) em 1 clique, usando senha demo fixa (ex: `tribocar123`).
-4. **Garantir que as senhas demo estão setadas** no `seed-personas` ou via SQL pra todas as contas demo terem a mesma senha conhecida.
-5. **Te passar a URL final** (ex: `motoristalivre.lovable.app/dev/personas`) pra você trocar de papel rapidinho durante testes.
+## O que dá pra melhorar (se quiser)
+
+Pra ter sensação de "app de verdade" sem barra do Safari, o caminho é **transformar o site em PWA instalável**. Aí o motorista:
+
+1. Abre no Safari → toca em Compartilhar → "Adicionar à Tela de Início"
+2. Vira um ícone no celular
+3. Quando abre pelo ícone, **roda em fullscreen sem barra do Safari**, parece app nativo
+4. Funciona offline (cache básico)
+5. Pode receber notificações push (com setup adicional)
+
+## Plano proposto
+
+**Transformar o app em PWA instalável**, focado no fluxo do motorista:
+
+1. **Instalar `vite-plugin-pwa`** e configurar no `vite.config.ts` com manifest
+2. **Criar manifest.json** com:
+   - nome: "TriboCar Motorista"
+   - tema: preto `#000` + accent `#1db865`
+   - display: `standalone` (esconde barra do Safari)
+   - start_url: `/painel`
+3. **Gerar ícones PWA** (192x192, 512x512, apple-touch-icon) na pasta `public/`
+4. **Adicionar meta tags mobile** no `index.html` (apple-mobile-web-app-capable, theme-color, viewport)
+5. **Service worker básico** pra cache de assets estáticos (sem cachear `/auth`, `/~oauth`, edge functions)
+6. **Criar página `/instalar`** com instruções visuais: "No Safari toque em Compartilhar → Adicionar à Tela de Início"
+7. **Banner discreto no `/painel`** sugerindo instalação na primeira visita (dismissível, salva preferência em localStorage)
 
 ## Resultado esperado
 
-Você abre `/dev/personas`, vê uma lista de cards (Admin Turbo, Carlos Silva motorista, Ana Souza motorista, passageiro demo, afiliado Posto Shell), clica em "Logar como Carlos Silva" → cai direto no `/painel` como motorista, fica online, e pode receber dispatch.
+Motorista abre `motoristalivre.lovable.app` no Safari → vê banner "Instalar como app" → segue instrução → ícone TriboCar aparece na tela inicial → ao tocar, abre direto no `/painel` em fullscreen, **sem barra do Safari**, parecendo app nativo.
 
-## Alternativa mais rápida (se preferir)
+## Alternativa: app nativo (Capacitor)
 
-Se não quiser mexer na `/dev/personas` agora, eu só reseto a senha de `carlos-silva@tribocar.test` pra `tribocar123` via SQL, você abre uma aba anônima, loga com esse email, e cai no `/painel`.
+Se quiser **app de verdade pra App Store / Play Store** com câmera, push notifications nativas, sensores, etc — o caminho é Capacitor. Mas exige Mac com Xcode pra iOS, Android Studio pro Android, e processo de publicação nas lojas. Mais trabalho, mais profissional.
 
 <lov-actions>
-<lov-suggestion message="Finalize a página /dev/personas com botão 'Logar como' funcional usando senha demo fixa 'tribocar123' pra eu trocar entre admin/motorista/passageiro/afiliado em 1 clique. Garanta que a rota está registrada no App.tsx e que todas as contas demo têm essa senha setada via SQL.">Finalizar /dev/personas com troca rápida</lov-suggestion>
-<lov-suggestion message="Reseta a senha das contas demo carlos-silva@tribocar.test e ana-souza@tribocar.test pra 'tribocar123' via SQL e me confirma os emails pra eu logar em aba anônima e testar o /painel direto">Só resetar senha das contas demo</lov-suggestion>
-<lov-suggestion message="Adicione no /admin um card 'Modo demonstração' com botões 'Ver como motorista Carlos' e 'Ver como passageiro' que abrem nova aba já logada na persona escolhida, sem perder minha sessão admin">Botão 'Ver como' no /admin</lov-suggestion>
+<lov-suggestion message="Transforme o app em PWA instalável seguindo o plano: vite-plugin-pwa, manifest com tema preto/verde, display standalone, start_url /painel, ícones, meta tags mobile, service worker básico, página /instalar com instruções e banner dismissível no /painel sugerindo instalação">Transformar em PWA instalável</lov-suggestion>
+<lov-suggestion message="Só adicione o manifest.json + meta tags mobile + ícones, sem service worker nem banner. Quero o mínimo pra dar pra adicionar à tela de início no iPhone e abrir em fullscreen">PWA mínimo (só manifest)</lov-suggestion>
+<lov-suggestion message="Quero app nativo de verdade pra publicar na App Store e Play Store. Configure Capacitor com iOS e Android, appId app.lovable.bfa5b0faaeb34c6e8df3d495e7f6c6b8, appName motoristalivre">Configurar Capacitor (app nativo)</lov-suggestion>
+<lov-suggestion message="Não precisa virar PWA. Só me explica visualmente onde clicar no Safari do iPhone pra adicionar motoristalivre.lovable.app à tela de início agora mesmo, sem mudar nada no código">Só me ensina a adicionar à tela</lov-suggestion>
 </lov-actions>
 
