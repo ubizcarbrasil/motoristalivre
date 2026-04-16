@@ -39,7 +39,8 @@ const App = () => (
 
             {/* Rotas com tenant (slug) */}
             <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
-            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPerfilMotorista /></ProvedorTenant>} />
+            <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
