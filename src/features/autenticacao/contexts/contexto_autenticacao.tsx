@@ -20,10 +20,20 @@ export function ProvedorAutenticacao({ children }: ProvedorAutenticacaoProps) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_evento, sessaoAtual) => {
+      async (_evento, sessaoAtual) => {
         setSessao(sessaoAtual);
         setUsuario(sessaoAtual?.user ?? null);
         setCarregando(false);
+
+        if (sessaoAtual?.user) {
+          const slug = localStorage.getItem("tribocar_tenant_slug");
+          if (slug) {
+            localStorage.removeItem("tribocar_tenant_slug");
+            setTimeout(async () => {
+              await supabase.rpc("ensure_user_profile", { _tenant_slug: slug });
+            }, 0);
+          }
+        }
       }
     );
 

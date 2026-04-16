@@ -1219,6 +1219,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_profile: {
+        Args: { _tenant_slug: string }
+        Returns: undefined
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
