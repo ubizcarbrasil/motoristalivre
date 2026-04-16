@@ -12,6 +12,7 @@ import PaginaCadastro from "@/features/autenticacao/pages/pagina_cadastro";
 import PaginaOnboarding from "@/features/onboarding/pages/pagina_onboarding";
 import PaginaPainel from "@/features/painel/pages/pagina_painel";
 import PaginaAdmin from "@/features/admin/pages/pagina_admin";
+import PaginaAfiliado from "@/features/afiliado/pages/pagina_afiliado";
 import PaginaRoot from "@/features/root/pages/pagina_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
 // PaginaPerfilMotorista removida - rota unificada em PaginaPassageiro
