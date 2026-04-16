@@ -3,8 +3,19 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { ProvedorAutenticacao } from "@/features/autenticacao/contexts/contexto_autenticacao";
+import { ProvedorTenant } from "@/features/tenant/contexts/contexto_tenant";
+import { RotaProtegida } from "@/compartilhados/components/rota_protegida";
+
+import PaginaEntrar from "@/features/autenticacao/pages/pagina_entrar";
+import PaginaCadastro from "@/features/autenticacao/pages/pagina_cadastro";
+import PaginaOnboarding from "@/features/onboarding/pages/pagina_onboarding";
+import PaginaPainel from "@/features/painel/pages/pagina_painel";
+import PaginaAdmin from "@/features/admin/pages/pagina_admin";
+import PaginaRoot from "@/features/root/pages/pagina_root";
+import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
+import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_motorista";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +25,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ProvedorAutenticacao>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/entrar" element={<PaginaEntrar />} />
+            <Route path="/cadastro" element={<PaginaCadastro />} />
+
+            {/* Rotas protegidas */}
+            <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
+            <Route path="/painel" element={<RotaProtegida><PaginaPainel /></RotaProtegida>} />
+            <Route path="/admin" element={<RotaProtegida><PaginaAdmin /></RotaProtegida>} />
+            <Route path="/root" element={<RotaProtegida><PaginaRoot /></RotaProtegida>} />
+
+            {/* Rotas com tenant (slug) */}
+            <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPerfilMotorista /></ProvedorTenant>} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ProvedorAutenticacao>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
