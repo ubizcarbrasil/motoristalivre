@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownLeft, ArrowUpRight, Receipt, PiggyBank, TrendingUp } from "lucide-react";
 import type { SaldoCarteira, TransacaoCarteira } from "../types/tipos_painel";
 import { buscarSaldoCarteira, buscarTransacoes } from "../services/servico_painel";
 import { TIPOS_TRANSACAO_LABELS } from "../constants/constantes_painel";
+import { SheetSolicitarSaque } from "@/compartilhados/components/sheet_solicitar_saque";
+import { garantirCarteira } from "@/compartilhados/services/servico_saque";
 
 interface AbaCarteiraProps {
   userId: string;
 }
 
-function HeroSaldo({ saldo }: { saldo: SaldoCarteira }) {
+function HeroSaldo({ saldo, onSacar }: { saldo: SaldoCarteira; onSacar: () => void }) {
   return (
     <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 p-5 space-y-4">
       <div>
@@ -28,7 +30,7 @@ function HeroSaldo({ saldo }: { saldo: SaldoCarteira }) {
           <PiggyBank className="w-3.5 h-3.5 mr-1" />
           Recarregar
         </Button>
-        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs">
+        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs" onClick={onSacar}>
           <TrendingUp className="w-3.5 h-3.5 mr-1" />
           Sacar
         </Button>
@@ -73,18 +75,28 @@ export function AbaCarteira({ userId }: AbaCarteiraProps) {
   const [saldo, setSaldo] = useState<SaldoCarteira>({ saldo: 0, bloqueado: 0, totalGanho: 0, totalSacado: 0 });
   const [transacoes, setTransacoes] = useState<TransacaoCarteira[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [sheetSaqueAberto, setSheetSaqueAberto] = useState(false);
+
+  const recarregar = useCallback(() => {
+    return Promise.all([buscarSaldoCarteira(userId), buscarTransacoes(userId)])
+      .then(([s, t]) => { setSaldo(s); setTransacoes(t); });
+  }, [userId]);
 
   useEffect(() => {
-    Promise.all([buscarSaldoCarteira(userId), buscarTransacoes(userId)])
-      .then(([s, t]) => { setSaldo(s); setTransacoes(t); })
-      .finally(() => setCarregando(false));
-  }, [userId]);
+    recarregar().finally(() => setCarregando(false));
+  }, [recarregar]);
+
+  const abrirSaque = async () => {
+    await garantirCarteira("driver");
+    await recarregar();
+    setSheetSaqueAberto(true);
+  };
 
   return (
     <div className="pt-12 pb-20 px-5 space-y-5">
       <h2 className="text-lg font-semibold text-foreground">Carteira</h2>
 
-      <HeroSaldo saldo={saldo} />
+      <HeroSaldo saldo={saldo} onSacar={abrirSaque} />
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -102,6 +114,14 @@ export function AbaCarteira({ userId }: AbaCarteiraProps) {
           </div>
         )}
       </div>
+
+      <SheetSolicitarSaque
+        aberto={sheetSaqueAberto}
+        onFechar={() => setSheetSaqueAberto(false)}
+        ownerType="driver"
+        saldoDisponivel={saldo.saldo}
+        onSucesso={recarregar}
+      />
     </div>
   );
 }
