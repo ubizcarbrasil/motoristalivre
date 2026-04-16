@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { Link, useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,18 +15,24 @@ export default function PaginaEntrar() {
   const { destino, carregando: carregandoDestino } = useRedirecionamento();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [slugGrupo, setSlugGrupo] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
 
-  if (carregandoAuth || (usuario && carregandoDestino)) {
+  if (carregandoAuth || (usuario && !redirectTo && carregandoDestino)) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (usuario && redirectTo) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   if (usuario && destino) {
@@ -55,8 +61,9 @@ export default function PaginaEntrar() {
     }
     localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
     setCarregandoGoogle(true);
+    const redirectParam = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : "";
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/entrar`,
+      redirect_uri: `${window.location.origin}/entrar${redirectParam}`,
     });
     if (result?.error) {
       toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
