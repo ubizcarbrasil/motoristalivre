@@ -1,67 +1,69 @@
 
 
-## Diagnóstico
+## Diagnóstico — Por que "não consigo acesso na conta do motorista"
 
-O erro do Safari "**servidor não pode ser encontrado**" é um erro de **DNS**, não de roteamento da aplicação. Verifiquei via `dig` e nenhum desses domínios resolve:
+Olhando o código, a causa raiz é clara:
 
-- `turbo.tribocar.com` → sem registro
-- `tribocar.com` → sem registro
-- `www.tribocar.com` → sem registro
+**1. Não existe opção "Motorista" no `/cadastro`.** Em `pagina_cadastro.tsx` (linhas 12 e 133-137), as únicas opções são `grupo`, `passageiro` e `afiliado`. Quando alguém abre `/cadastro?tipo=motorista`, o `resolverTipoInicial` cai no default `"grupo"` — ou seja, o usuário acaba criando **um tenant novo** (vira `tenant_admin`), não vira motorista de um grupo existente.
 
-A rota `/cadastro` existe e funciona normalmente em `App.tsx` (linha 37) — o problema é anterior, o navegador nem chega a alcançar o servidor.
+**2. Mesmo se a opção existisse, signup normal não cria o motorista.** O trigger `handle_new_user` insere apenas em `public.users`. Para receber corridas, o usuário precisa também ter linha em `public.drivers` (com slug, veículo, etc.) — coisa que hoje só o `seed-personas` faz (linhas 123-139). Sem isso, `pagina_painel.tsx` mostra "Perfil de motorista não encontrado" (linha 56-66).
 
-A URL atual publicada do projeto é:
-- **Preview**: `https://id-preview--bfa5b0fa-aeb3-4c6e-8df3-d495e7f6c6b8.lovable.app`
-- **Publicada**: `https://motoristalivre.lovable.app`
+**3. Cadastro de motorista deveria precisar de aprovação do dono do grupo.** O modelo correto para um motorista entrar num grupo existente é via `driver_group_invites` (tabela já existe, com `direction = 'request_from_driver'` e status pendente).
 
-Ou seja, hoje o app está acessível em `motoristalivre.lovable.app/cadastro?tipo=motorista`, **não** em `turbo.tribocar.com`.
+## Plano de correção
 
-## Causas possíveis
+### Etapa 1 — Adicionar aba "Motorista" no `/cadastro`
 
-1. **O domínio `tribocar.com` ainda não foi conectado** ao projeto via Lovable (Settings → Domains).
-2. **O domínio existe mas o subdomínio `turbo` não tem registro CNAME/A** apontando para a Lovable.
-3. **Propagação de DNS pendente** (caso tenha sido configurado há poucos minutos — costuma levar de minutos a algumas horas).
+Em `pagina_cadastro.tsx`:
+- Adicionar `"motorista"` ao tipo `TipoCadastro` e ao array `opcoes` (4 botões em vez de 3).
+- `resolverTipoInicial("motorista")` retorna `"motorista"`.
+- Quando `tipoCadastro === "motorista"`: exigir slug do grupo, mostrar texto explicativo "Você enviará uma solicitação para entrar no grupo. O dono do grupo precisa aprovar antes de você começar a receber corridas."
+- Não setar `metadata.role` (mantém `passenger` default no trigger) — a role só vira `driver` depois da aprovação.
+- Após o `signUp` bem-sucedido, criar uma solicitação em `driver_group_invites` (`driver_id = novo user`, `tenant_id = lookup pelo slug`, `direction = 'request_from_driver'`, `status = 'pending'`).
 
-## Plano de ação
+### Etapa 2 — RPC `request_driver_join` (banco)
 
-Como isto é uma questão de configuração de domínio (não de código), o caminho é:
+Como o trigger `handle_new_user` cria a linha em `public.users` com tenant resolvido pelo slug (já faz isso), e `driver_group_invites` exige RLS `(driver_id = auth.uid())`, criar uma função SECURITY DEFINER:
 
-### 1. Verificar se o domínio foi adicionado no projeto
-Abrir **Project Settings → Domains** no Lovable e conferir se `turbo.tribocar.com` (ou `tribocar.com`) está listado como custom domain conectado.
-
-### 2. Se ainda não foi adicionado
-- Publicar o projeto (já está publicado em `motoristalivre.lovable.app`).
-- Em **Settings → Domains**, clicar em **Connect Domain** e adicionar `turbo.tribocar.com`.
-- Lovable vai mostrar o registro DNS necessário (geralmente um `CNAME turbo → cname.lovable.app` ou similar).
-
-### 3. Configurar DNS no provedor do domínio
-No painel do registrador onde `tribocar.com` está hospedado (Registro.br, GoDaddy, Cloudflare, etc.), adicionar:
-
-```text
-Tipo:  CNAME
-Nome:  turbo
-Valor: <valor que o Lovable indicar>
-TTL:   3600
+```sql
+create or replace function public.request_driver_join(_tenant_slug text, _message text default null)
+returns uuid ...
 ```
 
-### 4. Aguardar propagação e validar
-Após salvar, aguardar 5–60 minutos e testar novamente:
-```bash
-dig turbo.tribocar.com
-```
-Quando retornar IP/CNAME, o link `https://turbo.tribocar.com/cadastro?tipo=motorista` funcionará automaticamente — o roteamento do React já trata `/cadastro` corretamente.
+A função: resolve `tenant_id` pelo slug, valida que o user já existe em `public.users` no tenant, e insere em `driver_group_invites`.
 
-### 5. (Opcional) Tratar o query param `?tipo=motorista`
-Verifiquei `pagina_cadastro.tsx` — atualmente ela **não lê** `?tipo=motorista` para pré-selecionar o tipo de conta. Se a intenção do link é levar diretamente para o cadastro de motorista (e não passageiro), preciso adicionar leitura do `searchParams` na página de cadastro. Posso fazer isso em seguida, é uma alteração de código pequena.
+### Etapa 3 — Aprovação cria o registro em `drivers`
 
-## Próximo passo imediato
+Quando o admin aprova o convite (`status = 'accepted'`), criar trigger ou RPC que:
+- Atualiza `users.role = 'driver'`.
+- Insere em `public.drivers` com `id = driver_id`, `tenant_id`, `slug` gerado a partir do nome (ex: `joao-silva`), `is_online = false`, `is_verified = false`.
+- Motorista pode então logar e cair em `/painel` com perfil válido.
 
-Como o ajuste principal (DNS) é fora do código, não há nada para alterar no repositório agora. Se confirmar que quer:
-- **(a)** Apenas instruções para configurar o domínio → já está acima.
-- **(b)** Que eu ajuste o `pagina_cadastro.tsx` para ler `?tipo=motorista|passageiro|afiliado` e pré-selecionar — posso fazer assim que você aprovar.
+### Etapa 4 — Tela "aguardando aprovação" no painel
+
+Em `pagina_painel.tsx`, quando `perfil` é null mas existe um convite pendente do tipo `request_from_driver` para o user, mostrar tela "Sua solicitação para entrar no grupo X está em análise" em vez de "Perfil de motorista não encontrado".
+
+### Etapa 5 — Atualizar links externos
+
+URLs corretos para divulgar (após DNS de `turbo.tribocar.com` ser configurado, ou usando `motoristalivre.lovable.app`):
+- Motorista entrar num grupo: `/cadastro?tipo=motorista`
+- Passageiro: `/cadastro?tipo=passageiro`
+- Afiliado: `/cadastro?tipo=afiliado`
+- Criar grupo novo: `/cadastro` (default)
+
+## Arquivos que serão tocados
+
+- `src/features/autenticacao/pages/pagina_cadastro.tsx` — adicionar aba motorista, fluxo de solicitação.
+- Nova migration SQL — função `request_driver_join` + trigger/função `approve_driver_invite` que cria linha em `drivers`.
+- `src/features/painel/pages/pagina_painel.tsx` + hook — detectar e mostrar estado "aguardando aprovação".
+- (Opcional) `src/features/admin/components/secao_motoristas.tsx` — garantir que a UI de aprovação já existe e funciona com `request_from_driver`.
+
+## Resumo
+
+Hoje, **literalmente não há caminho de signup para virar motorista de um grupo**. A pessoa que tenta `?tipo=motorista` vira `tenant_admin` por engano. O plano cria esse caminho do zero, com aprovação do dono do grupo, e devolve feedback claro pro motorista enquanto espera.
 
 <lov-actions>
-<lov-suggestion message="Ajuste a pagina_cadastro.tsx para ler o query param ?tipo=motorista|passageiro|afiliado e pré-selecionar o tipo de conta automaticamente">Ler ?tipo no /cadastro</lov-suggestion>
-<lov-suggestion message="Abra Project Settings → Domains e me oriente passo a passo para conectar o domínio turbo.tribocar.com a este projeto">Conectar domínio turbo.tribocar.com</lov-suggestion>
-<lov-suggestion message="Por enquanto use motoristalivre.lovable.app/cadastro?tipo=motorista — atualize qualquer link/material que esteja apontando para turbo.tribocar.com">Trocar links para .lovable.app</lov-suggestion>
+<lov-suggestion message="Aprovar o plano completo: aba Motorista no /cadastro, RPC request_driver_join, fluxo de aprovação criando linha em drivers, e tela 'aguardando aprovação' no painel">Implementar plano completo</lov-suggestion>
+<lov-suggestion message="Implementar apenas a etapa 1 e 2 (aba Motorista no cadastro + RPC request_driver_join), deixar aprovação manual via SQL por enquanto">Só cadastro + solicitação</lov-suggestion>
+<lov-suggestion message="Em vez de fluxo com aprovação, faça o /cadastro?tipo=motorista criar o motorista direto (role=driver + linha em drivers com slug auto-gerado), sem precisar de aprovação do dono do grupo">Cadastro direto sem aprovação</lov-suggestion>
 </lov-actions>
