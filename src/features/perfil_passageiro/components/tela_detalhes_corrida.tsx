@@ -10,6 +10,7 @@ interface TelaDetalhesCorridaProps {
   rideId: string;
   isRideRequest: boolean;
   nomePassageiro: string;
+  tenantId: string | null;
   onVoltar: () => void;
   onPedirNovamente?: (origem: EnderecoCorrida, destino: EnderecoCorrida) => void;
 }
@@ -53,7 +54,7 @@ function LinhaInfo({
   );
 }
 
-export function TelaDetalhesCorrida({ rideId, isRideRequest, nomePassageiro, onVoltar, onPedirNovamente }: TelaDetalhesCorridaProps) {
+export function TelaDetalhesCorrida({ rideId, isRideRequest, nomePassageiro, tenantId, onVoltar, onPedirNovamente }: TelaDetalhesCorridaProps) {
   const { detalhes, carregando } = useDetalhesCorrida(rideId, isRideRequest);
 
   const podePedirNovamente =
@@ -236,7 +237,7 @@ export function TelaDetalhesCorrida({ rideId, isRideRequest, nomePassageiro, onV
 
             {/* Ações */}
             <div className="space-y-2">
-              <BotaoComprovanteCorrida detalhes={detalhes} nomePassageiro={nomePassageiro} />
+              <BotaoComprovanteCorrida detalhes={detalhes} nomePassageiro={nomePassageiro} tenantId={tenantId} />
               {podePedirNovamente && (
                 <Button
                   onClick={handlePedirNovamente}

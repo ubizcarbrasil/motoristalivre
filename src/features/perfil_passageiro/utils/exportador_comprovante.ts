@@ -3,6 +3,8 @@ import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 import type { DetalhesCorrida } from "../types/tipos_perfil_passageiro";
 import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
+import { BRANDING_PDF_PADRAO, type BrandingPdf } from "../types/tipos_branding_pdf";
+import { clarearRgb, hexParaRgb } from "./utilitarios_cor_pdf";
 
 /**
  * Monta a URL pública de validação da corrida.
@@ -94,35 +96,82 @@ async function carregarImagemBase64(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * Detecta o formato (PNG/JPEG) de uma data URL para passar ao jsPDF.
+ */
+function formatoImagem(dataUrl: string): "PNG" | "JPEG" {
+  return dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")
+    ? "JPEG"
+    : "PNG";
+}
+
 export async function exportarComprovanteCorrida(
   detalhes: DetalhesCorrida,
-  nomePassageiro: string
+  nomePassageiro: string,
+  branding: BrandingPdf = BRANDING_PDF_PADRAO
 ): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const larguraPagina = doc.internal.pageSize.getWidth();
   const margem = 14;
-  let cursorY = 18;
 
-  // Cabeçalho
-  doc.setFillColor(29, 184, 101);
-  doc.rect(0, 0, larguraPagina, 10, "F");
+  const corPrimaria = hexParaRgb(branding.corPrimariaHex);
+  const corPrimariaSuave = clarearRgb(corPrimaria, 0.88);
 
+  // Cabeçalho colorido com branding do tenant
+  const alturaHeader = 26;
+  doc.setFillColor(...corPrimaria);
+  doc.rect(0, 0, larguraPagina, alturaHeader, "F");
+
+  // Logo (se disponível) à esquerda
+  let xTextoHeader = margem;
+  const logoDataUrl = branding.logoUrl ? await carregarImagemBase64(branding.logoUrl) : null;
+  if (logoDataUrl) {
+    const tamanhoLogo = 16;
+    try {
+      doc.addImage(
+        logoDataUrl,
+        formatoImagem(logoDataUrl),
+        margem,
+        (alturaHeader - tamanhoLogo) / 2,
+        tamanhoLogo,
+        tamanhoLogo
+      );
+      xTextoHeader = margem + tamanhoLogo + 5;
+    } catch {
+      // ignora se imagem falhar
+    }
+  }
+
+  // Nome da empresa + título dentro do header
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(30);
-  doc.text("Comprovante de corrida", margem, cursorY);
+  doc.setFontSize(13);
+  if (branding.nomeEmpresa) {
+    doc.text(branding.nomeEmpresa, xTextoHeader, 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Comprovante de corrida", xTextoHeader, 18);
+  } else {
+    doc.text("Comprovante de corrida", xTextoHeader, 16);
+  }
 
-  cursorY += 6;
+  // Data emissão à direita
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(
+    `Emitido em ${new Date().toLocaleString("pt-BR")}`,
+    larguraPagina - margem,
+    18,
+    { align: "right" }
+  );
+
+  let cursorY = alturaHeader + 8;
+
+  // Passageiro
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(120);
   doc.text(`Passageiro: ${nomePassageiro}`, margem, cursorY);
-  doc.text(
-    `Emitido em ${new Date().toLocaleString("pt-BR")}`,
-    larguraPagina - margem,
-    cursorY,
-    { align: "right" }
-  );
 
   cursorY += 4;
   doc.setDrawColor(220);
@@ -135,7 +184,7 @@ export async function exportarComprovanteCorrida(
   doc.setTextColor(80);
   doc.text(`ID: ${detalhes.id}`, margem, cursorY);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(29, 184, 101);
+  doc.setTextColor(...corPrimaria);
   doc.text(status.label.toUpperCase(), larguraPagina - margem, cursorY, { align: "right" });
   cursorY += 5;
   doc.setFont("helvetica", "normal");
@@ -177,7 +226,7 @@ export async function exportarComprovanteCorrida(
   });
   cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
 
-  // Métricas (distância, duração, pagamento, conclusão)
+  // Métricas
   const metricas: Array<[string, string]> = [];
   if (detalhes.distance_km !== null) {
     metricas.push(["Distância", formatarDistancia(detalhes.distance_km)]);
@@ -203,7 +252,7 @@ export async function exportarComprovanteCorrida(
       body: metricas,
       theme: "striped",
       styles: { fontSize: 9, cellPadding: 2.5 },
-      headStyles: { fillColor: [29, 184, 101], textColor: 255, fontStyle: "bold" },
+      headStyles: { fillColor: corPrimaria, textColor: 255, fontStyle: "bold" },
       columnStyles: {
         0: { cellWidth: 50, fontStyle: "bold", textColor: [80, 80, 80] },
         1: { cellWidth: "auto" },
@@ -232,7 +281,7 @@ export async function exportarComprovanteCorrida(
       body: linhasMotorista,
       theme: "striped",
       styles: { fontSize: 9, cellPadding: 2.5 },
-      headStyles: { fillColor: [29, 184, 101], textColor: 255, fontStyle: "bold" },
+      headStyles: { fillColor: corPrimaria, textColor: 255, fontStyle: "bold" },
       columnStyles: {
         0: { cellWidth: 50, fontStyle: "bold", textColor: [80, 80, 80] },
         1: { cellWidth: "auto" },
@@ -244,8 +293,8 @@ export async function exportarComprovanteCorrida(
   // Valor pago — bloco destacado
   if (detalhes.price_paid !== null) {
     const alturaCaixa = 16;
-    doc.setFillColor(232, 250, 240);
-    doc.setDrawColor(29, 184, 101);
+    doc.setFillColor(...corPrimariaSuave);
+    doc.setDrawColor(...corPrimaria);
     doc.roundedRect(margem, cursorY, larguraPagina - margem * 2, alturaCaixa, 2, 2, "FD");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -253,7 +302,7 @@ export async function exportarComprovanteCorrida(
     doc.text("VALOR PAGO", margem + 4, cursorY + 7);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.setTextColor(29, 184, 101);
+    doc.setTextColor(...corPrimaria);
     doc.text(formatarValor(detalhes.price_paid), larguraPagina - margem - 4, cursorY + 11, {
       align: "right",
     });
@@ -293,7 +342,7 @@ export async function exportarComprovanteCorrida(
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
-    doc.setTextColor(29, 184, 101);
+    doc.setTextColor(...corPrimaria);
     const linhasUrl = doc.splitTextToSize(urlValidacao, larguraTexto);
     doc.text(linhasUrl, xTexto, yQr + tamanhoQr - 2);
 
@@ -304,8 +353,11 @@ export async function exportarComprovanteCorrida(
   doc.setFont("helvetica", "italic");
   doc.setFontSize(8);
   doc.setTextColor(150);
+  const textoRodape = branding.nomeEmpresa
+    ? `Comprovante emitido por ${branding.nomeEmpresa} · gerado automaticamente.`
+    : "Este é um comprovante gerado automaticamente.";
   doc.text(
-    "Este é um comprovante gerado automaticamente.",
+    textoRodape,
     larguraPagina / 2,
     doc.internal.pageSize.getHeight() - 10,
     { align: "center" }

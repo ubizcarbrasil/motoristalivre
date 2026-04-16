@@ -129,6 +129,7 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
           rideId={corridaSelecionada.id}
           isRideRequest={corridaSelecionada.motorista_id === null}
           nomePassageiro={perfil?.full_name ?? perfil?.email ?? "Passageiro"}
+          tenantId={perfil?.tenant_id ?? null}
           onVoltar={() => setCorridaSelecionada(null)}
           onPedirNovamente={
             onPedirNovamente
