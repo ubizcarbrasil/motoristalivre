@@ -2,3 +2,6 @@ project_id = "sulhoaufaifqgnrvstez"
 
 [functions.validar-corrida]
 verify_jwt = false
+
+[functions.seed-personas]
+verify_jwt = false
