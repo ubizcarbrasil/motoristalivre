@@ -7,6 +7,7 @@ import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
+import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -42,6 +43,7 @@ export default function PaginaPassageiro() {
     grupoNome,
     rideRequestId,
     passengerId,
+    resetarSolicitacao,
   } = useSolicitacao();
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
