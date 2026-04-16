@@ -5,6 +5,3 @@ verify_jwt = false
 
 [functions.seed-personas]
 verify_jwt = false
-
-[functions.housekeeping-mover-branding]
-verify_jwt = false
