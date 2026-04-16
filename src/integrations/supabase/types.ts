@@ -684,6 +684,7 @@ export type Database = {
           origin_lng: number | null
           origin_type: Database["public"]["Enums"]["ride_origin_type"] | null
           passenger_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
           status: Database["public"]["Enums"]["ride_status"]
           suggested_price: number | null
           tenant_id: string
@@ -706,6 +707,7 @@ export type Database = {
           origin_lng?: number | null
           origin_type?: Database["public"]["Enums"]["ride_origin_type"] | null
           passenger_id: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["ride_status"]
           suggested_price?: number | null
           tenant_id: string
@@ -728,6 +730,7 @@ export type Database = {
           origin_lng?: number | null
           origin_type?: Database["public"]["Enums"]["ride_origin_type"] | null
           passenger_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["ride_status"]
           suggested_price?: number | null
           tenant_id?: string
@@ -777,6 +780,7 @@ export type Database = {
           origin_affiliate_id: string | null
           origin_driver_id: string | null
           passenger_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
           price_paid: number | null
           ride_request_id: string
           started_at: string | null
@@ -794,6 +798,7 @@ export type Database = {
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
           passenger_id: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           price_paid?: number | null
           ride_request_id: string
           started_at?: string | null
@@ -811,6 +816,7 @@ export type Database = {
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
           passenger_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           price_paid?: number | null
           ride_request_id?: string
           started_at?: string | null
@@ -1247,6 +1253,7 @@ export type Database = {
       commission_type: "transbordo" | "affiliate" | "referral" | "platform"
       dispatch_mode: "auto" | "manual" | "hybrid"
       dispatch_response: "pending" | "accepted" | "rejected" | "timeout"
+      payment_method: "dinheiro" | "pix" | "cartao" | "saldo"
       payout_status: "pending" | "processing" | "completed" | "failed"
       referral_type: "driver" | "affiliate"
       ride_origin_type: "driver_link" | "affiliate_link" | "group_link"
@@ -1410,6 +1417,7 @@ export const Constants = {
       commission_type: ["transbordo", "affiliate", "referral", "platform"],
       dispatch_mode: ["auto", "manual", "hybrid"],
       dispatch_response: ["pending", "accepted", "rejected", "timeout"],
+      payment_method: ["dinheiro", "pix", "cartao", "saldo"],
       payout_status: ["pending", "processing", "completed", "failed"],
       referral_type: ["driver", "affiliate"],
       ride_origin_type: ["driver_link", "affiliate_link", "group_link"],
