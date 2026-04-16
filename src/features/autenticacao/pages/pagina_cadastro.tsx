@@ -62,12 +62,11 @@ export default function PaginaCadastro() {
 
   async function handleGoogle() {
     setCarregandoGoogle(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/painel` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/painel`,
     });
-    if (error) {
-      toast({ title: "Erro ao entrar com Google", description: error.message, variant: "destructive" });
+    if (result?.error) {
+      toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
       setCarregandoGoogle(false);
     }
   }
