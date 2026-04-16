@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, UserCheck, XCircle } from "lucide-react";
 import { buscarHistoricoSaques } from "../services/servico_saque";
-import type { DonoCarteira, HistoricoSaque } from "../types/tipos_saque";
+import type { DonoCarteira, HistoricoSaque, StatusSaque } from "../types/tipos_saque";
 import { STATUS_SAQUE_LABELS } from "../types/tipos_saque";
 
 interface HistoricoSaquesProps {
@@ -19,31 +19,65 @@ function formatarData(iso: string): string {
   });
 }
 
+function BlocoProcessamento({ saque }: { saque: HistoricoSaque }) {
+  if (!saque.processed_at) return null;
+
+  const aprovado: StatusSaque[] = ["approved", "completed"];
+  const rejeitado: StatusSaque[] = ["rejected", "failed"];
+
+  const ehAprovado = aprovado.includes(saque.status);
+  const ehRejeitado = rejeitado.includes(saque.status);
+
+  if (!ehAprovado && !ehRejeitado) return null;
+
+  const Icone = ehAprovado ? CheckCircle2 : XCircle;
+  const cor = ehAprovado
+    ? "bg-primary/10 border-primary/30 text-primary"
+    : "bg-destructive/10 border-destructive/30 text-destructive";
+  const titulo = ehAprovado ? "Aprovado" : "Rejeitado";
+
+  return (
+    <div className={`mt-2 rounded-lg border px-2.5 py-2 ${cor}`}>
+      <div className="flex items-center gap-1.5">
+        <Icone className="w-3.5 h-3.5 shrink-0" />
+        <span className="text-[11px] font-semibold">{titulo}</span>
+        <span className="text-[10px] opacity-80 ml-auto">
+          {formatarData(saque.processed_at)}
+        </span>
+      </div>
+      {saque.processed_by_name && (
+        <div className="flex items-center gap-1.5 mt-1 opacity-90">
+          <UserCheck className="w-3 h-3 shrink-0" />
+          <span className="text-[10px] truncate">por {saque.processed_by_name}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ItemSaque({ saque }: { saque: HistoricoSaque }) {
   const status = STATUS_SAQUE_LABELS[saque.status];
   return (
-    <div className="flex items-start justify-between gap-3 py-3 border-b border-border last:border-0">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">
-          R$ {saque.amount.toFixed(2).replace(".", ",")}
-        </p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          Solicitado em {formatarData(saque.requested_at)}
-        </p>
-        {saque.processed_at && (
-          <p className="text-[11px] text-muted-foreground">
-            Processado em {formatarData(saque.processed_at)}
+    <div className="py-3 border-b border-border last:border-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">
+            R$ {saque.amount.toFixed(2).replace(".", ",")}
           </p>
-        )}
-        {saque.pix_key && (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            PIX: {saque.pix_key}
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Solicitado em {formatarData(saque.requested_at)}
           </p>
-        )}
+          {saque.pix_key && (
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+              PIX: {saque.pix_key}
+            </p>
+          )}
+        </div>
+        <span className={`shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full ${status.cor}`}>
+          {status.label}
+        </span>
       </div>
-      <span className={`shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full ${status.cor}`}>
-        {status.label}
-      </span>
+      <BlocoProcessamento saque={saque} />
     </div>
   );
 }
