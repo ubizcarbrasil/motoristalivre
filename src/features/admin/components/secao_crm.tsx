@@ -83,7 +83,7 @@ export function SecaoCRM() {
   if (carregando) return <p className="p-6 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <div className="flex flex-wrap gap-2">
         {(["todos", "vip", "regular", "risco", "perdido"] as const).map((f) => (
           <Button
@@ -102,6 +102,7 @@ export function SecaoCRM() {
         <Button size="sm" variant="outline" onClick={() => { /* TODO */ }}>Campanha cashback</Button>
       </div>
 
+      <div className="overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -147,6 +148,7 @@ export function SecaoCRM() {
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }
