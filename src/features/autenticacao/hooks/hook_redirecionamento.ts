@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 
-type Destino = "/admin" | "/painel" | "/afiliado" | "/root" | "/onboarding";
+type Destino = string;
 
 export function useRedirecionamento(): { destino: Destino | null; carregando: boolean } {
   const { usuario, carregando: carregandoAuth, temTenant } = useAutenticacao();
@@ -28,7 +28,7 @@ export function useRedirecionamento(): { destino: Destino | null; carregando: bo
     async function buscarRole() {
       const { data } = await supabase
         .from("users")
-        .select("role")
+        .select("role, tenant_id")
         .eq("id", usuario!.id)
         .single();
 
@@ -45,6 +45,33 @@ export function useRedirecionamento(): { destino: Destino | null; carregando: bo
         case "affiliate":
           setDestino("/afiliado");
           break;
+        case "passenger": {
+          // Busca tenant + um motorista para montar /{slug}/{driver_slug}
+          if (data?.tenant_id) {
+            const { data: tenant } = await supabase
+              .from("tenants")
+              .select("slug")
+              .eq("id", data.tenant_id)
+              .maybeSingle();
+            const { data: driver } = await supabase
+              .from("drivers")
+              .select("slug")
+              .eq("tenant_id", data.tenant_id)
+              .order("is_online", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (tenant?.slug && driver?.slug) {
+              setDestino(`/${tenant.slug}/${driver.slug}`);
+            } else if (tenant?.slug) {
+              setDestino(`/${tenant.slug}`);
+            } else {
+              setDestino("/painel");
+            }
+          } else {
+            setDestino("/painel");
+          }
+          break;
+        }
         case "driver":
         default:
           setDestino("/painel");

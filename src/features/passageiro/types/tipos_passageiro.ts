@@ -32,6 +32,16 @@ export interface DadosMotorista {
   tenant_id: string;
 }
 
+export interface MotoristaListado {
+  id: string;
+  slug: string;
+  nome: string;
+  avatar_url: string | null;
+  is_online: boolean;
+  is_verified: boolean;
+  tenant_slug: string;
+}
+
 export interface DadosAfiliado {
   id: string;
   nome: string;

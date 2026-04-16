@@ -1,6 +1,46 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DadosMotorista, DadosAfiliado, ConfigPreco, DadosRota, Coordenada } from "../types/tipos_passageiro";
+import type { DadosMotorista, DadosAfiliado, ConfigPreco, DadosRota, Coordenada, MotoristaListado } from "../types/tipos_passageiro";
 import { NOMINATIM_URL } from "../constants/constantes_passageiro";
+
+export async function buscarTenantPorSlug(tenantSlug: string): Promise<{ id: string; name: string } | null> {
+  const { data } = await supabase
+    .from("tenants")
+    .select("id, name")
+    .eq("slug", tenantSlug)
+    .maybeSingle();
+  return data ?? null;
+}
+
+export async function listarMotoristasDoTenant(tenantSlug: string): Promise<MotoristaListado[]> {
+  const tenant = await buscarTenantPorSlug(tenantSlug);
+  if (!tenant) return [];
+
+  const { data: drivers } = await supabase
+    .from("drivers")
+    .select("id, slug, is_online, is_verified")
+    .eq("tenant_id", tenant.id)
+    .order("is_online", { ascending: false });
+
+  if (!drivers || drivers.length === 0) return [];
+
+  const ids = drivers.map((d) => d.id);
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, full_name, avatar_url")
+    .in("id", ids);
+
+  const mapaUsers = new Map((users ?? []).map((u) => [u.id, u]));
+
+  return drivers.map((d) => ({
+    id: d.id,
+    slug: d.slug,
+    nome: mapaUsers.get(d.id)?.full_name ?? "Motorista",
+    avatar_url: mapaUsers.get(d.id)?.avatar_url ?? null,
+    is_online: d.is_online,
+    is_verified: d.is_verified,
+    tenant_slug: tenantSlug,
+  }));
+}
 
 export async function buscarMotorista(tenantSlug: string, motoristaSlug: string): Promise<DadosMotorista | null> {
   const { data: tenant } = await supabase

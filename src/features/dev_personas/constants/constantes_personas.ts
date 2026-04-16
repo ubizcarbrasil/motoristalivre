@@ -56,6 +56,6 @@ export const PERSONAS: Persona[] = [
     role: "passenger",
     email: "passageiro@tribocar.test",
     senha: SENHA_PADRAO,
-    rotaDestino: `/${TENANT_DEMO_SLUG}`,
+    rotaDestino: `/${TENANT_DEMO_SLUG}/motorista-demo`,
   },
 ];

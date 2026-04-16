@@ -8,6 +8,7 @@ import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { TelaAvaliacao } from "../components/tela_avaliacao";
+import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -28,6 +29,7 @@ export default function PaginaPassageiro() {
     afiliado,
     carregando,
     erro,
+    tenantSemMotorista,
     origem,
     setOrigem,
     destino,
@@ -192,6 +194,10 @@ export default function PaginaPassageiro() {
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (tenantSemMotorista) {
+    return <ListaMotoristasTenant tenantSlug={tenantSemMotorista} />;
   }
 
   if (erro) {
