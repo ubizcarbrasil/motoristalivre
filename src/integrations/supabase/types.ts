@@ -239,6 +239,56 @@ export type Database = {
           },
         ]
       }
+      driver_group_invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          direction: Database["public"]["Enums"]["invite_direction"]
+          driver_id: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["invite_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          direction: Database["public"]["Enums"]["invite_direction"]
+          driver_id: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          direction?: Database["public"]["Enums"]["invite_direction"]
+          driver_id?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_invites_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           bio: string | null
@@ -1319,6 +1369,8 @@ export type Database = {
       dispatch_mode: "auto" | "manual" | "hybrid"
       dispatch_response: "pending" | "accepted" | "rejected" | "timeout"
       favorite_type: "home" | "work" | "other"
+      invite_direction: "invite_from_group" | "request_from_driver"
+      invite_status: "pending" | "accepted" | "rejected" | "expired"
       payment_method: "dinheiro" | "pix" | "cartao" | "saldo"
       payout_status:
         | "pending"
@@ -1491,6 +1543,8 @@ export const Constants = {
       dispatch_mode: ["auto", "manual", "hybrid"],
       dispatch_response: ["pending", "accepted", "rejected", "timeout"],
       favorite_type: ["home", "work", "other"],
+      invite_direction: ["invite_from_group", "request_from_driver"],
+      invite_status: ["pending", "accepted", "rejected", "expired"],
       payment_method: ["dinheiro", "pix", "cartao", "saldo"],
       payout_status: [
         "pending",
