@@ -3,14 +3,13 @@ import type { AbaPainel } from "../types/tipos_painel";
 
 interface AcessoRapidoProps {
   onNavegar: (aba: AbaPainel) => void;
-  onPrecos: () => void;
 }
 
-export function AcessoRapido({ onNavegar, onPrecos }: AcessoRapidoProps) {
+export function AcessoRapido({ onNavegar }: AcessoRapidoProps) {
   const itens = [
-    { label: "Preços", icone: DollarSign, onClick: onPrecos },
-    { label: "Minha Tribo", icone: Users, onClick: () => onNavegar("tribo") },
-    { label: "Compartilhar", icone: Share2, onClick: () => onNavegar("tribo") },
+    { label: "Preços", icone: DollarSign, onClick: () => onNavegar("configuracoes") },
+    { label: "Meus Links", icone: Share2, onClick: () => onNavegar("meus_links") },
+    { label: "Grupos", icone: Users, onClick: () => onNavegar("configuracoes") },
     { label: "Carteira", icone: Settings, onClick: () => onNavegar("carteira") },
   ];
 
