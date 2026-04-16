@@ -1348,6 +1348,7 @@ export type Database = {
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
+      process_ride_commission: { Args: { _ride_id: string }; Returns: Json }
       reject_payout: { Args: { _payout_id: string }; Returns: undefined }
       request_driver_join: {
         Args: { _message?: string; _tenant_slug: string }
