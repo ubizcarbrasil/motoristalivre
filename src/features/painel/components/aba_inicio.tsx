@@ -3,6 +3,7 @@ import { CardDispatch } from "../components/card_dispatch";
 import { GridStats } from "../components/grid_stats";
 import { ListaCorridas } from "../components/lista_corridas";
 import { AcessoRapido } from "../components/acesso_rapido";
+import { ToggleLocalizacao } from "../components/toggle_localizacao";
 import type { PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo, AbaPainel } from "../types/tipos_painel";
 
 interface AbaInicioProps {
@@ -13,6 +14,9 @@ interface AbaInicioProps {
   dispatch: DispatchAtivo | null;
   timeoutSec: number;
   realtimeAtivo: boolean;
+  corridaAtivaId: string | null;
+  localizacaoAtiva: boolean;
+  onToggleLocalizacao: () => void;
   onToggleOnline: () => void;
   onAceitarDispatch: () => void | Promise<void>;
   onRecusarDispatch: () => void | Promise<void>;
@@ -29,6 +33,9 @@ export function AbaInicio({
   dispatch,
   timeoutSec,
   realtimeAtivo,
+  corridaAtivaId,
+  localizacaoAtiva,
+  onToggleLocalizacao,
   onToggleOnline,
   onAceitarDispatch,
   onRecusarDispatch,
@@ -44,6 +51,12 @@ export function AbaInicio({
         realtimeAtivo={realtimeAtivo}
         onToggleOnline={onToggleOnline}
       />
+
+      {corridaAtivaId && (
+        <div className="px-4">
+          <ToggleLocalizacao ativo={localizacaoAtiva} onToggle={onToggleLocalizacao} />
+        </div>
+      )}
 
       {dispatch && (
         <CardDispatch

@@ -334,3 +334,15 @@ export async function buscarConfigPrecoTenant(tenantId: string) {
 
   return data;
 }
+
+export async function buscarCorridaAtiva(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("rides")
+    .select("id")
+    .eq("driver_id", userId)
+    .is("completed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
