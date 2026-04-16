@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
-import { Navigate } from "react-router-dom";
+import { useRedirecionamento } from "../hooks/hook_redirecionamento";
 
 export default function PaginaEntrar() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
+  const { destino, carregando: carregandoDestino } = useRedirecionamento();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function PaginaEntrar() {
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
 
-  if (carregandoAuth) {
+  if (carregandoAuth || (usuario && carregandoDestino)) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -28,8 +29,8 @@ export default function PaginaEntrar() {
     );
   }
 
-  if (usuario) {
-    return <Navigate to="/painel" replace />;
+  if (usuario && destino) {
+    return <Navigate to={destino} replace />;
   }
 
   async function handleEntrar(e: React.FormEvent) {
@@ -43,9 +44,8 @@ export default function PaginaEntrar() {
     setCarregando(false);
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/painel");
     }
+    // Redirecionamento será feito automaticamente pelo hook useRedirecionamento
   }
 
   async function handleGoogle() {
@@ -56,7 +56,7 @@ export default function PaginaEntrar() {
     localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
     setCarregandoGoogle(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/painel`,
+      redirect_uri: `${window.location.origin}/entrar`,
     });
     if (result?.error) {
       toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
