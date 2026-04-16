@@ -6,7 +6,7 @@ interface RespostasRapidasProps {
 
 export function RespostasRapidas({ onSelecionar }: RespostasRapidasProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto px-3 pb-2 no-scrollbar">
+    <div className="flex gap-2 overflow-x-auto px-3 pb-2" style={{ scrollbarWidth: "none" }}>
       {RESPOSTAS_RAPIDAS.map((texto) => (
         <button
           key={texto}
