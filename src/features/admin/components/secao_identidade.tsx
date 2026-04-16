@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { invalidarCacheBranding } from "@/features/perfil_passageiro/services/servico_branding_pdf";
 
 export function SecaoIdentidade() {
   const { usuario } = useAutenticacao();
@@ -47,6 +48,7 @@ export function SecaoIdentidade() {
     setSalvando(true);
     try {
       await supabase.from("tenant_branding").update({ description: descricao, city: cidade, whatsapp }).eq("tenant_id", tenantId);
+      invalidarCacheBranding(tenantId);
       toast.success("Identidade atualizada");
     } catch {
       toast.error("Erro ao salvar");
