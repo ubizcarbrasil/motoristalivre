@@ -11,13 +11,12 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuario nao autenticado");
 
-  // Criar tenant
+  // Criar tenant sem owner (para evitar FK violation, pois user ainda nao existe)
   const { data: tenant, error: erroTenant } = await supabase
     .from("tenants")
     .insert({
       name: identidade.nome,
       slug: identidade.subdominio,
-      owner_user_id: user.id,
       plan_id: planoId || null,
       status: "active",
     })
