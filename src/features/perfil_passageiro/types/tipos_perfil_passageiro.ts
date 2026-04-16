@@ -1,3 +1,8 @@
+export interface EnderecoCorrida {
+  coordenada: { lat: number; lng: number };
+  endereco: string;
+}
+
 export interface AvaliacaoEnviada {
   id: string;
   rating: number;
