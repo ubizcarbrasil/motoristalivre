@@ -29,6 +29,7 @@ export interface CorridaHistorico {
   completed_at: string | null;
   status: StatusCorrida;
   price_paid: number | null;
+  distance_km: number | null;
   origin_address: string | null;
   dest_address: string | null;
   motorista_id: string | null;

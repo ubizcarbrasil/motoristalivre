@@ -68,7 +68,7 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
       .order("created_at", { ascending: false }),
     supabase
       .from("ride_requests")
-      .select("id, created_at, status, origin_address, dest_address, final_price, offered_price, suggested_price")
+      .select("id, created_at, status, origin_address, dest_address, final_price, offered_price, suggested_price, distance_km")
       .eq("passenger_id", passengerId)
       .order("created_at", { ascending: false }),
   ]);
@@ -100,6 +100,7 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
       completed_at: r.completed_at,
       status: (req?.status as StatusCorrida) ?? "completed",
       price_paid: r.price_paid !== null ? Number(r.price_paid) : null,
+      distance_km: req?.distance_km !== null && req?.distance_km !== undefined ? Number(req.distance_km) : null,
       origin_address: req?.origin_address ?? null,
       dest_address: req?.dest_address ?? null,
       motorista_id: r.driver_id,
@@ -124,6 +125,7 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
           : r.suggested_price !== null
           ? Number(r.suggested_price)
           : null,
+      distance_km: r.distance_km !== null && r.distance_km !== undefined ? Number(r.distance_km) : null,
       origin_address: r.origin_address,
       dest_address: r.dest_address,
       motorista_id: null,
