@@ -71,9 +71,17 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="corridas" className="mt-4">
+              <TabsContent value="corridas" className="mt-4 space-y-3">
+                <FiltrosHistoricoCorridas
+                  status={filtroStatus}
+                  periodo={filtroPeriodo}
+                  onMudarStatus={setFiltroStatus}
+                  onMudarPeriodo={setFiltroPeriodo}
+                  totalFiltrado={corridasFiltradas.length}
+                  totalGeral={corridas.length}
+                />
                 <ListaHistoricoCorridas
-                  corridas={corridas}
+                  corridas={corridasFiltradas}
                   onSelecionar={setCorridaSelecionada}
                 />
               </TabsContent>
