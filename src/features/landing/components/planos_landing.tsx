@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Plano = Tables<"plans">;
