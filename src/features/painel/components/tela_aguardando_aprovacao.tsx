@@ -22,7 +22,7 @@ export function TelaAguardandoAprovacao({ nomeGrupo }: TelaAguardandoAprovacaoPr
             O dono do grupo precisa aprovar antes de você começar a receber corridas.
           </p>
         </div>
-        <Button variant="outline" className="w-full" onClick={logout}>
+        <Button variant="outline" className="w-full" onClick={sair}>
           <LogOut className="w-4 h-4 mr-2" />
           Sair
         </Button>
