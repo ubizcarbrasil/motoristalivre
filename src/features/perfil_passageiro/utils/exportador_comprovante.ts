@@ -1,7 +1,30 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import QRCode from "qrcode";
 import type { DetalhesCorrida } from "../types/tipos_perfil_passageiro";
 import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
+
+/**
+ * Monta a URL pública de validação da corrida.
+ * Usa o origin atual para funcionar em qualquer ambiente (dev/preview/prod).
+ */
+function urlValidacaoCorrida(rideId: string): string {
+  const origem = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origem}/validar-corrida/${rideId}`;
+}
+
+async function gerarQrCodeDataUrl(texto: string): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(texto, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 256,
+      color: { dark: "#000000", light: "#ffffff" },
+    });
+  } catch {
+    return null;
+  }
+}
 
 const PAGAMENTO_LABELS: Record<string, string> = {
   dinheiro: "Dinheiro",
