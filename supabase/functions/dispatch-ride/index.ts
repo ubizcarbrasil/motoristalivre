@@ -509,6 +509,20 @@ Deno.serve(async (req) => {
         await handleTimeoutCheck(ride_request_id);
         break;
 
+      case "timeout": {
+        if (!dispatch_id) throw new Error("dispatch_id required");
+        const { data: dispatch } = await supabase
+          .from("ride_dispatches")
+          .select("*")
+          .eq("id", dispatch_id)
+          .single();
+        if (dispatch && dispatch.response === "pending") {
+          await marcarDispatchTimeout(dispatch_id);
+          await tryNextDriver(dispatch.ride_request_id, dispatch.tenant_id, dispatch.attempt_number);
+        }
+        break;
+      }
+
       case "complete":
         if (!ride_id) throw new Error("ride_id required");
         await completeRide(ride_id);
