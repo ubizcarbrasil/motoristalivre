@@ -15,13 +15,7 @@ interface SidebarRootProps {
 export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const navigate = useNavigate();
-
-  async function handleSair() {
-    await supabase.auth.signOut();
-    toast.success("Você saiu da conta");
-    navigate("/entrar");
-  }
+  const { sair } = useLogout();
 
   return (
     <Sidebar collapsible="icon">
