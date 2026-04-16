@@ -62,6 +62,11 @@ export default function PaginaCadastro() {
   }
 
   async function handleGoogle() {
+    if (!slugGrupo.trim()) {
+      toast({ title: "Informe o slug do grupo antes de continuar", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
     setCarregandoGoogle(true);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/painel`,
