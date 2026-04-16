@@ -1,55 +1,79 @@
+`.
 
+## Links de acesso
 
-## Diagnóstico
+Olhando o roteamento em `src/App.tsx` e o que existe hoje no banco:
 
-A tela "Link não encontrado" no print **não é o NotFound 404 genérico** — é a tela de erro do `pagina_passageiro.tsx` (linhas 197–206). Ela é exibida quando o hook `useSolicitacao` seta `erro = true`, o que acontece quando `buscarMotorista(slug, slugPerfil)` retorna `null`.
+### 🚖 Motorista
+O painel é unificado (motorista + afiliado) em `/painel`, atrás de login.
 
-### Causa raiz: a rota `/demo` cai em `/:slug/:driver_slug` errado
+- **URL**: `https://motoristalivre.lovable.app/painel`
+- Requer estar autenticado com um usuário cuja `role` seja `driver` (ou `affiliate`).
+- Login: `/entrar` ou via Personas de dev em `/dev/personas`.
 
-Olhando o `App.tsx`:
-```
-<Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
-```
+Já o **perfil público** de um motorista (página vista pelo passageiro antes de pedir corrida) segue o padrão `/{tenant_slug}/perfil/{driver_slug}`. Exemplos reais no banco:
 
-Quando o passageiro faz "Login direto" via `/dev/personas`, ele é redirecionado para `/demo`. O `PaginaPassageiro` é montado, e o `useSolicitacao` faz:
+- `https://motoristalivre.lovable.app/papalegua/perfil/carlos-silva`
+- `https://motoristalivre.lovable.app/papalegua/perfil/ana-souza`
+- `https://motoristalivre.lovable.app/demo/perfil/motorista-demo`
 
-```ts
-const slugPerfil = params.affiliate_slug || params.driver_slug || "";
-// slug = "demo", slugPerfil = ""
-if (tipoOrigem === "motorista" && params.slug) {
-  const m = await buscarMotorista("demo", "");  // ← driver_slug vazio!
-  if (!m) { setErro(true); return; }            // ← cai aqui
-}
-```
+### 🧍 Passageiro
+A tela do passageiro (mapa + solicitação de corrida) é pública e usa o slug do tenant, podendo opcionalmente apontar para um motorista específico ou link de afiliado:
 
-O service `buscarMotorista` faz `.eq("slug", "")` em `drivers`, não acha ninguém, retorna `null`, e a tela mostra "Link não encontrado".
+| Cenário | Padrão de URL | Exemplo real |
+|---|---|---|
+| Tenant (lista de motoristas) | `/{tenant_slug}` | `https://motoristalivre.lovable.app/papalegua` |
+| Motorista específico | `/{tenant_slug}/{driver_slug}` | `https://motoristalivre.lovable.app/papalegua/carlos-silva` |
+| Via link de afiliado | `/{tenant_slug}/a/{affiliate_slug}` | `https://motoristalivre.lovable.app/papalegua/a/{slug-do-afiliado}` |
 
-A página `/demo` (sem slug de motorista) **nunca foi pensada para funcionar sozinha** — o fluxo correto é o passageiro abrir um link tipo `/demo/motorista-demo` ou `/demo/a/afiliado-demo`. Sem motorista no path, não há para quem pedir corrida.
+### Resumo rápido
+- **Motorista (painel privado)** → `/painel`
+- **Passageiro (público)** → `/{tenant_slug}` ou `/{tenant_slug}/{driver_slug}`
 
-### Por que o motorista também não aparece
+Os tenants ativos hoje são `papalegua` e `demo` (os outros — `tribofinal`, `teste` — ainda não têm motoristas cadastrados).
 
-Mesmo se você acessar `/demo/motorista-demo` direto, pode dar erro porque:
-- A edge function `seed-personas` cria o driver com `slug: "motorista-demo"` ✅
-- Mas o `useRedirecionamento` manda o passageiro para `/demo` (sem o `/motorista-demo`) ❌
+<lov-actions>
+<lov-suggestion message="Abra a página do passageiro em /papalegua/carlos-silva no preview e confirme que o mapa e o botão de solicitar corrida carregam corretamente">Testar página do passageiro</lov-suggestion>
+<lov-suggestion message="Crie uma tela /links no painel do motorista que liste e permita copiar todas as URLs públicas relacionadas a ele (perfil, link direto de corrida, link de afiliado)">Adicionar tela de links no painel</lov-suggestion>
+<lov-suggestion message="Gere QR Codes reais (usando a lib qrcode) para cada link público do motorista, substituindo o placeholder atual no card_link_afiliado.tsx">Gerar QR Codes reais</lov-suggestion>
+<lov-suggestion message="Adicione um seletor de tenants ativos na página /dev/personas para facilitar o teste de fluxos em diferentes grupos">Melhorar página de personas</lov-suggestion>
+</lov-actions>Desculpe a chamada acidental. Resposta direta:
 
-## O que precisa ser corrigido
+## Links de acesso
 
-### 1. Ajustar destino do passageiro nas personas
-Em `constantes_personas.ts`, mudar:
-```ts
-rotaDestino: `/${TENANT_DEMO_SLUG}`           // ❌ /demo
-rotaDestino: `/${TENANT_DEMO_SLUG}/motorista-demo`  // ✅ /demo/motorista-demo
-```
+Olhando o roteamento em `src/App.tsx` e o que existe hoje no banco:
 
-E também em `hook_redirecionamento.ts`, o caso `passenger` precisa redirecionar para um link válido (tenant + motorista padrão), não só `/demo`.
+### 🚖 Motorista
+O painel é unificado (motorista + afiliado) em `/painel`, atrás de login.
 
-### 2. Tornar a tela mais amigável quando faltar slug de motorista
-Em `pagina_passageiro.tsx`, ao invés de "Link não encontrado" cru, mostrar uma tela de **seleção** ("Escolha um motorista do grupo Demo") listando os motoristas online do tenant, ou pelo menos um link/CTA de volta. Isso evita confundir o usuário em testes.
+- **URL**: `https://motoristalivre.lovable.app/painel`
+- Requer estar autenticado com um usuário cuja `role` seja `driver` (ou `affiliate`).
+- Login: `/entrar` ou via Personas de dev em `/dev/personas`.
 
-### 3. Confirmar que o seed roda antes do login
-Se o usuário clicou "Login direto" sem antes clicar em "Criar/Recriar personas", o tenant `demo` e o driver `motorista-demo` não existem ainda. Vou adicionar uma checagem no `useRedirecionamento` (ou no `servico_personas`) que dispara o seed automaticamente antes do primeiro login direto, de forma idempotente.
+Já o **perfil público** de um motorista (página vista pelo passageiro) segue o padrão `/{tenant_slug}/perfil/{driver_slug}`. Exemplos reais no banco:
 
-## Arquivos a editar
+- `https://motoristalivre.lovable.app/papalegua/perfil/carlos-silva`
+- `https://motoristalivre.lovable.app/papalegua/perfil/ana-souza`
+- `https://motoristalivre.lovable.app/demo/perfil/motorista-demo`
 
-- `src/features/dev_personas/constants/constantes_personas.ts` — corrigir `rotaDestino` do passageiro para `/demo/motorista-demo`
-- `src/features/autenticacao/hooks/hook_redirecionamento.ts` — para `passenger`, buscar um motorista do tenant e redirecionar para `/{tenant_slug}/{
+### 🧍 Passageiro
+Tela do passageiro (mapa + solicitação) é pública e usa o slug do tenant, podendo apontar para um motorista específico ou um link de afiliado:
+
+| Cenário | Padrão de URL | Exemplo real |
+|---|---|---|
+| Tenant (lista de motoristas) | `/{tenant_slug}` | `https://motoristalivre.lovable.app/papalegua` |
+| Motorista específico | `/{tenant_slug}/{driver_slug}` | `https://motoristalivre.lovable.app/papalegua/carlos-silva` |
+| Via link de afiliado | `/{tenant_slug}/a/{affiliate_slug}` | `https://motoristalivre.lovable.app/papalegua/a/{slug-afiliado}` |
+
+### Resumo rápido
+- **Motorista (painel privado)** → `/painel`
+- **Passageiro (público)** → `/{tenant_slug}` ou `/{tenant_slug}/{driver_slug}`
+
+Tenants ativos hoje: `papalegua` e `demo` (os outros — `tribofinal`, `teste` — ainda não têm motoristas cadastrados).
+
+<lov-actions>
+<lov-suggestion message="Abra a página do passageiro em /papalegua/carlos-silva no preview e confirme que o mapa e o botão de solicitar corrida carregam corretamente">Testar página do passageiro</lov-suggestion>
+<lov-suggestion message="Crie uma tela /links no painel do motorista que liste e permita copiar todas as URLs públicas relacionadas a ele (perfil, link direto de corrida, link de afiliado)">Adicionar tela de links no painel</lov-suggestion>
+<lov-suggestion message="Gere QR Codes reais (usando a lib qrcode) para cada link público do motorista, substituindo o placeholder atual no card_link_afiliado.tsx">Gerar QR Codes reais</lov-suggestion>
+<lov-suggestion message="Adicione um seletor de tenants ativos na página /dev/personas para facilitar o teste de fluxos em diferentes grupos">Melhorar página de personas</lov-suggestion>
+</lov-actions>
