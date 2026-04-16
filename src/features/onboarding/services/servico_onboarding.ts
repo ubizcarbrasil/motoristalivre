@@ -59,6 +59,8 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
     city: identidade.cidade || null,
     description: identidade.descricao || null,
     whatsapp: identidade.whatsapp || null,
+    logo_url: identidade.logoUrl || null,
+    cover_url: identidade.capaUrl || null,
   });
 
   // Criar settings
