@@ -48,7 +48,7 @@ export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleSair}
+              onClick={sair}
               className="text-muted-foreground hover:text-destructive"
             >
               <LogOut className="h-4 w-4 shrink-0" />
