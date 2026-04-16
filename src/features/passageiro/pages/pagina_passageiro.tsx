@@ -13,6 +13,7 @@ import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
 import { existeAvaliacao } from "../services/servico_avaliacao";
 import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favoritos";
+import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_recentes";
 import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
