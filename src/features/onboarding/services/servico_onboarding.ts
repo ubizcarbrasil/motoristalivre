@@ -11,51 +11,21 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuario nao autenticado");
 
-  // Criar tenant
-  const { data: tenant, error: erroTenant } = await supabase
-    .from("tenants")
-    .insert({
-      name: identidade.nome,
-      slug: identidade.subdominio,
-      owner_user_id: user.id,
-      plan_id: planoId || null,
-      status: "active",
-    })
-    .select("id")
-    .single();
+  // Criar tenant + user atomicamente via RPC
+  const { data: tenantId, error: erroTenant } = await supabase.rpc(
+    "create_tenant_with_owner" as any,
+    {
+      _name: identidade.nome,
+      _slug: identidade.subdominio,
+      _plan_id: planoId || null,
+    }
+  );
 
-  if (erroTenant || !tenant) throw erroTenant || new Error("Erro ao criar grupo");
-
-  // Upsert user como tenant_admin (trigger pode ter criado o registro antes)
-  const { data: existingUser } = await supabase
-    .from("users")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (existingUser) {
-    await supabase
-      .from("users")
-      .update({
-        tenant_id: tenant.id,
-        role: "tenant_admin" as const,
-        full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-        email: user.email ?? null,
-      })
-      .eq("id", user.id);
-  } else {
-    await supabase.from("users").insert({
-      id: user.id,
-      tenant_id: tenant.id,
-      role: "tenant_admin" as const,
-      full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-      email: user.email ?? null,
-    });
-  }
+  if (erroTenant || !tenantId) throw erroTenant || new Error("Erro ao criar grupo");
 
   // Criar branding
   await supabase.from("tenant_branding").insert({
-    tenant_id: tenant.id,
+    tenant_id: tenantId,
     city: identidade.cidade || null,
     description: identidade.descricao || null,
     whatsapp: identidade.whatsapp || null,
@@ -65,7 +35,7 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
 
   // Criar settings
   await supabase.from("tenant_settings").insert({
-    tenant_id: tenant.id,
+    tenant_id: tenantId,
     dispatch_mode: configuracao.modoDespacho,
     base_fare: configuracao.bandeira,
     price_per_km: configuracao.precoPorKm,
@@ -77,11 +47,11 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
   // Criar subscription
   if (planoId) {
     await supabase.from("subscriptions").insert({
-      tenant_id: tenant.id,
+      tenant_id: tenantId,
       plan_id: planoId,
       status: "active",
     });
   }
 
-  return tenant.id;
+  return tenantId;
 }
