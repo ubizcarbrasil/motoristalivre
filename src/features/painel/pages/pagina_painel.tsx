@@ -17,8 +17,13 @@ export default function PaginaPainel() {
     corridasRecentes,
     dispatch,
     tenant,
+    timeoutSec,
+    realtimeAtivo,
     carregando,
     toggleOnline,
+    aceitarDispatch,
+    recusarDispatch,
+    timeoutDispatch,
     userId,
   } = usePainel();
 
@@ -52,7 +57,12 @@ export default function PaginaPainel() {
           stats={stats}
           corridas={corridasRecentes}
           dispatch={dispatch}
+          timeoutSec={timeoutSec}
+          realtimeAtivo={realtimeAtivo}
           onToggleOnline={toggleOnline}
+          onAceitarDispatch={aceitarDispatch}
+          onRecusarDispatch={recusarDispatch}
+          onTimeoutDispatch={timeoutDispatch}
           onNavegar={setAba}
           onPrecos={() => setAba("precos")}
         />

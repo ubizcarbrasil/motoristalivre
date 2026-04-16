@@ -1,34 +1,58 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, DollarSign, Link } from "lucide-react";
+import { MapPin, Clock, DollarSign, Link, Loader2 } from "lucide-react";
 import type { DispatchAtivo } from "../types/tipos_painel";
 import { TIMEOUT_DISPATCH_SEG } from "../constants/constantes_painel";
 
 interface CardDispatchProps {
   dispatch: DispatchAtivo;
-  onAceitar: () => void;
-  onRecusar: () => void;
+  timeoutSec?: number;
+  onAceitar: () => void | Promise<void>;
+  onRecusar: () => void | Promise<void>;
+  onTimeout?: () => void | Promise<void>;
 }
 
-export function CardDispatch({ dispatch, onAceitar, onRecusar }: CardDispatchProps) {
-  const [restante, setRestante] = useState(TIMEOUT_DISPATCH_SEG);
+export function CardDispatch({ dispatch, timeoutSec = TIMEOUT_DISPATCH_SEG, onAceitar, onRecusar, onTimeout }: CardDispatchProps) {
+  const [restante, setRestante] = useState(timeoutSec);
+  const [acao, setAcao] = useState<"aceitar" | "recusar" | null>(null);
 
   useEffect(() => {
     const elapsed = Math.floor((Date.now() - new Date(dispatch.dispatched_at).getTime()) / 1000);
-    const inicial = Math.max(0, TIMEOUT_DISPATCH_SEG - elapsed);
+    const inicial = Math.max(0, timeoutSec - elapsed);
     setRestante(inicial);
+
+    if (inicial === 0) {
+      onTimeout?.();
+      return;
+    }
 
     const timer = setInterval(() => {
       setRestante((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0; }
+        if (prev <= 1) {
+          clearInterval(timer);
+          onTimeout?.();
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [dispatch.dispatched_at]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch.dispatched_at, timeoutSec]);
 
-  const progresso = (restante / TIMEOUT_DISPATCH_SEG) * 100;
+  const progresso = (restante / timeoutSec) * 100;
+  const desabilitado = acao !== null;
+
+  const handleAceitar = async () => {
+    setAcao("aceitar");
+    await onAceitar();
+  };
+
+  const handleRecusar = async () => {
+    setAcao("recusar");
+    await onRecusar();
+  };
 
   return (
     <div className="mx-5 rounded-2xl border-2 border-foreground/20 bg-card p-4 space-y-3 animate-pulse-subtle">
@@ -68,7 +92,6 @@ export function CardDispatch({ dispatch, onAceitar, onRecusar }: CardDispatchPro
         <span>{dispatch.origem_nome}</span>
       </div>
 
-      {/* Barra de countdown */}
       <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
         <div
           className="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
@@ -77,11 +100,11 @@ export function CardDispatch({ dispatch, onAceitar, onRecusar }: CardDispatchPro
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={onRecusar} className="flex-1 h-11">
-          Recusar
+        <Button variant="outline" onClick={handleRecusar} disabled={desabilitado} className="flex-1 h-11">
+          {acao === "recusar" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Recusar"}
         </Button>
-        <Button onClick={onAceitar} className="flex-1 h-11 font-semibold">
-          Aceitar
+        <Button onClick={handleAceitar} disabled={desabilitado} className="flex-1 h-11 font-semibold">
+          {acao === "aceitar" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aceitar"}
         </Button>
       </div>
     </div>

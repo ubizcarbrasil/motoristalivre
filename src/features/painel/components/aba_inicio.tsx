@@ -11,7 +11,12 @@ interface AbaInicioProps {
   stats: EstatisticasHoje;
   corridas: CorridaRecente[];
   dispatch: DispatchAtivo | null;
+  timeoutSec: number;
+  realtimeAtivo: boolean;
   onToggleOnline: () => void;
+  onAceitarDispatch: () => void | Promise<void>;
+  onRecusarDispatch: () => void | Promise<void>;
+  onTimeoutDispatch: () => void | Promise<void>;
   onNavegar: (aba: AbaPainel) => void;
   onPrecos: () => void;
 }
@@ -22,19 +27,31 @@ export function AbaInicio({
   stats,
   corridas,
   dispatch,
+  timeoutSec,
+  realtimeAtivo,
   onToggleOnline,
+  onAceitarDispatch,
+  onRecusarDispatch,
+  onTimeoutDispatch,
   onNavegar,
   onPrecos,
 }: AbaInicioProps) {
   return (
     <div className="pb-20 space-y-4">
-      <HeaderPainel perfil={perfil} tenantSlug={tenantSlug} onToggleOnline={onToggleOnline} />
+      <HeaderPainel
+        perfil={perfil}
+        tenantSlug={tenantSlug}
+        realtimeAtivo={realtimeAtivo}
+        onToggleOnline={onToggleOnline}
+      />
 
       {dispatch && (
         <CardDispatch
           dispatch={dispatch}
-          onAceitar={() => {}}
-          onRecusar={() => {}}
+          timeoutSec={timeoutSec}
+          onAceitar={onAceitarDispatch}
+          onRecusar={onRecusarDispatch}
+          onTimeout={onTimeoutDispatch}
         />
       )}
 
