@@ -128,8 +128,18 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
         <TelaDetalhesCorrida
           rideId={corridaSelecionada.id}
           isRideRequest={corridaSelecionada.motorista_id === null}
+          nomePassageiro={perfil?.full_name ?? perfil?.email ?? "Passageiro"}
           onVoltar={() => setCorridaSelecionada(null)}
           onPedirNovamente={
+            onPedirNovamente
+              ? (origem, destino) => {
+                  onPedirNovamente(origem, destino);
+                  setCorridaSelecionada(null);
+                }
+              : undefined
+          }
+        />
+      )}
             onPedirNovamente
               ? (origem, destino) => {
                   onPedirNovamente(origem, destino);
