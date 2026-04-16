@@ -3,7 +3,9 @@ import { Loader2 } from "lucide-react";
 import { CampoEndereco } from "./campo_endereco";
 import { StripMotorista } from "./strip_motorista";
 import { SeletorVeiculo } from "./seletor_veiculo";
+import { ChipsFavoritosRapidos } from "@/features/favoritos_passageiro/components/chips_favoritos_rapidos";
 import { saudacaoPorHorario } from "../utils/utilitarios_passageiro";
+import type { FavoritoEndereco, TipoFavorito } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import type {
   DadosMotorista,
   DadosAfiliado,
@@ -37,6 +39,11 @@ interface BottomSheetProps {
   onConfirmar: () => void;
   onVoltarEnderecos: () => void;
   confirmando?: boolean;
+  favoritos?: FavoritoEndereco[];
+  onUsarFavorito?: (favorito: FavoritoEndereco) => void;
+  onAdicionarFavoritoTipo?: (tipo: TipoFavorito) => void;
+  onFavoritarEndereco?: (endereco: { address: string; lat: number; lng: number }) => void;
+  identificarFavorito?: (lat: number, lng: number, endereco: string) => FavoritoEndereco | undefined;
 }
 
 export function BottomSheet({
@@ -61,8 +68,15 @@ export function BottomSheet({
   onConfirmar,
   onVoltarEnderecos,
   confirmando = false,
+  favoritos = [],
+  onUsarFavorito,
+  onAdicionarFavoritoTipo,
+  onFavoritarEndereco,
+  identificarFavorito,
 }: BottomSheetProps) {
   const podeBuscar = origem !== null && destino !== null && !carregandoRota;
+  const mostrarChipsFavoritos =
+    etapa === "endereco" && onUsarFavorito && onAdicionarFavoritoTipo;
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-20 bg-background rounded-t-2xl border-t border-border shadow-2xl">
@@ -86,6 +100,14 @@ export function BottomSheet({
 
         {etapa === "endereco" && (
           <>
+            {mostrarChipsFavoritos && (
+              <ChipsFavoritosRapidos
+                favoritos={favoritos}
+                onUsar={onUsarFavorito!}
+                onAdicionarTipo={onAdicionarFavoritoTipo!}
+              />
+            )}
+
             <div className="space-y-2">
               <CampoEndereco
                 tipo="origem"
@@ -93,12 +115,18 @@ export function BottomSheet({
                 onSelecionar={onSelecionarOrigem}
                 placeholder="De onde?"
                 onGeolocalizarOrigem={onGeolocalizarOrigem}
+                favoritos={favoritos}
+                onFavoritarResultado={onFavoritarEndereco}
+                identificarFavorito={identificarFavorito}
               />
               <CampoEndereco
                 tipo="destino"
                 valor={destino}
                 onSelecionar={onSelecionarDestino}
                 placeholder="Para onde?"
+                favoritos={favoritos}
+                onFavoritarResultado={onFavoritarEndereco}
+                identificarFavorito={identificarFavorito}
               />
             </div>
 
