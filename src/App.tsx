@@ -14,7 +14,7 @@ import PaginaPainel from "@/features/painel/pages/pagina_painel";
 import PaginaAdmin from "@/features/admin/pages/pagina_admin";
 import PaginaRoot from "@/features/root/pages/pagina_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
-import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_motorista";
+// PaginaPerfilMotorista removida - rota unificada em PaginaPassageiro
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,7 +39,8 @@ const App = () => (
 
             {/* Rotas com tenant (slug) */}
             <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
-            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPerfilMotorista /></ProvedorTenant>} />
+            <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

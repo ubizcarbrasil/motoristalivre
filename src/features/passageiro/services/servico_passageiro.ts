@@ -1,0 +1,159 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { DadosMotorista, DadosAfiliado, ConfigPreco, DadosRota, Coordenada } from "../types/tipos_passageiro";
+import { NOMINATIM_URL } from "../constants/constantes_passageiro";
+
+export async function buscarMotorista(tenantSlug: string, motoristaSlug: string): Promise<DadosMotorista | null> {
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, name")
+    .eq("slug", tenantSlug)
+    .maybeSingle();
+
+  if (!tenant) return null;
+
+  const { data: driver } = await supabase
+    .from("drivers")
+    .select("id, slug, bio, is_online, is_verified, tenant_id")
+    .eq("slug", motoristaSlug)
+    .eq("tenant_id", tenant.id)
+    .maybeSingle();
+
+  if (!driver) return null;
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("full_name, avatar_url")
+    .eq("id", driver.id)
+    .maybeSingle();
+
+  // Buscar nota média
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("driver_id", driver.id);
+
+  const nota = reviews && reviews.length > 0
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+    : null;
+
+  return {
+    id: driver.id,
+    nome: user?.full_name ?? "Motorista",
+    avatar_url: user?.avatar_url ?? null,
+    slug: driver.slug,
+    nota,
+    is_online: driver.is_online,
+    grupo_nome: tenant.name,
+    tenant_id: tenant.id,
+  };
+}
+
+export async function buscarAfiliado(tenantSlug: string, afiliadoSlug: string): Promise<DadosAfiliado | null> {
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, name")
+    .eq("slug", tenantSlug)
+    .maybeSingle();
+
+  if (!tenant) return null;
+
+  const { data: affiliate } = await supabase
+    .from("affiliates")
+    .select("id, slug, business_name, tenant_id")
+    .eq("slug", afiliadoSlug)
+    .eq("tenant_id", tenant.id)
+    .eq("is_approved", true)
+    .maybeSingle();
+
+  if (!affiliate) return null;
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("full_name")
+    .eq("id", affiliate.id)
+    .maybeSingle();
+
+  return {
+    id: affiliate.id,
+    nome: user?.full_name ?? "Afiliado",
+    slug: affiliate.slug,
+    business_name: affiliate.business_name,
+    grupo_nome: tenant.name,
+    tenant_id: tenant.id,
+  };
+}
+
+export async function buscarConfigPreco(tenantId: string): Promise<ConfigPreco> {
+  const { data } = await supabase
+    .from("tenant_settings")
+    .select("base_fare, price_per_km, price_per_min, min_fare")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  return {
+    bandeira: data?.base_fare ?? 5,
+    preco_por_km: data?.price_per_km ?? 2,
+    preco_por_min: data?.price_per_min ?? 0.5,
+    tarifa_minima: data?.min_fare ?? 7,
+  };
+}
+
+export async function buscarEnderecosNominatim(query: string): Promise<Array<{ endereco: string; lat: number; lng: number }>> {
+  if (query.length < 3) return [];
+
+  const params = new URLSearchParams({
+    q: query,
+    format: "json",
+    addressdetails: "1",
+    limit: "5",
+    countrycodes: "br",
+  });
+
+  const res = await fetch(`${NOMINATIM_URL}/search?${params}`, {
+    headers: { "Accept-Language": "pt-BR" },
+  });
+
+  if (!res.ok) return [];
+
+  const dados = await res.json();
+  return dados.map((item: { display_name: string; lat: string; lon: string }) => ({
+    endereco: item.display_name,
+    lat: parseFloat(item.lat),
+    lng: parseFloat(item.lon),
+  }));
+}
+
+export async function buscarRota(origem: Coordenada, destino: Coordenada): Promise<DadosRota | null> {
+  const url = `https://router.project-osrm.org/route/v1/driving/${origem.lng},${origem.lat};${destino.lng},${destino.lat}?overview=full&geometries=geojson`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const dados = await res.json();
+    const rota = dados.routes?.[0];
+    if (!rota) return null;
+
+    const pontos: Coordenada[] = rota.geometry.coordinates.map(
+      ([lng, lat]: [number, number]) => ({ lat, lng })
+    );
+
+    return {
+      distancia_km: rota.distance / 1000,
+      duracao_min: Math.ceil(rota.duration / 60),
+      pontos,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function calcularPreco(
+  config: ConfigPreco,
+  distancia_km: number,
+  duracao_min: number,
+  multiplicador: number
+): number {
+  const preco = (config.bandeira + distancia_km * config.preco_por_km + duracao_min * config.preco_por_min) * multiplicador;
+  return Math.max(preco, config.tarifa_minima);
+}
