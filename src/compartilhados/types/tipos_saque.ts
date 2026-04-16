@@ -19,6 +19,8 @@ export interface HistoricoSaque {
   status: StatusSaque;
   requested_at: string;
   processed_at: string | null;
+  processed_by: string | null;
+  processed_by_name: string | null;
 }
 
 export const VALOR_MINIMO_SAQUE = 10;
