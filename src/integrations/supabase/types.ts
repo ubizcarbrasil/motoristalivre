@@ -1219,6 +1219,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_tenant_with_owner: {
+        Args: { _name: string; _plan_id?: string; _slug: string }
+        Returns: string
+      }
       ensure_user_profile: {
         Args: { _tenant_slug: string }
         Returns: undefined
