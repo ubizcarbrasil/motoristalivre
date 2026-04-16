@@ -157,7 +157,10 @@ export default function PaginaEntrar() {
 
         <p className="text-center text-sm text-muted-foreground">
           Nao tem conta?{" "}
-          <Link to="/cadastro" className="text-primary hover:underline font-medium">
+          <Link
+            to={redirectTo ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}` : "/cadastro"}
+            className="text-primary hover:underline font-medium"
+          >
             Criar conta
           </Link>
         </p>
