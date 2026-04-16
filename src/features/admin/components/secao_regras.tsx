@@ -61,7 +61,7 @@ export function SecaoRegras() {
   }
 
   return (
-    <div className="max-w-lg space-y-6 p-6">
+    <div className="max-w-lg space-y-6 p-4 sm:p-6">
       <div className="space-y-2">
         <Label>Modo de despacho</Label>
         <Select value={modoDespacho} onValueChange={setModoDespacho}>

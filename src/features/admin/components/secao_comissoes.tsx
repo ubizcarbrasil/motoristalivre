@@ -50,7 +50,7 @@ export function SecaoComissoes() {
   }
 
   return (
-    <div className="max-w-lg space-y-6 p-6">
+    <div className="max-w-lg space-y-6 p-4 sm:p-6">
       <div className="space-y-2">
         <Label>Comissao de transbordo (%)</Label>
         <Input type="number" value={transbordo} onChange={(e) => setTransbordo(Number(e.target.value))} min={0} max={100} />
