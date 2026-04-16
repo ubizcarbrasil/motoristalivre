@@ -11,7 +11,7 @@ const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 interface TenantSettings {
-  dispatch_mode: "auto" | "manual" | "hybrid";
+  dispatch_mode: "owner_priority" | "proximity" | "broadcast";
   dispatch_radius_km: number;
   dispatch_timeout_sec: number;
   dispatch_max_attempts: number;
@@ -52,6 +52,7 @@ async function criarDispatch(
     tenant_id: tenantId,
     attempt_number: attempt,
     response: "pending",
+    dispatched_at: new Date().toISOString(),
   });
 }
 
@@ -109,8 +110,7 @@ async function dispatchRide(rideRequestId: string) {
 
   let motoristasOrdenados: string[] = [];
 
-  // dispatch_mode: auto = owner_priority, manual = proximity, hybrid = broadcast
-  if (settings.dispatch_mode === "auto" && request.origin_driver_id) {
+  if (settings.dispatch_mode === "owner_priority" && request.origin_driver_id) {
     // Owner priority: try owner first, then others
     const ownerOnline = motoristasOnline.includes(request.origin_driver_id);
     if (ownerOnline) {
@@ -121,7 +121,7 @@ async function dispatchRide(rideRequestId: string) {
     } else {
       motoristasOrdenados = motoristasOnline;
     }
-  } else if (settings.dispatch_mode === "manual") {
+  } else if (settings.dispatch_mode === "proximity") {
     // Proximity mode — for now use all online (geo sorting requires location data)
     motoristasOrdenados = motoristasOnline;
   } else {
@@ -131,7 +131,7 @@ async function dispatchRide(rideRequestId: string) {
 
   await atualizarStatusRequest(rideRequestId, "dispatching");
 
-  if (settings.dispatch_mode === "hybrid") {
+  if (settings.dispatch_mode === "broadcast") {
     // Broadcast: dispatch to all at once
     for (const driverId of motoristasOrdenados) {
       await criarDispatch(rideRequestId, driverId, request.tenant_id, 1);
@@ -290,6 +290,17 @@ async function completeRide(rideId: string) {
 
   if (!ride) return;
 
+  // Idempotência: se já existe comissão processada para esta ride, sair
+  const { data: existingCommission } = await supabase
+    .from("commissions")
+    .select("id")
+    .eq("ride_id", rideId)
+    .eq("status", "processed")
+    .limit(1)
+    .maybeSingle();
+
+  if (existingCommission) return;
+
   const now = new Date().toISOString();
   await supabase
     .from("rides")
@@ -305,7 +316,7 @@ async function completeRide(rideId: string) {
 
   // Process transbordo commission
   if (ride.is_transbordo && ride.origin_driver_id) {
-    const comissaoValor = (pricePaid * settings.transbordo_commission) / 100;
+    const comissaoValor = settings.transbordo_commission;
 
     if (comissaoValor > 0) {
       // Get driver wallet
@@ -366,7 +377,7 @@ async function completeRide(rideId: string) {
 
   // Process affiliate commission
   if (ride.origin_affiliate_id) {
-    const comissaoAfiliado = (pricePaid * settings.affiliate_commission) / 100;
+    const comissaoAfiliado = settings.affiliate_commission;
 
     if (comissaoAfiliado > 0) {
       const { data: affiliateWallet } = await supabase
