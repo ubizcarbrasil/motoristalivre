@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
             <Route path="/painel" element={<RotaProtegida><PaginaPainel /></RotaProtegida>} />
             <Route path="/admin" element={<RotaProtegida><PaginaAdmin /></RotaProtegida>} />
+            <Route path="/afiliado" element={<RotaProtegida><PaginaAfiliado /></RotaProtegida>} />
             <Route path="/root" element={<RotaProtegida><PaginaRoot /></RotaProtegida>} />
 
             {/* Rotas com tenant (slug) */}
