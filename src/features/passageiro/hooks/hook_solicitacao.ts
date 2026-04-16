@@ -149,9 +149,11 @@ export function useSolicitacao() {
       if (error) throw error;
       setRideRequestId(data.id);
       setEtapa("buscando");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro desconhecido";
-      toast.error(`Erro ao solicitar corrida: ${msg}`);
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string; details?: string; hint?: string };
+      const code = err?.code ? ` [${err.code}]` : "";
+      const msg = err?.message ?? "Erro desconhecido";
+      toast.error(`Erro ao solicitar corrida${code}: ${msg}`);
       console.error("[solicitar corrida]", e);
     } finally {
       setConfirmando(false);
