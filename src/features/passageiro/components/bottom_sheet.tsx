@@ -11,6 +11,7 @@ import type {
   PrecoCalculado,
   EtapaSolicitacao,
   TipoOrigem,
+  FormaPagamento,
 } from "../types/tipos_passageiro";
 
 interface BottomSheetProps {
@@ -31,15 +32,17 @@ interface BottomSheetProps {
   onSelecionarVeiculo: (id: string) => void;
   valorOferta: number;
   onMudarOferta: (v: number) => void;
+  formaPagamento: FormaPagamento;
+  onMudarFormaPagamento: (f: FormaPagamento) => void;
   onConfirmar: () => void;
   onVoltarEnderecos: () => void;
+  confirmando?: boolean;
 }
 
 export function BottomSheet({
   tipoOrigem,
   motorista,
   afiliado,
-  grupoNome,
   etapa,
   origem,
   destino,
@@ -53,8 +56,11 @@ export function BottomSheet({
   onSelecionarVeiculo,
   valorOferta,
   onMudarOferta,
+  formaPagamento,
+  onMudarFormaPagamento,
   onConfirmar,
   onVoltarEnderecos,
+  confirmando = false,
 }: BottomSheetProps) {
   const podeBuscar = origem !== null && destino !== null && !carregandoRota;
 
@@ -63,10 +69,8 @@ export function BottomSheet({
       <div className="w-10 h-1 rounded-full bg-border mx-auto mt-3 mb-2" />
 
       <div className="px-5 pb-6 space-y-3 max-h-[70vh] overflow-y-auto">
-        {/* Saudação */}
         <p className="text-lg font-semibold text-foreground">{saudacaoPorHorario()}</p>
 
-        {/* Strip do motorista */}
         {tipoOrigem === "motorista" && motorista && (
           <StripMotorista motorista={motorista} />
         )}
@@ -80,7 +84,6 @@ export function BottomSheet({
           </div>
         )}
 
-        {/* Endereços ou Veículos */}
         {etapa === "endereco" && (
           <>
             <div className="space-y-2">
@@ -104,9 +107,7 @@ export function BottomSheet({
               disabled={!podeBuscar}
               className="w-full h-12 font-semibold"
             >
-              {carregandoRota ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
+              {carregandoRota ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Buscar motoristas
             </Button>
           </>
@@ -119,8 +120,11 @@ export function BottomSheet({
             onSelecionar={onSelecionarVeiculo}
             valorOferta={valorOferta}
             onMudarOferta={onMudarOferta}
+            formaPagamento={formaPagamento}
+            onMudarFormaPagamento={onMudarFormaPagamento}
             onConfirmar={onConfirmar}
             onVoltar={onVoltarEnderecos}
+            confirmando={confirmando}
           />
         )}
       </div>

@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 import type {
   DadosMotorista,
   DadosAfiliado,
@@ -9,6 +12,7 @@ import type {
   DadosRota,
   EtapaSolicitacao,
   PrecoCalculado,
+  FormaPagamento,
 } from "../types/tipos_passageiro";
 import {
   buscarMotorista,
@@ -21,6 +25,7 @@ import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
 
 export function useSolicitacao() {
   const params = useParams<{ slug: string; driver_slug?: string; affiliate_slug?: string }>();
+  const { usuario } = useAutenticacao();
 
   const tipoOrigem: TipoOrigem = params.affiliate_slug ? "afiliado" : "motorista";
   const slugPerfil = params.affiliate_slug || params.driver_slug || "";
@@ -40,8 +45,10 @@ export function useSolicitacao() {
   const [veiculoSelecionado, setVeiculoSelecionado] = useState("compacto");
   const [valorOferta, setValorOferta] = useState<number>(0);
   const [precos, setPrecos] = useState<PrecoCalculado[]>([]);
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("dinheiro");
+  const [confirmando, setConfirmando] = useState(false);
+  const [rideRequestId, setRideRequestId] = useState<string | null>(null);
 
-  // Carregar dados iniciais
   useEffect(() => {
     async function carregar() {
       try {
@@ -68,7 +75,6 @@ export function useSolicitacao() {
     carregar();
   }, [params.slug, slugPerfil, tipoOrigem]);
 
-  // Buscar rota quando origem e destino estão preenchidos
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
 
@@ -88,9 +94,50 @@ export function useSolicitacao() {
     setCarregandoRota(false);
   }, [origem, destino, configPreco]);
 
-  const confirmarCorrida = useCallback(() => {
-    setEtapa("buscando");
-  }, []);
+  const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
+  const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
+
+  const confirmarCorrida = useCallback(async () => {
+    if (!usuario || !tenantId || !origem || !destino || !rota) {
+      toast.error("Faça login para solicitar uma corrida");
+      return;
+    }
+    setConfirmando(true);
+    try {
+      const { data, error } = await supabase
+        .from("ride_requests")
+        .insert({
+          tenant_id: tenantId,
+          passenger_id: usuario.id,
+          origin_type: motorista ? "driver_link" : "affiliate_link",
+          origin_driver_id: motorista?.id ?? null,
+          origin_affiliate_id: afiliado?.id ?? null,
+          origin_lat: origem.coordenada.lat,
+          origin_lng: origem.coordenada.lng,
+          origin_address: origem.endereco,
+          dest_lat: destino.coordenada.lat,
+          dest_lng: destino.coordenada.lng,
+          dest_address: destino.endereco,
+          distance_km: rota.distancia_km,
+          estimated_min: rota.duracao_min,
+          offered_price: valorOferta,
+          suggested_price: valorOferta,
+          payment_method: formaPagamento,
+          status: "pending",
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      setRideRequestId(data.id);
+      setEtapa("buscando");
+    } catch (e) {
+      toast.error("Erro ao solicitar corrida");
+      console.error(e);
+    } finally {
+      setConfirmando(false);
+    }
+  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento]);
 
   const voltarParaEnderecos = useCallback(() => {
     setEtapa("endereco");
@@ -98,8 +145,9 @@ export function useSolicitacao() {
     setPrecos([]);
   }, []);
 
-  const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
-  const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
+  const irParaCorridaAceita = useCallback(() => {
+    setEtapa("aceita");
+  }, []);
 
   return {
     tipoOrigem,
@@ -122,9 +170,15 @@ export function useSolicitacao() {
     valorOferta,
     setValorOferta,
     precos,
+    formaPagamento,
+    setFormaPagamento,
     confirmarCorrida,
     voltarParaEnderecos,
+    confirmando,
     tenantId,
     grupoNome,
+    rideRequestId,
+    irParaCorridaAceita,
+    passengerId: usuario?.id,
   };
 }
