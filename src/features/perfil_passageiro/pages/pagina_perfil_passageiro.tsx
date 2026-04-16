@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,9 @@ import { CabecalhoPerfilPassageiro } from "../components/cabecalho_perfil_passag
 import { GridEstatisticasPassageiro } from "../components/grid_estatisticas_passageiro";
 import { ListaAvaliacoesEnviadas } from "../components/lista_avaliacoes_enviadas";
 import { ListaHistoricoCorridas } from "../components/lista_historico_corridas";
+import { TelaDetalhesCorrida } from "../components/tela_detalhes_corrida";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
+import type { CorridaHistorico } from "../types/tipos_perfil_passageiro";
 
 interface PaginaPerfilPassageiroProps {
   userId: string;
@@ -14,6 +17,7 @@ interface PaginaPerfilPassageiroProps {
 
 export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfilPassageiroProps) {
   const { perfil, avaliacoes, corridas, carregando } = usePerfilPassageiro(userId);
+  const [corridaSelecionada, setCorridaSelecionada] = useState<CorridaHistorico | null>(null);
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -55,7 +59,10 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
               </TabsList>
 
               <TabsContent value="corridas" className="mt-4">
-                <ListaHistoricoCorridas corridas={corridas} />
+                <ListaHistoricoCorridas
+                  corridas={corridas}
+                  onSelecionar={setCorridaSelecionada}
+                />
               </TabsContent>
 
               <TabsContent value="avaliacoes" className="mt-4">
@@ -65,6 +72,14 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
           </>
         )}
       </main>
+
+      {corridaSelecionada && (
+        <TelaDetalhesCorrida
+          rideId={corridaSelecionada.id}
+          isRideRequest={corridaSelecionada.motorista_id === null}
+          onVoltar={() => setCorridaSelecionada(null)}
+        />
+      )}
     </div>
   );
 }
