@@ -14,6 +14,7 @@ import {
 } from "../components/filtros_historico_corridas";
 import { ListaFavoritosPerfil } from "@/features/favoritos_passageiro/components/lista_favoritos_perfil";
 import { ResumoHistoricoCorridas } from "../components/resumo_historico_corridas";
+import { MenuExportarHistorico } from "../components/menu_exportar_historico";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
 import { calcularResumoCorridas, filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
 import type { CorridaHistorico, EnderecoCorrida } from "../types/tipos_perfil_passageiro";
@@ -95,6 +96,13 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
                   totalGeral={corridas.length}
                 />
                 <ResumoHistoricoCorridas resumo={resumoFiltrado} />
+                <div className="flex justify-end">
+                  <MenuExportarHistorico
+                    corridas={corridasFiltradas}
+                    resumo={resumoFiltrado}
+                    nomePassageiro={perfil.full_name ?? perfil.email ?? "Passageiro"}
+                  />
+                </div>
                 <ListaHistoricoCorridas
                   corridas={corridasFiltradas}
                   onSelecionar={setCorridaSelecionada}
