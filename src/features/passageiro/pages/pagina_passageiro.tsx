@@ -12,6 +12,9 @@ import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
 import { existeAvaliacao } from "../services/servico_avaliacao";
+import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favoritos";
+import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
+import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
 import { Loader2, User } from "lucide-react";
@@ -49,10 +52,18 @@ export default function PaginaPassageiro() {
     resetarSolicitacao,
   } = useSolicitacao();
 
+  const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
+  const favoritosCtx = useFavoritos({ passengerId, tenantId });
+
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
   const [mostraPerfil, setMostraPerfil] = useState(false);
+  const [favoritoDialogo, setFavoritoDialogo] = useState<{
+    aberto: boolean;
+    tipoSugerido?: TipoFavorito;
+    enderecoInicial?: { address: string; lat: number; lng: number } | null;
+  }>({ aberto: false });
   const [avaliacaoPendente, setAvaliacaoPendente] = useState<{
     ride_id: string;
     driver_id: string;
@@ -112,7 +123,6 @@ export default function PaginaPassageiro() {
 
   const fecharRastreamento = useCallback(() => {
     setMostraRastreamento(false);
-    // Keep connection alive so pills update in background
   }, []);
 
   const geolocalizarOrigem = useCallback(() => {
@@ -127,6 +137,51 @@ export default function PaginaPassageiro() {
       () => {}
     );
   }, [setOrigem]);
+
+  const usarFavoritoComoCampo = useCallback(
+    (f: FavoritoEndereco) => {
+      const enderecoCompleto = {
+        coordenada: { lat: f.lat, lng: f.lng },
+        endereco: f.address,
+      };
+      // Preenche origem se vazia, senão preenche destino
+      if (!origem) {
+        setOrigem(enderecoCompleto);
+        toast.success(`${f.label} definido como origem`);
+      } else if (!destino) {
+        setDestino(enderecoCompleto);
+        toast.success(`${f.label} definido como destino`);
+      } else {
+        // Ambos preenchidos: substitui destino
+        setDestino(enderecoCompleto);
+        toast.success(`Destino atualizado para ${f.label}`);
+      }
+    },
+    [origem, destino, setOrigem, setDestino]
+  );
+
+  const abrirDialogoFavorito = useCallback(
+    (tipo: TipoFavorito, enderecoInicial?: { address: string; lat: number; lng: number }) => {
+      if (!passengerId) {
+        toast.error("Você precisa estar logado para favoritar");
+        return;
+      }
+      setFavoritoDialogo({ aberto: true, tipoSugerido: tipo, enderecoInicial });
+    },
+    [passengerId]
+  );
+
+  const favoritarEndereco = useCallback(
+    (endereco: { address: string; lat: number; lng: number }) => {
+      const ja = favoritosCtx.eFavorito(endereco.lat, endereco.lng, endereco.address);
+      if (ja) {
+        toast.info(`Já favoritado como "${ja.label}"`);
+        return;
+      }
+      abrirDialogoFavorito("other", endereco);
+    },
+    [favoritosCtx, abrirDialogoFavorito]
+  );
 
   if (carregando) {
     return (
@@ -194,6 +249,11 @@ export default function PaginaPassageiro() {
           onConfirmar={confirmarCorrida}
           onVoltarEnderecos={voltarParaEnderecos}
           confirmando={confirmando}
+          favoritos={passengerId ? favoritosCtx.favoritos : []}
+          onUsarFavorito={passengerId ? usarFavoritoComoCampo : undefined}
+          onAdicionarFavoritoTipo={passengerId ? (t) => abrirDialogoFavorito(t) : undefined}
+          onFavoritarEndereco={passengerId ? favoritarEndereco : undefined}
+          identificarFavorito={passengerId ? favoritosCtx.eFavorito : undefined}
         />
       )}
 
@@ -255,6 +315,17 @@ export default function PaginaPassageiro() {
           }}
         />
       )}
+
+      <DialogoEditarFavorito
+        aberto={favoritoDialogo.aberto}
+        onFechar={() => setFavoritoDialogo({ aberto: false })}
+        tipoSugerido={favoritoDialogo.tipoSugerido}
+        enderecoInicial={favoritoDialogo.enderecoInicial ?? null}
+        onSalvar={async (dados) => {
+          const ok = await favoritosCtx.adicionar(dados);
+          return ok;
+        }}
+      />
 
       <SheetInstalacao />
     </div>
