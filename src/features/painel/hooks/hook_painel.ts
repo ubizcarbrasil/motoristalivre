@@ -10,11 +10,13 @@ import {
   alternarOnline,
   buscarTenantDoMotorista,
   buscarTimeoutDispatch,
+  buscarCorridaAtiva,
   aceitarDispatch as aceitarDispatchService,
   recusarDispatch as recusarDispatchService,
   marcarDispatchTimeout as timeoutDispatchService,
 } from "../services/servico_painel";
 import { useDispatchRealtime } from "./hook_dispatch_realtime";
+import { useCompartilharLocalizacao } from "./hook_compartilhar_localizacao";
 import { TIMEOUT_DISPATCH_SEG } from "../constants/constantes_painel";
 
 export function usePainel() {
@@ -27,27 +29,31 @@ export function usePainel() {
   const [tenant, setTenant] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [timeoutSec, setTimeoutSec] = useState<number>(TIMEOUT_DISPATCH_SEG);
   const [carregando, setCarregando] = useState(true);
+  const [corridaAtivaId, setCorridaAtivaId] = useState<string | null>(null);
 
   const userId = usuario?.id;
 
   const { dispatchAtivo, realtimeAtivo, limparDispatch } = useDispatchRealtime(userId, dispatchInicial);
+  const localizacao = useCompartilharLocalizacao(corridaAtivaId);
 
   const carregar = useCallback(async () => {
     if (!userId) return;
     setCarregando(true);
     try {
-      const [p, s, c, d, t] = await Promise.all([
+      const [p, s, c, d, t, rideId] = await Promise.all([
         buscarPerfilMotorista(userId),
         buscarEstatisticasHoje(userId),
         buscarCorridasRecentes(userId),
         buscarDispatchAtivo(userId),
         buscarTenantDoMotorista(userId),
+        buscarCorridaAtiva(userId),
       ]);
       setPerfil(p);
       setStats(s);
       setCorridasRecentes(c);
       setDispatchInicial(d);
       setTenant(t);
+      setCorridaAtivaId(rideId);
       if (t?.id) {
         const sec = await buscarTimeoutDispatch(t.id);
         setTimeoutSec(sec);
@@ -119,5 +125,7 @@ export function usePainel() {
     timeoutDispatch,
     userId,
     recarregar: carregar,
+    corridaAtivaId,
+    localizacao,
   };
 }
