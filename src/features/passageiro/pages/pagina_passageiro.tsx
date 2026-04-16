@@ -1,11 +1,14 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
 import { OverlayBusca } from "../components/overlay_busca";
 import { SheetInstalacao } from "../components/sheet_instalacao";
+import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
+import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
   const {
@@ -22,15 +25,30 @@ export default function PaginaPassageiro() {
     carregandoRota,
     buscarRotaCallback,
     etapa,
+    setEtapa,
     veiculoSelecionado,
     setVeiculoSelecionado,
     valorOferta,
     setValorOferta,
     precos,
+    formaPagamento,
+    setFormaPagamento,
     confirmarCorrida,
     voltarParaEnderecos,
+    confirmando,
     grupoNome,
+    rideRequestId,
+    passengerId,
   } = useSolicitacao();
+
+  const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
+
+  // Quando a corrida é aceita, transiciona para o Estado 3
+  useEffect(() => {
+    if (corridaAceita && (etapa === "buscando" || etapa === "aceita")) {
+      setEtapa("aceita");
+    }
+  }, [corridaAceita, etapa, setEtapa]);
 
   const geolocalizarOrigem = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -75,7 +93,7 @@ export default function PaginaPassageiro() {
 
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
 
-      {etapa !== "buscando" && (
+      {etapa !== "buscando" && etapa !== "aceita" && (
         <BottomSheet
           tipoOrigem={tipoOrigem}
           motorista={motorista}
@@ -94,12 +112,23 @@ export default function PaginaPassageiro() {
           onSelecionarVeiculo={setVeiculoSelecionado}
           valorOferta={valorOferta}
           onMudarOferta={setValorOferta}
+          formaPagamento={formaPagamento}
+          onMudarFormaPagamento={setFormaPagamento}
           onConfirmar={confirmarCorrida}
           onVoltarEnderecos={voltarParaEnderecos}
+          confirmando={confirmando}
         />
       )}
 
-      {etapa === "buscando" && <OverlayBusca grupoNome={grupoNome} />}
+      {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
+
+      {etapa === "aceita" && corridaAceita && (
+        <SheetCorridaAceita
+          corrida={corridaAceita}
+          onRastrear={() => toast.info("Rastreamento em tempo real em breve")}
+          onChat={() => toast.info("Chat em breve")}
+        />
+      )}
 
       <SheetInstalacao />
     </div>

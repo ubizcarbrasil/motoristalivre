@@ -56,4 +56,43 @@ export interface DadosRota {
 
 export type TipoOrigem = "motorista" | "afiliado";
 
-export type EtapaSolicitacao = "endereco" | "veiculo" | "buscando";
+export type EtapaSolicitacao = "endereco" | "veiculo" | "buscando" | "aceita";
+
+export type FormaPagamento = "dinheiro" | "pix" | "cartao" | "saldo";
+
+export type StatusCorrida = "accepted" | "in_progress" | "completed" | "cancelled" | "expired";
+
+export interface MotoristaCorrida {
+  id: string;
+  nome: string;
+  handle: string;
+  avatar_url: string | null;
+  telefone: string | null;
+  nota_media: number;
+  total_corridas: number;
+  is_online: boolean;
+  grupos: { handle: string; nome: string }[];
+  veiculo: {
+    modelo: string | null;
+    ano: number | null;
+    cor: string | null;
+    placa: string | null;
+  };
+}
+
+export interface AvaliacaoMotorista {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface CorridaAceita {
+  ride_request_id: string;
+  ride_id: string | null;
+  status: StatusCorrida;
+  motorista: MotoristaCorrida;
+  estimated_min: number;
+  accepted_at: string;
+  avaliacoes: AvaliacaoMotorista[];
+}

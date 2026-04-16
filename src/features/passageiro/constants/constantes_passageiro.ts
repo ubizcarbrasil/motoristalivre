@@ -1,4 +1,19 @@
-import type { OpcaoVeiculo } from "../types/tipos_passageiro";
+import type { OpcaoVeiculo, FormaPagamento } from "../types/tipos_passageiro";
+
+export const FORMAS_PAGAMENTO: { id: FormaPagamento; label: string; icone: string }[] = [
+  { id: "dinheiro", label: "Dinheiro", icone: "banknote" },
+  { id: "pix", label: "PIX", icone: "qr-code" },
+  { id: "cartao", label: "Cartão", icone: "credit-card" },
+  { id: "saldo", label: "Saldo", icone: "wallet" },
+];
+
+export const ETAPAS_CORRIDA = [
+  { id: "accepted", label: "Aceito" },
+  { id: "a_caminho", label: "A caminho" },
+  { id: "chegou", label: "Chegou" },
+  { id: "in_progress", label: "Em viagem" },
+] as const;
+
 
 export const OPCOES_VEICULOS: OpcaoVeiculo[] = [
   {

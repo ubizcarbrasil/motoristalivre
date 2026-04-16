@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Car, Bike } from "lucide-react";
-import type { PrecoCalculado } from "../types/tipos_passageiro";
+import type { PrecoCalculado, FormaPagamento } from "../types/tipos_passageiro";
 import { formatarPreco } from "../utils/utilitarios_passageiro";
+import { SeletorPagamento } from "./seletor_pagamento";
 
 interface SeletorVeiculoProps {
   precos: PrecoCalculado[];
@@ -10,8 +11,11 @@ interface SeletorVeiculoProps {
   onSelecionar: (id: string) => void;
   valorOferta: number;
   onMudarOferta: (valor: number) => void;
+  formaPagamento: FormaPagamento;
+  onMudarFormaPagamento: (forma: FormaPagamento) => void;
   onConfirmar: () => void;
   onVoltar: () => void;
+  confirmando?: boolean;
 }
 
 function iconeVeiculo(id: string) {
@@ -25,8 +29,11 @@ export function SeletorVeiculo({
   onSelecionar,
   valorOferta,
   onMudarOferta,
+  formaPagamento,
+  onMudarFormaPagamento,
   onConfirmar,
   onVoltar,
+  confirmando = false,
 }: SeletorVeiculoProps) {
   return (
     <div className="space-y-4">
@@ -74,12 +81,14 @@ export function SeletorVeiculo({
         </div>
       </div>
 
+      <SeletorPagamento selecionado={formaPagamento} onSelecionar={onMudarFormaPagamento} />
+
       <div className="flex gap-3">
-        <Button variant="outline" onClick={onVoltar} className="flex-1 h-12">
+        <Button variant="outline" onClick={onVoltar} disabled={confirmando} className="flex-1 h-12">
           Voltar
         </Button>
-        <Button onClick={onConfirmar} className="flex-1 h-12 font-semibold">
-          Confirmar
+        <Button onClick={onConfirmar} disabled={confirmando} className="flex-1 h-12 font-semibold">
+          {confirmando ? "Confirmando..." : "Confirmar"}
         </Button>
       </div>
     </div>
