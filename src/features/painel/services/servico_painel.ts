@@ -335,14 +335,37 @@ export async function buscarConfigPrecoTenant(tenantId: string) {
   return data;
 }
 
-export async function buscarCorridaAtiva(userId: string): Promise<string | null> {
-  const { data } = await supabase
+export interface CorridaAtivaInfo {
+  ride_id: string;
+  passenger_id: string;
+  passenger_nome: string;
+  passenger_avatar: string | null;
+  passenger_telefone: string | null;
+}
+
+export async function buscarCorridaAtiva(userId: string): Promise<CorridaAtivaInfo | null> {
+  const { data: ride } = await supabase
     .from("rides")
-    .select("id")
+    .select("id, passenger_id")
     .eq("driver_id", userId)
     .is("completed_at", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data?.id ?? null;
+
+  if (!ride) return null;
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("full_name, avatar_url, phone")
+    .eq("id", ride.passenger_id)
+    .maybeSingle();
+
+  return {
+    ride_id: ride.id,
+    passenger_id: ride.passenger_id,
+    passenger_nome: user?.full_name ?? "Passageiro",
+    passenger_avatar: user?.avatar_url ?? null,
+    passenger_telefone: user?.phone ?? null,
+  };
 }
