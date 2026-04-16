@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 import type { AbaPainel, PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo } from "../types/tipos_painel";
@@ -19,9 +20,16 @@ import { useDispatchRealtime } from "./hook_dispatch_realtime";
 import { useCompartilharLocalizacao } from "./hook_compartilhar_localizacao";
 import { TIMEOUT_DISPATCH_SEG } from "../constants/constantes_painel";
 
+const ABAS_VALIDAS: AbaPainel[] = ["inicio", "meus_links", "carteira", "perfil", "configuracoes"];
+
 export function usePainel() {
   const { usuario } = useAutenticacao();
-  const [aba, setAba] = useState<AbaPainel>("inicio");
+  const [searchParams] = useSearchParams();
+  const abaInicial = (() => {
+    const q = searchParams.get("aba");
+    return q && (ABAS_VALIDAS as string[]).includes(q) ? (q as AbaPainel) : "inicio";
+  })();
+  const [aba, setAba] = useState<AbaPainel>(abaInicial);
   const [perfil, setPerfil] = useState<PerfilMotorista | null>(null);
   const [stats, setStats] = useState<EstatisticasHoje>({ faturamento: 0, corridas: 0, comissoes: 0, avaliacao: 0 });
   const [corridasRecentes, setCorridasRecentes] = useState<CorridaRecente[]>([]);
