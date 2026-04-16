@@ -1330,6 +1330,7 @@ export type Database = {
         Args: { _name: string; _plan_id?: string; _slug: string }
         Returns: string
       }
+      ensure_passenger: { Args: { _tenant_id: string }; Returns: string }
       ensure_user_profile: {
         Args: { _tenant_slug: string }
         Returns: undefined
