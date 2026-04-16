@@ -13,8 +13,9 @@ import {
   type FiltroStatus,
 } from "../components/filtros_historico_corridas";
 import { ListaFavoritosPerfil } from "@/features/favoritos_passageiro/components/lista_favoritos_perfil";
+import { ResumoHistoricoCorridas } from "../components/resumo_historico_corridas";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
-import { filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
+import { calcularResumoCorridas, filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
 import type { CorridaHistorico, EnderecoCorrida } from "../types/tipos_perfil_passageiro";
 
 interface PaginaPerfilPassageiroProps {
@@ -33,6 +34,11 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
   const corridasFiltradas = useMemo(
     () => filtrarCorridas(corridas, filtroStatus, filtroPeriodo, filtroBusca),
     [corridas, filtroStatus, filtroPeriodo, filtroBusca]
+  );
+
+  const resumoFiltrado = useMemo(
+    () => calcularResumoCorridas(corridasFiltradas),
+    [corridasFiltradas]
   );
 
   return (
@@ -88,6 +94,7 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
                   totalFiltrado={corridasFiltradas.length}
                   totalGeral={corridas.length}
                 />
+                <ResumoHistoricoCorridas resumo={resumoFiltrado} />
                 <ListaHistoricoCorridas
                   corridas={corridasFiltradas}
                   onSelecionar={setCorridaSelecionada}
