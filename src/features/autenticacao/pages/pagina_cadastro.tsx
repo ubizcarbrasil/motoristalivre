@@ -9,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
 
-type TipoCadastro = "grupo" | "passageiro" | "afiliado";
+type TipoCadastro = "grupo" | "motorista" | "passageiro" | "afiliado";
 
 function resolverTipoInicial(valor: string | null): TipoCadastro {
+  if (valor === "motorista") return "motorista";
   if (valor === "passageiro") return "passageiro";
   if (valor === "afiliado") return "afiliado";
   return "grupo";
@@ -44,7 +45,10 @@ export default function PaginaCadastro() {
     return <Navigate to="/painel" replace />;
   }
 
-  const precisaSlug = tipoCadastro === "passageiro" || tipoCadastro === "afiliado";
+  const precisaSlug =
+    tipoCadastro === "passageiro" ||
+    tipoCadastro === "afiliado" ||
+    tipoCadastro === "motorista";
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +73,7 @@ export default function PaginaCadastro() {
     if (tipoCadastro === "afiliado") {
       metadata.role = "affiliate";
     }
+    // Motorista NÃO seta role aqui — vira driver só após aprovação do dono do grupo
 
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -78,12 +83,40 @@ export default function PaginaCadastro() {
         emailRedirectTo: window.location.origin,
       },
     });
-    setCarregando(false);
+
     if (error) {
+      setCarregando(false);
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
-    } else {
-      setEmailEnviado(true);
+      return;
     }
+
+    // Se for motorista, cria a solicitação de entrada no grupo
+    if (tipoCadastro === "motorista") {
+      // Tenta logar imediatamente para chamar a RPC autenticado
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      if (!signInError) {
+        const { error: rpcError } = await supabase.rpc("request_driver_join", {
+          _tenant_slug: slugGrupo.trim(),
+          _message: null,
+        });
+        if (rpcError) {
+          toast({
+            title: "Conta criada, mas houve erro ao solicitar entrada no grupo",
+            description: rpcError.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Email confirmation está ativa — guarda intenção pra criar a solicitação no primeiro login
+        localStorage.setItem("tribocar_pending_driver_join", slugGrupo.trim());
+      }
+    }
+
+    setCarregando(false);
+    setEmailEnviado(true);
   }
 
   async function handleGoogle() {
@@ -96,6 +129,9 @@ export default function PaginaCadastro() {
     }
     if (tipoCadastro === "afiliado") {
       localStorage.setItem("tribocar_signup_role", "affiliate");
+    }
+    if (tipoCadastro === "motorista") {
+      localStorage.setItem("tribocar_pending_driver_join", slugGrupo.trim());
     }
     setCarregandoGoogle(true);
     const redirectPath = tipoCadastro === "grupo" ? "/onboarding" : "/painel";
@@ -122,6 +158,11 @@ export default function PaginaCadastro() {
             Enviamos um link de confirmacao para <strong className="text-foreground">{email}</strong>.
             Clique no link para ativar sua conta.
           </p>
+          {tipoCadastro === "motorista" && (
+            <p className="text-xs text-muted-foreground">
+              Após confirmar, sua solicitação para entrar no grupo será enviada e ficará aguardando aprovação do dono.
+            </p>
+          )}
           <Button variant="outline" className="w-full" onClick={() => navigate("/entrar")}>
             Voltar para login
           </Button>
@@ -132,6 +173,7 @@ export default function PaginaCadastro() {
 
   const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
     { valor: "grupo", label: "Criar grupo" },
+    { valor: "motorista", label: "Motorista" },
     { valor: "passageiro", label: "Passageiro" },
     { valor: "afiliado", label: "Afiliado" },
   ];
@@ -145,7 +187,7 @@ export default function PaginaCadastro() {
         </div>
 
         {/* Tipo de cadastro */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {opcoes.map((opcao) => (
             <button
               key={opcao.valor}
@@ -177,6 +219,11 @@ export default function PaginaCadastro() {
               {tipoCadastro === "afiliado" && (
                 <p className="text-xs text-muted-foreground">
                   Voce sera cadastrado como afiliado neste grupo.
+                </p>
+              )}
+              {tipoCadastro === "motorista" && (
+                <p className="text-xs text-muted-foreground">
+                  Você enviará uma solicitação para entrar no grupo. O dono do grupo precisa aprovar antes de você começar a receber corridas.
                 </p>
               )}
             </div>
