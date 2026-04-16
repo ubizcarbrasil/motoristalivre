@@ -93,12 +93,14 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
     const driver = mapaDrivers.get(r.driver_id);
     return {
       id: r.id,
+      ride_request_id: r.ride_request_id,
       created_at: r.created_at,
       completed_at: r.completed_at,
       status: (req?.status as StatusCorrida) ?? "completed",
       price_paid: r.price_paid !== null ? Number(r.price_paid) : null,
       origin_address: req?.origin_address ?? null,
       dest_address: req?.dest_address ?? null,
+      motorista_id: r.driver_id,
       motorista_nome: driver?.full_name ?? "Motorista",
       motorista_avatar: driver?.avatar_url ?? null,
     };
@@ -108,6 +110,7 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
     .filter((r) => !requestIdsUsados.has(r.id))
     .map((r) => ({
       id: r.id,
+      ride_request_id: r.id,
       created_at: r.created_at,
       completed_at: null,
       status: r.status as StatusCorrida,
@@ -121,6 +124,7 @@ export async function buscarHistoricoCorridas(passengerId: string): Promise<Corr
           : null,
       origin_address: r.origin_address,
       dest_address: r.dest_address,
+      motorista_id: null,
       motorista_nome: "—",
       motorista_avatar: null,
     }));
