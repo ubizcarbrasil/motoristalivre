@@ -14,14 +14,15 @@ import {
 } from "../components/filtros_historico_corridas";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
 import { filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
-import type { CorridaHistorico } from "../types/tipos_perfil_passageiro";
+import type { CorridaHistorico, EnderecoCorrida } from "../types/tipos_perfil_passageiro";
 
 interface PaginaPerfilPassageiroProps {
   userId: string;
   onVoltar: () => void;
+  onPedirNovamente?: (origem: EnderecoCorrida, destino: EnderecoCorrida) => void;
 }
 
-export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfilPassageiroProps) {
+export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovamente }: PaginaPerfilPassageiroProps) {
   const { perfil, avaliacoes, corridas, carregando } = usePerfilPassageiro(userId);
   const [corridaSelecionada, setCorridaSelecionada] = useState<CorridaHistorico | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todas");
@@ -99,6 +100,14 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
           rideId={corridaSelecionada.id}
           isRideRequest={corridaSelecionada.motorista_id === null}
           onVoltar={() => setCorridaSelecionada(null)}
+          onPedirNovamente={
+            onPedirNovamente
+              ? (origem, destino) => {
+                  onPedirNovamente(origem, destino);
+                  setCorridaSelecionada(null);
+                }
+              : undefined
+          }
         />
       )}
     </div>
