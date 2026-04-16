@@ -17,6 +17,7 @@ export default function PaginaCadastro() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [slugGrupo, setSlugGrupo] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
@@ -35,7 +36,7 @@ export default function PaginaCadastro() {
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
-    if (!nome.trim() || !email.trim() || !senha.trim()) {
+    if (!nome.trim() || !email.trim() || !senha.trim() || !slugGrupo.trim()) {
       toast({ title: "Preencha todos os campos", variant: "destructive" });
       return;
     }
@@ -48,7 +49,7 @@ export default function PaginaCadastro() {
       email: email.trim(),
       password: senha,
       options: {
-        data: { full_name: nome.trim() },
+        data: { full_name: nome.trim(), tenant_slug: slugGrupo.trim() },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -102,6 +103,18 @@ export default function PaginaCadastro() {
         </div>
 
         <form onSubmit={handleCadastro} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="slugGrupo" className="text-foreground">Slug do grupo</Label>
+            <Input
+              id="slugGrupo"
+              type="text"
+              placeholder="ex: meu-grupo"
+              value={slugGrupo}
+              onChange={(e) => setSlugGrupo(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="nome" className="text-foreground">Nome completo</Label>
             <Input
