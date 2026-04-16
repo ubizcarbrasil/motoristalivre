@@ -35,7 +35,7 @@ export default function PaginaAfiliado() {
         <HeroAfiliado perfil={perfil} />
         <CardLinkAfiliado perfil={perfil} stats={stats} />
         <ExplicacaoComissao />
-        <CarteiraAfiliado saldo={saldo} />
+        <CarteiraAfiliado userId={perfil.id} saldo={saldo} />
         <ListaCorridasAfiliado corridas={corridas} />
       </div>
     </LayoutBase>
