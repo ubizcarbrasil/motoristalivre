@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
@@ -27,6 +27,8 @@ import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
 export function useSolicitacao() {
   const params = useParams<{ slug: string; driver_slug?: string; affiliate_slug?: string }>();
   const { usuario } = useAutenticacao();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const tipoOrigem: TipoOrigem = params.affiliate_slug ? "afiliado" : "motorista";
   const slugPerfil = params.affiliate_slug || params.driver_slug || "";
@@ -110,8 +112,16 @@ export function useSolicitacao() {
   const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
 
   const confirmarCorrida = useCallback(async () => {
-    if (!usuario || !tenantId || !origem || !destino || !rota) {
-      toast.error("Faça login para solicitar uma corrida");
+    if (!usuario) {
+      const destinoAposLogin = `${location.pathname}${location.search}`;
+      toast("Entre para solicitar a corrida", {
+        description: "Você será redirecionado de volta após o login.",
+      });
+      navigate(`/entrar?redirectTo=${encodeURIComponent(destinoAposLogin)}`);
+      return;
+    }
+    if (!tenantId || !origem || !destino || !rota) {
+      toast.error("Defina origem e destino antes de confirmar");
       return;
     }
     setConfirmando(true);
@@ -158,7 +168,7 @@ export function useSolicitacao() {
     } finally {
       setConfirmando(false);
     }
-  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento]);
+  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, navigate, location.pathname, location.search]);
 
   const voltarParaEnderecos = useCallback(() => {
     setEtapa("endereco");
