@@ -242,6 +242,13 @@ export default function PaginaPassageiro() {
         />
       )}
 
+      {mostraPerfil && passengerId && (
+        <PaginaPerfilPassageiro
+          userId={passengerId}
+          onVoltar={() => setMostraPerfil(false)}
+        />
+      )}
+
       <SheetInstalacao />
     </div>
   );
