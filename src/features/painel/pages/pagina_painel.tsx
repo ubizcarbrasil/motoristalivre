@@ -31,6 +31,7 @@ export default function PaginaPainel() {
     userId,
     corridaAtiva,
     localizacao,
+    solicitacaoPendente,
   } = usePainel();
 
   const [mostraChat, setMostraChat] = useState(false);
