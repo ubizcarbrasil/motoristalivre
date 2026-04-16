@@ -59,6 +59,9 @@ export default function PaginaPainel() {
   }
 
   if (!perfil || !tenant || !userId) {
+    if (solicitacaoPendente) {
+      return <TelaAguardandoAprovacao nomeGrupo={solicitacaoPendente.tenantNome} />;
+    }
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
