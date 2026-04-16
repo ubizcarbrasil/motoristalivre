@@ -78,6 +78,7 @@ export function AbaCarteira({ userId }: AbaCarteiraProps) {
   const [transacoes, setTransacoes] = useState<TransacaoCarteira[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [sheetSaqueAberto, setSheetSaqueAberto] = useState(false);
+  const [versaoSaques, setVersaoSaques] = useState(0);
 
   const recarregar = useCallback(() => {
     return Promise.all([buscarSaldoCarteira(userId), buscarTransacoes(userId)])
@@ -94,35 +95,48 @@ export function AbaCarteira({ userId }: AbaCarteiraProps) {
     setSheetSaqueAberto(true);
   };
 
+  const aoSucessoSaque = async () => {
+    await recarregar();
+    setVersaoSaques((v) => v + 1);
+  };
+
   return (
     <div className="pt-12 pb-20 px-5 space-y-5">
       <h2 className="text-lg font-semibold text-foreground">Carteira</h2>
 
       <HeroSaldo saldo={saldo} onSacar={abrirSaque} />
 
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Transações
-        </p>
-        {carregando ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">Carregando...</p>
-        ) : transacoes.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma transação</p>
-        ) : (
-          <div className="rounded-xl bg-card border border-border px-3">
-            {transacoes.map((t) => (
-              <ItemTransacao key={t.id} transacao={t} />
-            ))}
-          </div>
-        )}
-      </div>
+      <Tabs defaultValue="transacoes" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-9">
+          <TabsTrigger value="transacoes" className="text-xs">Transações</TabsTrigger>
+          <TabsTrigger value="saques" className="text-xs">Histórico de saques</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="transacoes" className="mt-4">
+          {carregando ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">Carregando...</p>
+          ) : transacoes.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma transação</p>
+          ) : (
+            <div className="rounded-xl bg-card border border-border px-3">
+              {transacoes.map((t) => (
+                <ItemTransacao key={t.id} transacao={t} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="saques" className="mt-4">
+          <HistoricoSaques userId={userId} ownerType="driver" recarregar={versaoSaques} />
+        </TabsContent>
+      </Tabs>
 
       <SheetSolicitarSaque
         aberto={sheetSaqueAberto}
         onFechar={() => setSheetSaqueAberto(false)}
         ownerType="driver"
         saldoDisponivel={saldo.saldo}
-        onSucesso={recarregar}
+        onSucesso={aoSucessoSaque}
       />
     </div>
   );
