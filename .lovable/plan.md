@@ -1,69 +1,72 @@
 
+## Diagnóstico
 
-## Diagnóstico — Por que "não consigo acesso na conta do motorista"
+A tela que você está vendo (`/admin`) está **correta para o seu papel atual** — você é `tenant_admin` do grupo "turbo". O `hook_redirecionamento.ts` te manda pro `/admin` automaticamente porque é onde admins trabalham.
 
-Olhando o código, a causa raiz é clara:
+Pra testar o fluxo de **receber corridas**, você precisa estar logado como uma conta com role `driver`. Você tem 3 caminhos possíveis:
 
-**1. Não existe opção "Motorista" no `/cadastro`.** Em `pagina_cadastro.tsx` (linhas 12 e 133-137), as únicas opções são `grupo`, `passageiro` e `afiliado`. Quando alguém abre `/cadastro?tipo=motorista`, o `resolverTipoInicial` cai no default `"grupo"` — ou seja, o usuário acaba criando **um tenant novo** (vira `tenant_admin`), não vira motorista de um grupo existente.
+## Opções pra desbloquear o teste
 
-**2. Mesmo se a opção existisse, signup normal não cria o motorista.** O trigger `handle_new_user` insere apenas em `public.users`. Para receber corridas, o usuário precisa também ter linha em `public.drivers` (com slug, veículo, etc.) — coisa que hoje só o `seed-personas` faz (linhas 123-139). Sem isso, `pagina_painel.tsx` mostra "Perfil de motorista não encontrado" (linha 56-66).
+**Opção A — Logar com motorista demo existente**
+As contas `carlos-silva` e `ana-souza` já existem no banco (criadas pelo `seed-personas`). Preciso descobrir/resetar a senha delas via SQL e te passar pra você logar em outro navegador/aba anônima.
 
-**3. Cadastro de motorista deveria precisar de aprovação do dono do grupo.** O modelo correto para um motorista entrar num grupo existente é via `driver_group_invites` (tabela já existe, com `direction = 'request_from_driver'` e status pendente).
+**Opção B — Criar página /dev/personas (recomendado)**
+Já existe a feature `dev_personas` no projeto (`src/features/dev_personas/`). Vou verificar se ela tem botão "Logar como" funcional. Se sim, é só te indicar a rota. Se não, implemento.
 
-## Plano de correção
+**Opção C — Criar uma segunda conta sua de motorista**
+Você cria outro email (ex: `valquiria+motorista@...`), cadastra em `/cadastro?tipo=motorista` com slug `turbo`, depois loga como admin no `valquiria.ubizcar@gmail.com`, vai em `/admin → Motoristas`, aprova a solicitação. Aí loga com o segundo email e cai em `/painel`.
 
-### Etapa 1 — Adicionar aba "Motorista" no `/cadastro`
+## Plano sugerido
 
-Em `pagina_cadastro.tsx`:
-- Adicionar `"motorista"` ao tipo `TipoCadastro` e ao array `opcoes` (4 botões em vez de 3).
-- `resolverTipoInicial("motorista")` retorna `"motorista"`.
-- Quando `tipoCadastro === "motorista"`: exigir slug do grupo, mostrar texto explicativo "Você enviará uma solicitação para entrar no grupo. O dono do grupo precisa aprovar antes de você começar a receber corridas."
-- Não setar `metadata.role` (mantém `passenger` default no trigger) — a role só vira `driver` depois da aprovação.
-- Após o `signUp` bem-sucedido, criar uma solicitação em `driver_group_invites` (`driver_id = novo user`, `tenant_id = lookup pelo slug`, `direction = 'request_from_driver'`, `status = 'pending'`).
+1. **Verificar a feature `dev_personas`** — ler `pagina_personas.tsx` e `hook_personas.ts` pra ver se já existe troca rápida funcional.
+2. **Se existir e funcionar**: te passar a URL e a senha padrão das personas demo.
+3. **Se não existir/funcionar**: implementar botão "Logar como" usando admin API ou senha fixa demo (`tribocar123` por exemplo) pra trocar entre contas em 1 clique durante testes.
+4. **Documentar no chat**: deixar claro que `/admin` ≠ `/painel` e que cada papel tem sua tela.
 
-### Etapa 2 — RPC `request_driver_join` (banco)
+## Resumo curto
 
-Como o trigger `handle_new_user` cria a linha em `public.users` com tenant resolvido pelo slug (já faz isso), e `driver_group_invites` exige RLS `(driver_id = auth.uid())`, criar uma função SECURITY DEFINER:
-
-```sql
-create or replace function public.request_driver_join(_tenant_slug text, _message text default null)
-returns uuid ...
-```
-
-A função: resolve `tenant_id` pelo slug, valida que o user já existe em `public.users` no tenant, e insere em `driver_group_invites`.
-
-### Etapa 3 — Aprovação cria o registro em `drivers`
-
-Quando o admin aprova o convite (`status = 'accepted'`), criar trigger ou RPC que:
-- Atualiza `users.role = 'driver'`.
-- Insere em `public.drivers` com `id = driver_id`, `tenant_id`, `slug` gerado a partir do nome (ex: `joao-silva`), `is_online = false`, `is_verified = false`.
-- Motorista pode então logar e cair em `/painel` com perfil válido.
-
-### Etapa 4 — Tela "aguardando aprovação" no painel
-
-Em `pagina_painel.tsx`, quando `perfil` é null mas existe um convite pendente do tipo `request_from_driver` para o user, mostrar tela "Sua solicitação para entrar no grupo X está em análise" em vez de "Perfil de motorista não encontrado".
-
-### Etapa 5 — Atualizar links externos
-
-URLs corretos para divulgar (após DNS de `turbo.tribocar.com` ser configurado, ou usando `motoristalivre.lovable.app`):
-- Motorista entrar num grupo: `/cadastro?tipo=motorista`
-- Passageiro: `/cadastro?tipo=passageiro`
-- Afiliado: `/cadastro?tipo=afiliado`
-- Criar grupo novo: `/cadastro` (default)
-
-## Arquivos que serão tocados
-
-- `src/features/autenticacao/pages/pagina_cadastro.tsx` — adicionar aba motorista, fluxo de solicitação.
-- Nova migration SQL — função `request_driver_join` + trigger/função `approve_driver_invite` que cria linha em `drivers`.
-- `src/features/painel/pages/pagina_painel.tsx` + hook — detectar e mostrar estado "aguardando aprovação".
-- (Opcional) `src/features/admin/components/secao_motoristas.tsx` — garantir que a UI de aprovação já existe e funciona com `request_from_driver`.
-
-## Resumo
-
-Hoje, **literalmente não há caminho de signup para virar motorista de um grupo**. A pessoa que tenta `?tipo=motorista` vira `tenant_admin` por engano. O plano cria esse caminho do zero, com aprovação do dono do grupo, e devolve feedback claro pro motorista enquanto espera.
+Sim, a tela de `/admin` está certa pra quem é admin do grupo. **Não é bug.** Pra ver a tela de receber corridas (`/painel`), precisa logar com conta de motorista. Recomendo eu finalizar a `/dev/personas` pra você alternar entre admin/motorista/passageiro/afiliado em 1 clique durante os testes.
 
 <lov-actions>
-<lov-suggestion message="Aprovar o plano completo: aba Motorista no /cadastro, RPC request_driver_join, fluxo de aprovação criando linha em drivers, e tela 'aguardando aprovação' no painel">Implementar plano completo</lov-suggestion>
-<lov-suggestion message="Implementar apenas a etapa 1 e 2 (aba Motorista no cadastro + RPC request_driver_join), deixar aprovação manual via SQL por enquanto">Só cadastro + solicitação</lov-suggestion>
-<lov-suggestion message="Em vez de fluxo com aprovação, faça o /cadastro?tipo=motorista criar o motorista direto (role=driver + linha em drivers com slug auto-gerado), sem precisar de aprovação do dono do grupo">Cadastro direto sem aprovação</lov-suggestion>
+<lov-suggestion message="Verifique a feature dev_personas existente e finalize a página /dev/personas com botão 'Logar como' funcional pra eu trocar entre admin/motorista/passageiro/afiliado em 1 clique durante testes. Use uma senha demo fixa tipo 'tribocar123' pra todas as personas.">Finalizar /dev/personas com troca rápida</lov-suggestion>
+<lov-suggestion message="Reseta a senha das contas demo carlos-silva@tribocar.test e ana-souza@tribocar.test pra 'tribocar123' via SQL e me passa o email pra eu logar em aba anônima e testar o /painel">Resetar senha das contas demo</lov-suggestion>
+<lov-suggestion message="Adicione no /admin um botão 'Visualizar como motorista' que faça login impersonado em uma das contas de motorista do grupo só pra fins de teste/preview, sem perder a sessão admin">Botão 'Visualizar como motorista'</lov-suggestion>
+</lov-actions><lov-plan>
+
+## Diagnóstico
+
+A tela `/admin` que você está vendo **está correta** — você é `tenant_admin` do grupo "turbo" e o `hook_redirecionamento.ts` te leva pra lá automaticamente. Não é bug.
+
+`/admin` ≠ `/painel`. São papéis diferentes:
+
+| Papel | Rota | Função |
+|---|---|---|
+| `tenant_admin` (você) | `/admin` | Gerencia grupo, aprova motoristas |
+| `driver` | `/painel` | Recebe e aceita corridas |
+
+Uma mesma conta **não pode ser admin e motorista ao mesmo tempo** (role é única). Pra testar receber corridas, precisa logar com outra conta.
+
+## Caminho recomendado
+
+A feature `dev_personas` já existe no projeto (`src/features/dev_personas/`). Vou:
+
+1. **Auditar** o que já está implementado em `pagina_personas.tsx`, `hook_personas.ts` e `servico_personas.ts`.
+2. **Garantir que a rota `/dev/personas`** está registrada no `App.tsx` e acessível.
+3. **Implementar/corrigir o botão "Logar como"** pra trocar entre as personas demo (`carlos-silva`, `ana-souza`, admins, passageiros, afiliados) em 1 clique, usando senha demo fixa (ex: `tribocar123`).
+4. **Garantir que as senhas demo estão setadas** no `seed-personas` ou via SQL pra todas as contas demo terem a mesma senha conhecida.
+5. **Te passar a URL final** (ex: `motoristalivre.lovable.app/dev/personas`) pra você trocar de papel rapidinho durante testes.
+
+## Resultado esperado
+
+Você abre `/dev/personas`, vê uma lista de cards (Admin Turbo, Carlos Silva motorista, Ana Souza motorista, passageiro demo, afiliado Posto Shell), clica em "Logar como Carlos Silva" → cai direto no `/painel` como motorista, fica online, e pode receber dispatch.
+
+## Alternativa mais rápida (se preferir)
+
+Se não quiser mexer na `/dev/personas` agora, eu só reseto a senha de `carlos-silva@tribocar.test` pra `tribocar123` via SQL, você abre uma aba anônima, loga com esse email, e cai no `/painel`.
+
+<lov-actions>
+<lov-suggestion message="Finalize a página /dev/personas com botão 'Logar como' funcional usando senha demo fixa 'tribocar123' pra eu trocar entre admin/motorista/passageiro/afiliado em 1 clique. Garanta que a rota está registrada no App.tsx e que todas as contas demo têm essa senha setada via SQL.">Finalizar /dev/personas com troca rápida</lov-suggestion>
+<lov-suggestion message="Reseta a senha das contas demo carlos-silva@tribocar.test e ana-souza@tribocar.test pra 'tribocar123' via SQL e me confirma os emails pra eu logar em aba anônima e testar o /painel direto">Só resetar senha das contas demo</lov-suggestion>
+<lov-suggestion message="Adicione no /admin um card 'Modo demonstração' com botões 'Ver como motorista Carlos' e 'Ver como passageiro' que abrem nova aba já logada na persona escolhida, sem perder minha sessão admin">Botão 'Ver como' no /admin</lov-suggestion>
 </lov-actions>
+
