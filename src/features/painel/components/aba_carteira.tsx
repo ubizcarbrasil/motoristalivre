@@ -1,0 +1,107 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowDownLeft, ArrowUpRight, Receipt, PiggyBank, TrendingUp } from "lucide-react";
+import type { SaldoCarteira, TransacaoCarteira } from "../types/tipos_painel";
+import { buscarSaldoCarteira, buscarTransacoes } from "../services/servico_painel";
+import { TIPOS_TRANSACAO_LABELS } from "../constants/constantes_painel";
+
+interface AbaCarteiraProps {
+  userId: string;
+}
+
+function HeroSaldo({ saldo }: { saldo: SaldoCarteira }) {
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 p-5 space-y-4">
+      <div>
+        <p className="text-xs text-muted-foreground">Saldo disponível</p>
+        <p className="text-3xl font-bold text-foreground mt-1">
+          R${saldo.saldo.toFixed(2).replace(".", ",")}
+        </p>
+        {saldo.bloqueado > 0 && (
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            R${saldo.bloqueado.toFixed(2).replace(".", ",")} bloqueado
+          </p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs">
+          <PiggyBank className="w-3.5 h-3.5 mr-1" />
+          Recarregar
+        </Button>
+        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs">
+          <TrendingUp className="w-3.5 h-3.5 mr-1" />
+          Sacar
+        </Button>
+        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs">
+          <Receipt className="w-3.5 h-3.5 mr-1" />
+          Extrato
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ItemTransacao({ transacao }: { transacao: TransacaoCarteira }) {
+  const config = TIPOS_TRANSACAO_LABELS[transacao.tipo] ?? { label: transacao.tipo, entrada: true };
+  const entrada = config.entrada;
+
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+        entrada ? "bg-primary/10" : "bg-destructive/10"
+      }`}>
+        {entrada ? (
+          <ArrowDownLeft className="w-4 h-4 text-primary" />
+        ) : (
+          <ArrowUpRight className="w-4 h-4 text-destructive" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-foreground">{config.label}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {new Date(transacao.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </p>
+      </div>
+      <span className={`text-sm font-semibold ${entrada ? "text-primary" : "text-destructive"}`}>
+        {entrada ? "+" : "-"}R${Math.abs(transacao.valor).toFixed(2).replace(".", ",")}
+      </span>
+    </div>
+  );
+}
+
+export function AbaCarteira({ userId }: AbaCarteiraProps) {
+  const [saldo, setSaldo] = useState<SaldoCarteira>({ saldo: 0, bloqueado: 0, totalGanho: 0, totalSacado: 0 });
+  const [transacoes, setTransacoes] = useState<TransacaoCarteira[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    Promise.all([buscarSaldoCarteira(userId), buscarTransacoes(userId)])
+      .then(([s, t]) => { setSaldo(s); setTransacoes(t); })
+      .finally(() => setCarregando(false));
+  }, [userId]);
+
+  return (
+    <div className="pt-12 pb-20 px-5 space-y-5">
+      <h2 className="text-lg font-semibold text-foreground">Carteira</h2>
+
+      <HeroSaldo saldo={saldo} />
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Transações
+        </p>
+        {carregando ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Carregando...</p>
+        ) : transacoes.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma transação</p>
+        ) : (
+          <div className="rounded-xl bg-card border border-border px-3">
+            {transacoes.map((t) => (
+              <ItemTransacao key={t.id} transacao={t} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
