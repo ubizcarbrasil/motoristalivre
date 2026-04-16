@@ -6,6 +6,7 @@ import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
 import { AbaConfiguracoes } from "../components/aba_configuracoes";
+import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
 import { supabase } from "@/integrations/supabase/client";
