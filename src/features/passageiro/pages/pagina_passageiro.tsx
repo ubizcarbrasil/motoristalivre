@@ -156,6 +156,18 @@ export default function PaginaPassageiro() {
         centro={origem?.coordenada ?? undefined}
       />
 
+      {passengerId && etapa !== "buscando" && etapa !== "aceita" && (
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => setMostraPerfil(true)}
+          className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full shadow-lg"
+          aria-label="Meu perfil"
+        >
+          <User className="w-5 h-5" />
+        </Button>
+      )}
+
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
 
       {etapa !== "buscando" && etapa !== "aceita" && (
