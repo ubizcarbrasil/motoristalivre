@@ -73,21 +73,29 @@ export default function PaginaPassageiro() {
   // Quando corrida termina: mostrar avaliação ou cancelar
   useEffect(() => {
     if (!corridaAceita) return;
-    if (corridaAceita.status === "completed" && corridaAceita.ride_id) {
+    if (corridaAceita.status === "completed" && corridaAceita.ride_id && passengerId) {
       setMostraRastreamento(false);
       setMostraChat(false);
-      setAvaliacaoPendente({
-        ride_id: corridaAceita.ride_id,
-        driver_id: corridaAceita.motorista.id,
-        nome: corridaAceita.motorista.nome,
-        avatar: corridaAceita.motorista.avatar_url,
+      const rideId = corridaAceita.ride_id;
+      const motorista = corridaAceita.motorista;
+      existeAvaliacao(rideId, passengerId).then((jaAvaliou) => {
+        if (jaAvaliou) {
+          resetarSolicitacao();
+        } else {
+          setAvaliacaoPendente({
+            ride_id: rideId,
+            driver_id: motorista.id,
+            nome: motorista.nome,
+            avatar: motorista.avatar_url,
+          });
+        }
       });
     } else if (corridaAceita.status === "cancelled" || corridaAceita.status === "expired") {
       setMostraRastreamento(false);
       setMostraChat(false);
       resetarSolicitacao();
     }
-  }, [corridaAceita?.status, corridaAceita?.ride_id, resetarSolicitacao]);
+  }, [corridaAceita?.status, corridaAceita?.ride_id, passengerId, resetarSolicitacao]);
 
   const concluirAvaliacao = useCallback(() => {
     setAvaliacaoPendente(null);
