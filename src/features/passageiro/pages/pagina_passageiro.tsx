@@ -207,6 +207,17 @@ export default function PaginaPassageiro() {
         />
       )}
 
+      {avaliacaoPendente && passengerId && (
+        <TelaAvaliacao
+          rideId={avaliacaoPendente.ride_id}
+          driverId={avaliacaoPendente.driver_id}
+          passengerId={passengerId}
+          motoristaNome={avaliacaoPendente.nome}
+          motoristaAvatar={avaliacaoPendente.avatar}
+          onConcluir={concluirAvaliacao}
+        />
+      )}
+
       <SheetInstalacao />
     </div>
   );
