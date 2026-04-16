@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { AvaliacaoEnviada, DadosPerfilPassageiro } from "../types/tipos_perfil_passageiro";
+import type {
+  AvaliacaoEnviada,
+  CorridaHistorico,
+  DadosPerfilPassageiro,
+  StatusCorrida,
+} from "../types/tipos_perfil_passageiro";
 
 export async function buscarPerfilPassageiro(userId: string): Promise<DadosPerfilPassageiro | null> {
   const [usuarioRes, passageiroRes] = await Promise.all([
