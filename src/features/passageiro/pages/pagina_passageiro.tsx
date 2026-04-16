@@ -12,7 +12,9 @@ import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
 import { existeAvaliacao } from "../services/servico_avaliacao";
-import { Loader2 } from "lucide-react";
+import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
+import { Button } from "@/components/ui/button";
+import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
