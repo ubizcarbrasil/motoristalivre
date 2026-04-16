@@ -11,6 +11,7 @@ import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
+import { existeAvaliacao } from "../services/servico_avaliacao";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
