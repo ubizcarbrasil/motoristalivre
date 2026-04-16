@@ -20,6 +20,7 @@ import {
   buscarConfigPreco,
   buscarRota,
   calcularPreco,
+  buscarTenantPorSlug,
 } from "../services/servico_passageiro";
 import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
 
@@ -35,6 +36,7 @@ export function useSolicitacao() {
   const [configPreco, setConfigPreco] = useState<ConfigPreco | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
+  const [tenantSemMotorista, setTenantSemMotorista] = useState<string | null>(null);
 
   const [origem, setOrigem] = useState<EnderecoCompleto | null>(null);
   const [destino, setDestino] = useState<EnderecoCompleto | null>(null);
@@ -53,6 +55,16 @@ export function useSolicitacao() {
     async function carregar() {
       try {
         setCarregando(true);
+        setTenantSemMotorista(null);
+
+        // Caso especial: rota /:slug sem driver_slug nem affiliate_slug
+        if (params.slug && !params.driver_slug && !params.affiliate_slug) {
+          const tenant = await buscarTenantPorSlug(params.slug);
+          if (!tenant) { setErro(true); return; }
+          setTenantSemMotorista(params.slug);
+          return;
+        }
+
         if (tipoOrigem === "motorista" && params.slug) {
           const m = await buscarMotorista(params.slug, slugPerfil);
           if (!m) { setErro(true); return; }
@@ -73,7 +85,7 @@ export function useSolicitacao() {
       }
     }
     carregar();
-  }, [params.slug, slugPerfil, tipoOrigem]);
+  }, [params.slug, params.driver_slug, params.affiliate_slug, slugPerfil, tipoOrigem]);
 
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
