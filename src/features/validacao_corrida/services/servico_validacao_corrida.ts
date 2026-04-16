@@ -1,26 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
 import type { RespostaValidacao } from "../types/tipos_validacao_corrida";
 
 /**
- * Chama a edge function pública que retorna dados básicos da corrida
- * + branding do tenant para validação via QR Code.
- */
-export async function buscarValidacaoCorrida(
-  rideId: string,
-): Promise<RespostaValidacao> {
-  const { data, error } = await supabase.functions.invoke<RespostaValidacao>(
-    "validar-corrida",
-    { method: "GET", body: undefined as never, headers: {} },
-  );
-
-  // supabase-js não permite query params direto em invoke; usar fetch com URL
-  // Workaround: fazer fetch manualmente
-  if (error) throw error;
-  return data!;
-}
-
-/**
- * Versão via fetch direto para suportar query params (?id=...).
+ * Chama a edge function pública (verify_jwt = false) que retorna
+ * dados básicos da corrida + branding do tenant para validação via QR Code.
+ *
+ * Usa fetch direto para suportar query params na URL (?id=...),
+ * já que supabase-js invoke não os passa adiante.
  */
 export async function buscarValidacaoCorridaFetch(
   rideId: string,

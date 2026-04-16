@@ -17,6 +17,7 @@ import PaginaRoot from "@/features/root/pages/pagina_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
 import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_motorista";
 import PaginaLanding from "@/features/landing/pages/pagina_landing";
+import PaginaValidacaoCorrida from "@/features/validacao_corrida/pages/pagina_validacao_corrida";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
             <Route path="/cadastro" element={<PaginaCadastro />} />
+            <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
 
             {/* Rotas protegidas */}
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
