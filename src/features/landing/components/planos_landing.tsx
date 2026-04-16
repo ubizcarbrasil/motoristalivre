@@ -108,10 +108,10 @@ export function PlanosLanding() {
                 >
                   <Link to="/cadastro">Comecar com {plano.name}</Link>
                 </Button>
-              </div>
+              </motion.div>
             );
           })}
-              </motion.div>
+        </div>
       </div>
     </section>
   );
