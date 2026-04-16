@@ -38,6 +38,7 @@ export function usePainel() {
   const [timeoutSec, setTimeoutSec] = useState<number>(TIMEOUT_DISPATCH_SEG);
   const [carregando, setCarregando] = useState(true);
   const [corridaAtiva, setCorridaAtiva] = useState<Awaited<ReturnType<typeof buscarCorridaAtiva>>>(null);
+  const [solicitacaoPendente, setSolicitacaoPendente] = useState<{ tenantNome: string } | null>(null);
 
   const userId = usuario?.id;
 
@@ -48,6 +49,20 @@ export function usePainel() {
     if (!userId) return;
     setCarregando(true);
     try {
+      // Processa intenção pendente de virar motorista (vinda do /cadastro?tipo=motorista)
+      const slugPendente = localStorage.getItem("tribocar_pending_driver_join");
+      if (slugPendente) {
+        try {
+          await (await import("@/integrations/supabase/client")).supabase.rpc("request_driver_join", {
+            _tenant_slug: slugPendente,
+            _message: null,
+          });
+        } catch {
+          // silencioso — pode já existir ou ser inválido
+        }
+        localStorage.removeItem("tribocar_pending_driver_join");
+      }
+
       const [p, s, c, d, t, ride] = await Promise.all([
         buscarPerfilMotorista(userId),
         buscarEstatisticasHoje(userId),
@@ -65,6 +80,26 @@ export function usePainel() {
       if (t?.id) {
         const sec = await buscarTimeoutDispatch(t.id);
         setTimeoutSec(sec);
+      }
+
+      // Se não tem perfil de motorista, verifica se há solicitação pendente
+      if (!p) {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: convites } = await supabase
+          .from("driver_group_invites")
+          .select("tenant_id, tenants:tenant_id(name)")
+          .eq("driver_id", userId)
+          .eq("direction", "request_from_driver")
+          .eq("status", "pending")
+          .limit(1);
+        const convite = convites?.[0] as { tenants?: { name?: string } } | undefined;
+        if (convite) {
+          setSolicitacaoPendente({ tenantNome: convite.tenants?.name ?? "grupo" });
+        } else {
+          setSolicitacaoPendente(null);
+        }
+      } else {
+        setSolicitacaoPendente(null);
       }
     } finally {
       setCarregando(false);
@@ -135,5 +170,6 @@ export function usePainel() {
     recarregar: carregar,
     corridaAtiva,
     localizacao,
+    solicitacaoPendente,
   };
 }

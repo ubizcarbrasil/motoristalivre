@@ -6,6 +6,7 @@ import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
 import { AbaConfiguracoes } from "../components/aba_configuracoes";
+import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,7 @@ export default function PaginaPainel() {
     userId,
     corridaAtiva,
     localizacao,
+    solicitacaoPendente,
   } = usePainel();
 
   const [mostraChat, setMostraChat] = useState(false);
@@ -57,6 +59,9 @@ export default function PaginaPainel() {
   }
 
   if (!perfil || !tenant || !userId) {
+    if (solicitacaoPendente) {
+      return <TelaAguardandoAprovacao nomeGrupo={solicitacaoPendente.tenantNome} />;
+    }
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
