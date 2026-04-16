@@ -24,7 +24,6 @@ export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
     toast.success("Você saiu da conta");
     navigate("/entrar");
   }
-  const collapsed = state === "collapsed";
 
   return (
     <Sidebar collapsible="icon">
