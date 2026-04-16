@@ -3,6 +3,7 @@ import type {
   AvaliacaoEnviada,
   CorridaHistorico,
   DadosPerfilPassageiro,
+  DetalhesCorrida,
   StatusCorrida,
 } from "../types/tipos_perfil_passageiro";
 
