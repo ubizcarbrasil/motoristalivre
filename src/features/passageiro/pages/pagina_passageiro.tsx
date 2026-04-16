@@ -12,7 +12,9 @@ import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
 import { existeAvaliacao } from "../services/servico_avaliacao";
-import { Loader2 } from "lucide-react";
+import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
+import { Button } from "@/components/ui/button";
+import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
@@ -50,6 +52,7 @@ export default function PaginaPassageiro() {
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
+  const [mostraPerfil, setMostraPerfil] = useState(false);
   const [avaliacaoPendente, setAvaliacaoPendente] = useState<{
     ride_id: string;
     driver_id: string;
@@ -153,6 +156,18 @@ export default function PaginaPassageiro() {
         centro={origem?.coordenada ?? undefined}
       />
 
+      {passengerId && etapa !== "buscando" && etapa !== "aceita" && (
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => setMostraPerfil(true)}
+          className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full shadow-lg"
+          aria-label="Meu perfil"
+        >
+          <User className="w-5 h-5" />
+        </Button>
+      )}
+
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
 
       {etapa !== "buscando" && etapa !== "aceita" && (
@@ -224,6 +239,13 @@ export default function PaginaPassageiro() {
           motoristaNome={avaliacaoPendente.nome}
           motoristaAvatar={avaliacaoPendente.avatar}
           onConcluir={concluirAvaliacao}
+        />
+      )}
+
+      {mostraPerfil && passengerId && (
+        <PaginaPerfilPassageiro
+          userId={passengerId}
+          onVoltar={() => setMostraPerfil(false)}
         />
       )}
 
