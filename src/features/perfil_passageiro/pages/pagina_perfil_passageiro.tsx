@@ -27,10 +27,11 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
   const [corridaSelecionada, setCorridaSelecionada] = useState<CorridaHistorico | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<FiltroPeriodo>("todos");
+  const [filtroBusca, setFiltroBusca] = useState("");
 
   const corridasFiltradas = useMemo(
-    () => filtrarCorridas(corridas, filtroStatus, filtroPeriodo),
-    [corridas, filtroStatus, filtroPeriodo]
+    () => filtrarCorridas(corridas, filtroStatus, filtroPeriodo, filtroBusca),
+    [corridas, filtroStatus, filtroPeriodo, filtroBusca]
   );
 
   return (
@@ -76,8 +77,10 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
                 <FiltrosHistoricoCorridas
                   status={filtroStatus}
                   periodo={filtroPeriodo}
+                  busca={filtroBusca}
                   onMudarStatus={setFiltroStatus}
                   onMudarPeriodo={setFiltroPeriodo}
+                  onMudarBusca={setFiltroBusca}
                   totalFiltrado={corridasFiltradas.length}
                   totalGeral={corridas.length}
                 />
