@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,13 @@ import { GridEstatisticasPassageiro } from "../components/grid_estatisticas_pass
 import { ListaAvaliacoesEnviadas } from "../components/lista_avaliacoes_enviadas";
 import { ListaHistoricoCorridas } from "../components/lista_historico_corridas";
 import { TelaDetalhesCorrida } from "../components/tela_detalhes_corrida";
+import {
+  FiltrosHistoricoCorridas,
+  type FiltroPeriodo,
+  type FiltroStatus,
+} from "../components/filtros_historico_corridas";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
+import { filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
 import type { CorridaHistorico } from "../types/tipos_perfil_passageiro";
 
 interface PaginaPerfilPassageiroProps {
@@ -18,6 +24,13 @@ interface PaginaPerfilPassageiroProps {
 export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfilPassageiroProps) {
   const { perfil, avaliacoes, corridas, carregando } = usePerfilPassageiro(userId);
   const [corridaSelecionada, setCorridaSelecionada] = useState<CorridaHistorico | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todas");
+  const [filtroPeriodo, setFiltroPeriodo] = useState<FiltroPeriodo>("todos");
+
+  const corridasFiltradas = useMemo(
+    () => filtrarCorridas(corridas, filtroStatus, filtroPeriodo),
+    [corridas, filtroStatus, filtroPeriodo]
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -58,9 +71,17 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="corridas" className="mt-4">
+              <TabsContent value="corridas" className="mt-4 space-y-3">
+                <FiltrosHistoricoCorridas
+                  status={filtroStatus}
+                  periodo={filtroPeriodo}
+                  onMudarStatus={setFiltroStatus}
+                  onMudarPeriodo={setFiltroPeriodo}
+                  totalFiltrado={corridasFiltradas.length}
+                  totalGeral={corridas.length}
+                />
                 <ListaHistoricoCorridas
-                  corridas={corridas}
+                  corridas={corridasFiltradas}
                   onSelecionar={setCorridaSelecionada}
                 />
               </TabsContent>
