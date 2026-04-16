@@ -30,7 +30,16 @@ export function useDevPersonas() {
   async function handleLogin(persona: Persona) {
     setLogando(persona.email);
     try {
-      await loginComoPersona(persona);
+      try {
+        await loginComoPersona(persona);
+      } catch {
+        // Personas ainda não criadas: dispara seed e tenta de novo
+        toast.info("Criando personas pela primeira vez...");
+        const r = await criarPersonas();
+        setResultado(r);
+        if (!r.ok) throw new Error(r.error ?? "Falha ao criar personas");
+        await loginComoPersona(persona);
+      }
       toast.success(`Logado como ${persona.titulo}`);
       navigate(persona.rotaDestino);
     } catch (e) {
