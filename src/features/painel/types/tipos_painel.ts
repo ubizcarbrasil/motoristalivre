@@ -1,4 +1,9 @@
-export type AbaPainel = "inicio" | "perfil" | "tribo" | "carteira" | "precos";
+export type AbaPainel =
+  | "inicio"
+  | "meus_links"
+  | "carteira"
+  | "perfil"
+  | "configuracoes";
 
 export interface EstatisticasHoje {
   faturamento: number;

@@ -43,7 +43,8 @@ export function useRedirecionamento(): { destino: Destino | null; carregando: bo
           setDestino("/admin");
           break;
         case "affiliate":
-          setDestino("/afiliado");
+          // Afiliado e motorista compartilham o mesmo painel unificado
+          setDestino("/painel");
           break;
         case "passenger": {
           // Busca tenant + um motorista para montar /{slug}/{driver_slug}
