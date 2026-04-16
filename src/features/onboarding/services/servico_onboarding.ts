@@ -52,6 +52,12 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
     });
   }
 
+  // Atualizar tenant com owner
+  await supabase
+    .from("tenants")
+    .update({ owner_user_id: user.id })
+    .eq("id", tenant.id);
+
   // Criar branding
   await supabase.from("tenant_branding").insert({
     tenant_id: tenant.id,
