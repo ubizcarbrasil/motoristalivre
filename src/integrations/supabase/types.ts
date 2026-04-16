@@ -1338,6 +1338,10 @@ export type Database = {
         Args: { _owner_type: Database["public"]["Enums"]["wallet_owner_type"] }
         Returns: string
       }
+      generate_driver_slug: {
+        Args: { _full_name: string; _tenant_id: string }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1345,6 +1349,10 @@ export type Database = {
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
       reject_payout: { Args: { _payout_id: string }; Returns: undefined }
+      request_driver_join: {
+        Args: { _message?: string; _tenant_slug: string }
+        Returns: string
+      }
       request_payout: {
         Args: {
           _amount: number
