@@ -32,7 +32,7 @@ export default function PaginaAdmin() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarAdmin secaoAtiva={secaoAtiva} onNavegar={setSecaoAtiva} />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <HeaderAdmin secao={secaoAtiva} />
           <main className="flex-1 overflow-auto">
             <Conteudo />

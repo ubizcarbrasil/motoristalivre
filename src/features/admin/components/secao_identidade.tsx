@@ -56,7 +56,7 @@ export function SecaoIdentidade() {
   }
 
   return (
-    <div className="max-w-lg space-y-6 p-6">
+    <div className="max-w-lg space-y-6 p-4 sm:p-6">
       <div className="space-y-2">
         <Label>Nome do grupo</Label>
         <Input value={nome} disabled className="opacity-60" />

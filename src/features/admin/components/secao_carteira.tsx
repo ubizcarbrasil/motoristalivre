@@ -70,8 +70,8 @@ export function SecaoCarteira() {
   if (carregando) return <p className="p-6 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-border bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Saldo disponivel</p>
@@ -92,6 +92,7 @@ export function SecaoCarteira() {
         </Card>
       </div>
 
+      <div className="overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -127,6 +128,7 @@ export function SecaoCarteira() {
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

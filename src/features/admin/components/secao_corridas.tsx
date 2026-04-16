@@ -85,7 +85,7 @@ export function SecaoCorridas() {
   if (carregando) return <p className="p-6 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <div className="flex flex-wrap gap-2">
         {["todos", "completed", "in_progress", "cancelled"].map((s) => (
           <Button key={s} size="sm" variant={filtroStatus === s ? "default" : "outline"} onClick={() => setFiltroStatus(s)}>
@@ -94,6 +94,7 @@ export function SecaoCorridas() {
         ))}
       </div>
 
+      <div className="overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -133,6 +134,7 @@ export function SecaoCorridas() {
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

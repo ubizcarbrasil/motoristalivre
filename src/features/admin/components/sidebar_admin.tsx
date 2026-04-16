@@ -19,8 +19,13 @@ interface SidebarAdminProps {
 }
 
 export function SidebarAdmin({ secaoAtiva, onNavegar }: SidebarAdminProps) {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
+
+  function handleNavegar(secao: SecaoAdmin) {
+    onNavegar(secao);
+    if (isMobile) setOpenMobile(false);
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -44,7 +49,7 @@ export function SidebarAdmin({ secaoAtiva, onNavegar }: SidebarAdminProps) {
                   return (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
-                        onClick={() => onNavegar(item.id)}
+                        onClick={() => handleNavegar(item.id)}
                         className={ativo ? "bg-accent/20 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}
                       >
                         <item.icone className="h-4 w-4 shrink-0" />

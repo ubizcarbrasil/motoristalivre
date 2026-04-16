@@ -65,7 +65,8 @@ export function SecaoAfiliados() {
   if (carregando) return <p className="p-6 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
+      <div className="overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -103,6 +104,7 @@ export function SecaoAfiliados() {
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }
