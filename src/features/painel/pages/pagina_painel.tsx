@@ -25,6 +25,8 @@ export default function PaginaPainel() {
     recusarDispatch,
     timeoutDispatch,
     userId,
+    corridaAtivaId,
+    localizacao,
   } = usePainel();
 
   if (carregando) {
@@ -59,6 +61,9 @@ export default function PaginaPainel() {
           dispatch={dispatch}
           timeoutSec={timeoutSec}
           realtimeAtivo={realtimeAtivo}
+          corridaAtivaId={corridaAtivaId}
+          localizacaoAtiva={localizacao.ativo}
+          onToggleLocalizacao={localizacao.toggle}
           onToggleOnline={toggleOnline}
           onAceitarDispatch={aceitarDispatch}
           onRecusarDispatch={recusarDispatch}
