@@ -5,9 +5,7 @@ import {
 import { LogOut } from "lucide-react";
 import { MENU_ROOT } from "../constants/constantes_root";
 import type { SecaoRoot } from "../types/tipos_root";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useLogout } from "@/compartilhados/hooks/hook_logout";
 
 interface SidebarRootProps {
   secaoAtiva: SecaoRoot;
