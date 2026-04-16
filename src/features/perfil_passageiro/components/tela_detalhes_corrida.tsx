@@ -4,10 +4,12 @@ import { useDetalhesCorrida } from "../hooks/hook_detalhes_corrida";
 import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
 import type { EnderecoCorrida } from "../types/tipos_perfil_passageiro";
 import { MapaCorrida } from "./mapa_corrida";
+import { BotaoComprovanteCorrida } from "./botao_comprovante_corrida";
 
 interface TelaDetalhesCorridaProps {
   rideId: string;
   isRideRequest: boolean;
+  nomePassageiro: string;
   onVoltar: () => void;
   onPedirNovamente?: (origem: EnderecoCorrida, destino: EnderecoCorrida) => void;
 }
@@ -51,7 +53,7 @@ function LinhaInfo({
   );
 }
 
-export function TelaDetalhesCorrida({ rideId, isRideRequest, onVoltar, onPedirNovamente }: TelaDetalhesCorridaProps) {
+export function TelaDetalhesCorrida({ rideId, isRideRequest, nomePassageiro, onVoltar, onPedirNovamente }: TelaDetalhesCorridaProps) {
   const { detalhes, carregando } = useDetalhesCorrida(rideId, isRideRequest);
 
   const podePedirNovamente =
@@ -232,16 +234,19 @@ export function TelaDetalhesCorrida({ rideId, isRideRequest, onVoltar, onPedirNo
               </div>
             )}
 
-            {/* Pedir novamente */}
-            {podePedirNovamente && (
-              <Button
-                onClick={handlePedirNovamente}
-                className="w-full h-12 gap-2 font-semibold"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Pedir novamente
-              </Button>
-            )}
+            {/* Ações */}
+            <div className="space-y-2">
+              <BotaoComprovanteCorrida detalhes={detalhes} nomePassageiro={nomePassageiro} />
+              {podePedirNovamente && (
+                <Button
+                  onClick={handlePedirNovamente}
+                  className="w-full h-12 gap-2 font-semibold"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Pedir novamente
+                </Button>
+              )}
+            </div>
           </>
         )}
       </main>
