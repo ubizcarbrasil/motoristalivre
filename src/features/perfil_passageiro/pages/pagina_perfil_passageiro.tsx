@@ -65,9 +65,12 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
             <GridEstatisticasPassageiro perfil={perfil} />
 
             <Tabs defaultValue="corridas" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 h-9">
+              <TabsList className="grid w-full grid-cols-3 h-9">
                 <TabsTrigger value="corridas" className="text-xs">
                   Corridas
+                </TabsTrigger>
+                <TabsTrigger value="favoritos" className="text-xs">
+                  Favoritos
                 </TabsTrigger>
                 <TabsTrigger value="avaliacoes" className="text-xs">
                   Avaliações
@@ -88,6 +91,13 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
                 <ListaHistoricoCorridas
                   corridas={corridasFiltradas}
                   onSelecionar={setCorridaSelecionada}
+                />
+              </TabsContent>
+
+              <TabsContent value="favoritos" className="mt-4">
+                <ListaFavoritosPerfil
+                  passengerId={perfil.id}
+                  tenantId={perfil.tenant_id}
                 />
               </TabsContent>
 
