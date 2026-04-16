@@ -170,5 +170,6 @@ export function usePainel() {
     recarregar: carregar,
     corridaAtiva,
     localizacao,
+    solicitacaoPendente,
   };
 }
