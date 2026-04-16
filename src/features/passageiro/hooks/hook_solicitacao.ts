@@ -149,6 +149,16 @@ export function useSolicitacao() {
     setEtapa("aceita");
   }, []);
 
+  const resetarSolicitacao = useCallback(() => {
+    setEtapa("endereco");
+    setRota(null);
+    setPrecos([]);
+    setOrigem(null);
+    setDestino(null);
+    setRideRequestId(null);
+    setValorOferta(0);
+  }, []);
+
   return {
     tipoOrigem,
     motorista,
@@ -179,6 +189,7 @@ export function useSolicitacao() {
     grupoNome,
     rideRequestId,
     irParaCorridaAceita,
+    resetarSolicitacao,
     passengerId: usuario?.id,
   };
 }
