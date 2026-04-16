@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { MensagemChat, PapelChat } from "../types/tipos_chat";
+import type { MensagemChat, PapelChat } from "../../types/tipos_chat";
 
 interface BolhaMensagemProps {
   mensagem: MensagemChat;
