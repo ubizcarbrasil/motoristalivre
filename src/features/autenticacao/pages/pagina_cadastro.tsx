@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { Link, useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,15 @@ export default function PaginaCadastro() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const tipoQuery = searchParams.get("tipo");
+  const tipoInicial: "passageiro" | "grupo" =
+    tipoQuery === "passageiro" ? "passageiro" : "grupo";
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [slugGrupo, setSlugGrupo] = useState("");
-  const [tipoCadastro, setTipoCadastro] = useState<"passageiro" | "grupo">("grupo");
+  const [tipoCadastro, setTipoCadastro] = useState<"passageiro" | "grupo">(tipoInicial);
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
