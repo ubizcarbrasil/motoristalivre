@@ -4,6 +4,7 @@ import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
 
 interface ListaHistoricoCorridasProps {
   corridas: CorridaHistorico[];
+  onSelecionar?: (corrida: CorridaHistorico) => void;
 }
 
 function formatarData(iso: string): string {
@@ -16,12 +17,26 @@ function formatarData(iso: string): string {
   });
 }
 
-function ItemCorrida({ corrida }: { corrida: CorridaHistorico }) {
+function ItemCorrida({
+  corrida,
+  onSelecionar,
+}: {
+  corrida: CorridaHistorico;
+  onSelecionar?: (corrida: CorridaHistorico) => void;
+}) {
   const status = STATUS_CORRIDA_LABELS[corrida.status];
   const inicial = corrida.motorista_nome.trim().charAt(0).toUpperCase() || "?";
+  const clicavel = !!onSelecionar;
 
   return (
-    <div className="rounded-xl bg-card border border-border p-3 space-y-2">
+    <button
+      type="button"
+      disabled={!clicavel}
+      onClick={() => onSelecionar?.(corrida)}
+      className={`w-full text-left rounded-xl bg-card border border-border p-3 space-y-2 transition-colors ${
+        clicavel ? "hover:border-primary/40 active:bg-secondary/50 cursor-pointer" : "cursor-default"
+      }`}
+    >
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
           {corrida.motorista_avatar ? (
@@ -78,11 +93,11 @@ function ItemCorrida({ corrida }: { corrida: CorridaHistorico }) {
           </span>
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
-export function ListaHistoricoCorridas({ corridas }: ListaHistoricoCorridasProps) {
+export function ListaHistoricoCorridas({ corridas, onSelecionar }: ListaHistoricoCorridasProps) {
   if (corridas.length === 0) {
     return (
       <div className="py-8 flex flex-col items-center gap-2 text-center">
@@ -95,7 +110,7 @@ export function ListaHistoricoCorridas({ corridas }: ListaHistoricoCorridasProps
   return (
     <div className="space-y-2">
       {corridas.map((c) => (
-        <ItemCorrida key={c.id} corrida={c} />
+        <ItemCorrida key={c.id} corrida={c} onSelecionar={onSelecionar} />
       ))}
     </div>
   );
