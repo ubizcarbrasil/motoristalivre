@@ -178,6 +178,7 @@ export function useSolicitacao() {
     configPreco,
     carregando,
     erro,
+    tenantSemMotorista,
     origem,
     setOrigem,
     destino,
