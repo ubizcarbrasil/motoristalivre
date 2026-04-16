@@ -116,7 +116,8 @@ export default function PaginaPassageiro() {
   const concluirAvaliacao = useCallback(() => {
     setAvaliacaoPendente(null);
     resetarSolicitacao();
-  }, [resetarSolicitacao]);
+    recentesCtx.recarregar();
+  }, [resetarSolicitacao, recentesCtx]);
 
   const abrirRastreamento = useCallback(() => {
     rastreamento.conectar();
