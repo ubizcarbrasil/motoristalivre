@@ -61,6 +61,8 @@ export const IDENTIDADE_INICIAL: DadosIdentidade = {
   descricao: "",
   subdominio: "",
   whatsapp: "",
+  logoUrl: "",
+  capaUrl: "",
 };
 
 export const CONFIGURACAO_INICIAL: DadosConfiguracao = {

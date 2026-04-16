@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useValidarSubdominio } from "../hooks/hook_validar_subdominio";
+import { CampoUploadImagem } from "./campo_upload_imagem";
 import type { DadosIdentidade } from "../types/tipos_onboarding";
 import { Loader2, Check, X } from "lucide-react";
 
@@ -99,6 +100,23 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             value={dados.whatsapp}
             onChange={(e) => atualizar("whatsapp", e.target.value)}
             maxLength={20}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <CampoUploadImagem
+            label="Logo"
+            valor={dados.logoUrl}
+            pasta="logos"
+            aspecto="square"
+            onChange={(url) => atualizar("logoUrl", url)}
+          />
+          <CampoUploadImagem
+            label="Imagem de capa"
+            valor={dados.capaUrl}
+            pasta="capas"
+            aspecto="wide"
+            onChange={(url) => atualizar("capaUrl", url)}
           />
         </div>
 

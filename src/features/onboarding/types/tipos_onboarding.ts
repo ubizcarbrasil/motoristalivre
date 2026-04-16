@@ -4,6 +4,8 @@ export interface DadosIdentidade {
   descricao: string;
   subdominio: string;
   whatsapp: string;
+  logoUrl: string;
+  capaUrl: string;
 }
 
 export interface PlanoOpcao {
