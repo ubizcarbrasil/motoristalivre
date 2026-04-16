@@ -9,7 +9,7 @@ import type {
 
 export async function buscarPerfilPassageiro(userId: string): Promise<DadosPerfilPassageiro | null> {
   const [usuarioRes, passageiroRes] = await Promise.all([
-    supabase.from("users").select("id, full_name, email, phone, avatar_url").eq("id", userId).maybeSingle(),
+    supabase.from("users").select("id, full_name, email, phone, avatar_url, tenant_id").eq("id", userId).maybeSingle(),
     supabase.from("passengers").select("total_rides, total_spent, cashback_balance").eq("id", userId).maybeSingle(),
   ]);
 
@@ -21,6 +21,7 @@ export async function buscarPerfilPassageiro(userId: string): Promise<DadosPerfi
     email: usuarioRes.data.email,
     phone: usuarioRes.data.phone,
     avatar_url: usuarioRes.data.avatar_url,
+    tenant_id: usuarioRes.data.tenant_id,
     total_rides: passageiroRes.data?.total_rides ?? 0,
     total_spent: Number(passageiroRes.data?.total_spent ?? 0),
     cashback_balance: Number(passageiroRes.data?.cashback_balance ?? 0),

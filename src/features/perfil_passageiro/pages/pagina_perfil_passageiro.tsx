@@ -12,6 +12,7 @@ import {
   type FiltroPeriodo,
   type FiltroStatus,
 } from "../components/filtros_historico_corridas";
+import { ListaFavoritosPerfil } from "@/features/favoritos_passageiro/components/lista_favoritos_perfil";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
 import { filtrarCorridas } from "../utils/utilitarios_perfil_passageiro";
 import type { CorridaHistorico, EnderecoCorrida } from "../types/tipos_perfil_passageiro";
