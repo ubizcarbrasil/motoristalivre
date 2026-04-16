@@ -42,7 +42,8 @@ const App = () => (
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
             <Route path="/painel" element={<RotaProtegida><PaginaPainel /></RotaProtegida>} />
             <Route path="/admin" element={<RotaProtegida><PaginaAdmin /></RotaProtegida>} />
-            <Route path="/afiliado" element={<RotaProtegida><PaginaAfiliado /></RotaProtegida>} />
+            {/* /afiliado removido — afiliados usam /painel unificado */}
+            <Route path="/afiliado" element={<Navigate to="/painel" replace />} />
             <Route path="/root" element={<RotaProtegida><PaginaRoot /></RotaProtegida>} />
 
             {/* Rotas com tenant (slug) */}

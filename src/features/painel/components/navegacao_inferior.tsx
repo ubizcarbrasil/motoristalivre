@@ -1,4 +1,4 @@
-import { Home, User, Users, Wallet } from "lucide-react";
+import { Home, Link2, Wallet, User, Settings } from "lucide-react";
 import type { AbaPainel } from "../types/tipos_painel";
 
 interface NavegacaoInferiorProps {
@@ -8,9 +8,10 @@ interface NavegacaoInferiorProps {
 
 const ITENS: { id: AbaPainel; label: string; icone: typeof Home }[] = [
   { id: "inicio", label: "Início", icone: Home },
-  { id: "perfil", label: "Perfil", icone: User },
-  { id: "tribo", label: "Tribo", icone: Users },
+  { id: "meus_links", label: "Links", icone: Link2 },
   { id: "carteira", label: "Carteira", icone: Wallet },
+  { id: "perfil", label: "Perfil", icone: User },
+  { id: "configuracoes", label: "Config", icone: Settings },
 ];
 
 export function NavegacaoInferior({ abaAtiva, onMudar }: NavegacaoInferiorProps) {
@@ -24,7 +25,7 @@ export function NavegacaoInferior({ abaAtiva, onMudar }: NavegacaoInferiorProps)
               key={id}
               type="button"
               onClick={() => onMudar(id)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-4 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
                 ativo ? "text-primary" : "text-muted-foreground"
               }`}
             >

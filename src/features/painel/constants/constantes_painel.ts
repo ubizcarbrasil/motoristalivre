@@ -2,9 +2,10 @@ import type { AbaPainel } from "../types/tipos_painel";
 
 export const ABAS_PAINEL: { id: AbaPainel; label: string; icone: string }[] = [
   { id: "inicio", label: "Início", icone: "home" },
-  { id: "perfil", label: "Perfil", icone: "user" },
-  { id: "tribo", label: "Tribo", icone: "users" },
+  { id: "meus_links", label: "Meus Links", icone: "link2" },
   { id: "carteira", label: "Carteira", icone: "wallet" },
+  { id: "perfil", label: "Perfil", icone: "user" },
+  { id: "configuracoes", label: "Configurações", icone: "settings" },
 ];
 
 export const TIMEOUT_DISPATCH_SEG = 28;

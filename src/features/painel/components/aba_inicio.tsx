@@ -25,7 +25,6 @@ interface AbaInicioProps {
   onRecusarDispatch: () => void | Promise<void>;
   onTimeoutDispatch: () => void | Promise<void>;
   onNavegar: (aba: AbaPainel) => void;
-  onPrecos: () => void;
 }
 
 export function AbaInicio({
@@ -45,7 +44,6 @@ export function AbaInicio({
   onRecusarDispatch,
   onTimeoutDispatch,
   onNavegar,
-  onPrecos,
 }: AbaInicioProps) {
   return (
     <div className="pb-20 space-y-4">
@@ -77,7 +75,7 @@ export function AbaInicio({
       )}
 
       <GridStats stats={stats} />
-      <AcessoRapido onNavegar={onNavegar} onPrecos={onPrecos} />
+      <AcessoRapido onNavegar={onNavegar} />
       <ListaCorridas corridas={corridas} />
     </div>
   );

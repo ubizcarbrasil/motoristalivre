@@ -1,0 +1,146 @@
+import { useEffect, useState, useCallback } from "react";
+import { Loader2, Plus, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { SecaoMeuPreco } from "./secao_meu_preco";
+import { SecaoRegrasLink } from "./secao_regras_link";
+import { CardConviteGrupo } from "./card_convite_grupo";
+import { BuscaGrupo } from "./busca_grupo";
+import {
+  buscarMeusGrupos,
+  buscarConvitesPendentes,
+  responderConvite,
+} from "../services/servico_configuracoes";
+import { toast } from "sonner";
+import type {
+  GrupoMotorista,
+  ConviteGrupo,
+} from "../types/tipos_configuracoes";
+
+interface AbaConfiguracoesProps {
+  driverId: string;
+  tenantId: string;
+  ehAdmin: boolean;
+}
+
+export function AbaConfiguracoes({ driverId, tenantId, ehAdmin }: AbaConfiguracoesProps) {
+  const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
+  const [convites, setConvites] = useState<ConviteGrupo[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const navigate = useNavigate();
+
+  const recarregar = useCallback(async () => {
+    const [g, c] = await Promise.all([
+      buscarMeusGrupos(driverId),
+      buscarConvitesPendentes(driverId),
+    ]);
+    setGrupos(g);
+    setConvites(c);
+  }, [driverId]);
+
+  useEffect(() => {
+    recarregar().finally(() => setCarregando(false));
+  }, [recarregar]);
+
+  const responder = async (id: string, resposta: "accepted" | "rejected") => {
+    try {
+      await responderConvite(id, resposta);
+      toast.success(resposta === "accepted" ? "Convite aceito" : "Convite recusado");
+      recarregar();
+    } catch {
+      toast.error("Erro ao responder");
+    }
+  };
+
+  return (
+    <div className="pt-12 pb-24 px-4 space-y-6">
+      <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
+
+      <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
+
+      <Separator />
+
+      <SecaoRegrasLink driverId={driverId} tenantId={tenantId} ehAdmin={ehAdmin} />
+
+      <Separator />
+
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Grupos e rede</h3>
+          <p className="text-[11px] text-muted-foreground">
+            Seus grupos ativos, convites e busca de novos grupos.
+          </p>
+        </div>
+
+        {carregando ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            {grupos.length > 0 && (
+              <div className="space-y-2">
+                {grupos.map((g) => (
+                  <div
+                    key={g.tenant_id}
+                    className="rounded-xl bg-card border border-border p-3 flex items-center gap-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {g.tenant_nome}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground font-mono">
+                        @{g.tenant_slug}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-primary font-medium block">
+                        {g.papel === "tenant_admin" || g.papel === "manager"
+                          ? "Admin"
+                          : "Membro"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {g.corridas_mes} corridas/mês
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {convites.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                  Convites e solicitações
+                </p>
+                {convites.map((c) => (
+                  <CardConviteGrupo key={c.id} convite={c} onResponder={responder} />
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                Entrar em um grupo
+              </p>
+              <BuscaGrupo driverId={driverId} onSolicitado={recarregar} />
+            </div>
+          </>
+        )}
+
+        <Button
+          variant="outline"
+          className="w-full h-11 gap-2"
+          onClick={() => navigate("/onboarding")}
+        >
+          <Plus className="w-4 h-4" />
+          Criar meu próprio grupo
+        </Button>
+      </div>
+    </div>
+  );
+}
