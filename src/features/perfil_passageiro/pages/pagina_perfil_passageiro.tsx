@@ -101,6 +101,7 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
                     corridas={corridasFiltradas}
                     resumo={resumoFiltrado}
                     nomePassageiro={perfil.full_name ?? perfil.email ?? "Passageiro"}
+                    tenantId={perfil.tenant_id}
                   />
                 </div>
                 <ListaHistoricoCorridas

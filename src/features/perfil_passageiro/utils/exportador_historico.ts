@@ -3,11 +3,14 @@ import autoTable from "jspdf-autotable";
 import type { CorridaHistorico } from "../types/tipos_perfil_passageiro";
 import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
 import type { ResumoCorridas } from "./utilitarios_perfil_passageiro";
+import { BRANDING_PDF_PADRAO, type BrandingPdf } from "../types/tipos_branding_pdf";
+import { clarearRgb, hexParaRgb } from "./utilitarios_cor_pdf";
 
 interface DadosExportacao {
   corridas: CorridaHistorico[];
   resumo: ResumoCorridas;
   nomePassageiro: string;
+  branding?: BrandingPdf;
 }
 
 function formatarDataHora(iso: string): string {
@@ -55,6 +58,28 @@ function escaparCampoCsv(valor: string): string {
   return valor;
 }
 
+async function carregarImagemBase64(url: string): Promise<string | null> {
+  try {
+    const resposta = await fetch(url);
+    if (!resposta.ok) return null;
+    const blob = await resposta.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+function formatoImagem(dataUrl: string): "PNG" | "JPEG" {
+  return dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")
+    ? "JPEG"
+    : "PNG";
+}
+
 export function exportarHistoricoCsv({ corridas }: DadosExportacao): void {
   const cabecalho = [
     "Data",
@@ -85,45 +110,108 @@ export function exportarHistoricoCsv({ corridas }: DadosExportacao): void {
   disparaDownload(blob, nomeArquivo("csv"));
 }
 
-export function exportarHistoricoPdf({ corridas, resumo, nomePassageiro }: DadosExportacao): void {
+export async function exportarHistoricoPdf({
+  corridas,
+  resumo,
+  nomePassageiro,
+  branding = BRANDING_PDF_PADRAO,
+}: DadosExportacao): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const larguraPagina = doc.internal.pageSize.getWidth();
+  const margem = 14;
 
+  const corPrimaria = hexParaRgb(branding.corPrimariaHex);
+  const corPrimariaSuave = clarearRgb(corPrimaria, 0.88);
+
+  // Cabeçalho colorido com branding (idêntico ao comprovante individual)
+  const alturaHeader = 26;
+  doc.setFillColor(...corPrimaria);
+  doc.rect(0, 0, larguraPagina, alturaHeader, "F");
+
+  let xTextoHeader = margem;
+  const logoDataUrl = branding.logoUrl ? await carregarImagemBase64(branding.logoUrl) : null;
+  if (logoDataUrl) {
+    const tamanhoLogo = 16;
+    try {
+      doc.addImage(
+        logoDataUrl,
+        formatoImagem(logoDataUrl),
+        margem,
+        (alturaHeader - tamanhoLogo) / 2,
+        tamanhoLogo,
+        tamanhoLogo
+      );
+      xTextoHeader = margem + tamanhoLogo + 5;
+    } catch {
+      // ignora se imagem falhar
+    }
+  }
+
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("Histórico de corridas", 14, 18);
+  doc.setFontSize(13);
+  if (branding.nomeEmpresa) {
+    doc.text(branding.nomeEmpresa, xTextoHeader, 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Histórico de corridas", xTextoHeader, 18);
+  } else {
+    doc.text("Histórico de corridas", xTextoHeader, 16);
+  }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(110);
-  doc.text(`Passageiro: ${nomePassageiro}`, 14, 25);
+  doc.setFontSize(8);
   doc.text(
-    `Gerado em: ${new Date().toLocaleString("pt-BR")}`,
-    larguraPagina - 14,
-    25,
+    `Gerado em ${new Date().toLocaleString("pt-BR")}`,
+    larguraPagina - margem,
+    18,
     { align: "right" }
   );
 
-  doc.setDrawColor(220);
-  doc.line(14, 29, larguraPagina - 14, 29);
+  let cursorY = alturaHeader + 8;
 
-  doc.setTextColor(30);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("Resumo", 14, 37);
-
+  // Passageiro
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  const resumoLinhas = [
-    `Total de corridas: ${resumo.totalCorridas}`,
-    `Concluídas: ${resumo.corridasConcluidas}`,
-    `Total gasto: ${formatarValor(resumo.totalGasto)}`,
-    `Distância total: ${formatarDistancia(resumo.totalDistancia)}`,
-  ];
-  resumoLinhas.forEach((l, i) => doc.text(l, 14, 44 + i * 5));
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(`Passageiro: ${nomePassageiro}`, margem, cursorY);
 
+  cursorY += 4;
+  doc.setDrawColor(220);
+  doc.line(margem, cursorY, larguraPagina - margem, cursorY);
+  cursorY += 6;
+
+  // Bloco de resumo destacado com cor do tenant
+  const alturaResumo = 22;
+  doc.setFillColor(...corPrimariaSuave);
+  doc.setDrawColor(...corPrimaria);
+  doc.roundedRect(margem, cursorY, larguraPagina - margem * 2, alturaResumo, 2, 2, "FD");
+
+  const itensResumo: Array<[string, string]> = [
+    ["Total", String(resumo.totalCorridas)],
+    ["Concluídas", String(resumo.corridasConcluidas)],
+    ["Total gasto", formatarValor(resumo.totalGasto)],
+    ["Distância", formatarDistancia(resumo.totalDistancia)],
+  ];
+
+  const larguraColuna = (larguraPagina - margem * 2) / itensResumo.length;
+  itensResumo.forEach(([label, valor], i) => {
+    const xCentro = margem + larguraColuna * i + larguraColuna / 2;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(80);
+    doc.text(label.toUpperCase(), xCentro, cursorY + 8, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...corPrimaria);
+    doc.text(valor, xCentro, cursorY + 16, { align: "center" });
+  });
+
+  cursorY += alturaResumo + 6;
+
+  // Tabela de corridas
   autoTable(doc, {
-    startY: 70,
+    startY: cursorY,
     head: [["Data", "Status", "Motorista", "Origem → Destino", "Dist.", "Valor"]],
     body: corridas.map((c) => [
       formatarDataHora(c.created_at),
@@ -134,7 +222,7 @@ export function exportarHistoricoPdf({ corridas, resumo, nomePassageiro }: Dados
       formatarValor(c.price_paid),
     ]),
     styles: { fontSize: 8, cellPadding: 2, valign: "middle" },
-    headStyles: { fillColor: [29, 184, 101], textColor: 255, fontStyle: "bold" },
+    headStyles: { fillColor: corPrimaria, textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [248, 248, 248] },
     columnStyles: {
       0: { cellWidth: 26 },
@@ -148,9 +236,12 @@ export function exportarHistoricoPdf({ corridas, resumo, nomePassageiro }: Dados
       const pagina = doc.getNumberOfPages();
       doc.setFontSize(8);
       doc.setTextColor(150);
+      const textoRodape = branding.nomeEmpresa
+        ? `${branding.nomeEmpresa} · página ${pagina}`
+        : `Página ${pagina}`;
       doc.text(
-        `Página ${pagina}`,
-        larguraPagina - 14,
+        textoRodape,
+        larguraPagina - margem,
         doc.internal.pageSize.getHeight() - 8,
         { align: "right" }
       );
