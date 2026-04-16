@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Crosshair, Loader2 } from "lucide-react";
+import { Crosshair, Loader2, Star } from "lucide-react";
 import { useAutocompletarEndereco } from "../hooks/hook_autocompletar_endereco";
-import type { EnderecoCompleto, Coordenada } from "../types/tipos_passageiro";
+import { SugestaoFavorito } from "@/features/favoritos_passageiro/components/sugestao_favorito";
+import type { FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
+import type { EnderecoCompleto } from "../types/tipos_passageiro";
 
 interface CampoEnderecoProps {
   tipo: "origem" | "destino";
@@ -10,14 +12,30 @@ interface CampoEnderecoProps {
   onSelecionar: (endereco: EnderecoCompleto) => void;
   placeholder: string;
   onGeolocalizarOrigem?: () => void;
+  favoritos?: FavoritoEndereco[];
+  onFavoritarResultado?: (endereco: { address: string; lat: number; lng: number }) => void;
+  identificarFavorito?: (lat: number, lng: number, endereco: string) => FavoritoEndereco | undefined;
 }
 
-export function CampoEndereco({ tipo, valor, onSelecionar, placeholder, onGeolocalizarOrigem }: CampoEnderecoProps) {
+export function CampoEndereco({
+  tipo,
+  valor,
+  onSelecionar,
+  placeholder,
+  onGeolocalizarOrigem,
+  favoritos = [],
+  onFavoritarResultado,
+  identificarFavorito,
+}: CampoEnderecoProps) {
   const { consulta, setConsulta, resultados, carregando } = useAutocompletarEndereco();
   const [focado, setFocado] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const textoExibido = valor?.endereco ?? "";
+  const semConsulta = consulta.length < 3;
+  const mostrarFavoritos = focado && semConsulta && favoritos.length > 0;
+  const mostrarResultados = focado && (consulta.length >= 3 || resultados.length > 0);
+  const mostrarDropdown = mostrarFavoritos || mostrarResultados;
 
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
@@ -59,33 +77,85 @@ export function CampoEndereco({ tipo, valor, onSelecionar, placeholder, onGeoloc
         </div>
       </div>
 
-      {/* Dropdown de resultados */}
-      {focado && (consulta.length >= 3 || resultados.length > 0) && (
-        <div className="absolute left-7 right-0 top-full mt-1 bg-card border border-border rounded-lg overflow-hidden z-50 shadow-xl max-h-52 overflow-y-auto">
-          {carregando && (
-            <div className="flex items-center justify-center py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            </div>
+      {mostrarDropdown && (
+        <div className="absolute left-7 right-0 top-full mt-1 bg-card border border-border rounded-lg overflow-hidden z-50 shadow-xl max-h-72 overflow-y-auto">
+          {mostrarFavoritos && (
+            <>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">
+                Favoritos
+              </p>
+              {favoritos.slice(0, 5).map((f) => (
+                <SugestaoFavorito
+                  key={f.id}
+                  favorito={f}
+                  onSelecionar={() => {
+                    onSelecionar({
+                      coordenada: { lat: f.lat, lng: f.lng },
+                      endereco: f.address,
+                    });
+                    setFocado(false);
+                  }}
+                />
+              ))}
+            </>
           )}
-          {!carregando && resultados.length === 0 && consulta.length >= 3 && (
-            <p className="text-xs text-muted-foreground px-3 py-3">Nenhum resultado encontrado</p>
+
+          {mostrarResultados && (
+            <>
+              {carregando && (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+              {!carregando && resultados.length === 0 && consulta.length >= 3 && (
+                <p className="text-xs text-muted-foreground px-3 py-3">Nenhum resultado encontrado</p>
+              )}
+              {resultados.map((r, i) => {
+                const jaFavoritado = identificarFavorito?.(r.lat, r.lng, r.endereco);
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center border-b border-border last:border-0 hover:bg-secondary transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelecionar({
+                          coordenada: { lat: r.lat, lng: r.lng },
+                          endereco: r.endereco,
+                        });
+                        setFocado(false);
+                      }}
+                      className="flex-1 text-left px-3 py-2.5 text-sm text-foreground"
+                    >
+                      <span className="line-clamp-2">{r.endereco}</span>
+                    </button>
+                    {onFavoritarResultado && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          onFavoritarResultado({
+                            address: r.endereco,
+                            lat: r.lat,
+                            lng: r.lng,
+                          });
+                        }}
+                        className="p-2.5 mr-1 text-muted-foreground hover:text-primary transition-colors"
+                        title={jaFavoritado ? "Já favoritado" : "Favoritar este endereço"}
+                      >
+                        <Star
+                          className={`w-4 h-4 ${
+                            jaFavoritado ? "fill-primary text-primary" : ""
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </>
           )}
-          {resultados.map((r, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => {
-                onSelecionar({
-                  coordenada: { lat: r.lat, lng: r.lng },
-                  endereco: r.endereco,
-                });
-                setFocado(false);
-              }}
-              className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors border-b border-border last:border-0"
-            >
-              <span className="line-clamp-2">{r.endereco}</span>
-            </button>
-          ))}
         </div>
       )}
     </div>

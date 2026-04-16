@@ -81,6 +81,7 @@ export interface DadosPerfilPassageiro {
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
+  tenant_id: string;
   total_rides: number;
   total_spent: number;
   cashback_balance: number;
