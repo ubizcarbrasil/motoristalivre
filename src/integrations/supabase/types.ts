@@ -320,6 +320,53 @@ export type Database = {
           },
         ]
       }
+      passenger_favorites: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          label: string
+          lat: number
+          lng: number
+          passenger_id: string
+          tenant_id: string
+          type: Database["public"]["Enums"]["favorite_type"]
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          label: string
+          lat: number
+          lng: number
+          passenger_id: string
+          tenant_id: string
+          type?: Database["public"]["Enums"]["favorite_type"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          label?: string
+          lat?: number
+          lng?: number
+          passenger_id?: string
+          tenant_id?: string
+          type?: Database["public"]["Enums"]["favorite_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_favorites_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passengers: {
         Row: {
           cashback_balance: number
@@ -1271,6 +1318,7 @@ export type Database = {
       commission_type: "transbordo" | "affiliate" | "referral" | "platform"
       dispatch_mode: "auto" | "manual" | "hybrid"
       dispatch_response: "pending" | "accepted" | "rejected" | "timeout"
+      favorite_type: "home" | "work" | "other"
       payment_method: "dinheiro" | "pix" | "cartao" | "saldo"
       payout_status:
         | "pending"
@@ -1442,6 +1490,7 @@ export const Constants = {
       commission_type: ["transbordo", "affiliate", "referral", "platform"],
       dispatch_mode: ["auto", "manual", "hybrid"],
       dispatch_response: ["pending", "accepted", "rejected", "timeout"],
+      favorite_type: ["home", "work", "other"],
       payment_method: ["dinheiro", "pix", "cartao", "saldo"],
       payout_status: [
         "pending",
