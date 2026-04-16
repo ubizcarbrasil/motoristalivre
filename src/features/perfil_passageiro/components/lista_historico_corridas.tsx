@@ -4,6 +4,7 @@ import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
 
 interface ListaHistoricoCorridasProps {
   corridas: CorridaHistorico[];
+  onSelecionar?: (corrida: CorridaHistorico) => void;
 }
 
 function formatarData(iso: string): string {
@@ -16,9 +17,16 @@ function formatarData(iso: string): string {
   });
 }
 
-function ItemCorrida({ corrida }: { corrida: CorridaHistorico }) {
+function ItemCorrida({
+  corrida,
+  onSelecionar,
+}: {
+  corrida: CorridaHistorico;
+  onSelecionar?: (corrida: CorridaHistorico) => void;
+}) {
   const status = STATUS_CORRIDA_LABELS[corrida.status];
   const inicial = corrida.motorista_nome.trim().charAt(0).toUpperCase() || "?";
+  const clicavel = !!onSelecionar;
 
   return (
     <div className="rounded-xl bg-card border border-border p-3 space-y-2">
