@@ -7,7 +7,7 @@ interface TelaAguardandoAprovacaoProps {
 }
 
 export function TelaAguardandoAprovacao({ nomeGrupo }: TelaAguardandoAprovacaoProps) {
-  const { logout } = useLogout();
+  const { sair } = useLogout();
   return (
     <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-sm text-center space-y-5">
