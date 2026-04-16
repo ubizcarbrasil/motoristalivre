@@ -1,12 +1,14 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
 import { OverlayBusca } from "../components/overlay_busca";
 import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
+import { TelaRastreamento } from "../components/tela_rastreamento";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
+import { useRastreamento } from "../hooks/hook_rastreamento";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +44,13 @@ export default function PaginaPassageiro() {
   } = useSolicitacao();
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
+  const [mostraRastreamento, setMostraRastreamento] = useState(false);
+
+  const rastreamento = useRastreamento(
+    corridaAceita?.ride_id ?? null,
+    corridaAceita?.status,
+    origem?.coordenada ?? null
+  );
 
   // Quando a corrida é aceita, transiciona para o Estado 3
   useEffect(() => {
@@ -49,6 +58,23 @@ export default function PaginaPassageiro() {
       setEtapa("aceita");
     }
   }, [corridaAceita, etapa, setEtapa]);
+
+  // Fechar rastreamento se corrida terminou
+  useEffect(() => {
+    if (corridaAceita?.status === "completed" || corridaAceita?.status === "cancelled") {
+      setMostraRastreamento(false);
+    }
+  }, [corridaAceita?.status]);
+
+  const abrirRastreamento = useCallback(() => {
+    rastreamento.conectar();
+    setMostraRastreamento(true);
+  }, [rastreamento]);
+
+  const fecharRastreamento = useCallback(() => {
+    setMostraRastreamento(false);
+    // Keep connection alive so pills update in background
+  }, []);
 
   const geolocalizarOrigem = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -122,11 +148,22 @@ export default function PaginaPassageiro() {
 
       {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
 
-      {etapa === "aceita" && corridaAceita && (
+      {etapa === "aceita" && corridaAceita && !mostraRastreamento && (
         <SheetCorridaAceita
           corrida={corridaAceita}
-          onRastrear={() => toast.info("Rastreamento em tempo real em breve")}
+          onRastrear={abrirRastreamento}
           onChat={() => toast.info("Chat em breve")}
+        />
+      )}
+
+      {mostraRastreamento && (
+        <TelaRastreamento
+          posicaoMotorista={rastreamento.posicao}
+          posicaoPassageiro={origem?.coordenada ?? null}
+          distanciaKm={rastreamento.distanciaKm}
+          etaMin={rastreamento.etaMin}
+          conectado={rastreamento.conectado}
+          onVoltar={fecharRastreamento}
         />
       )}
 
