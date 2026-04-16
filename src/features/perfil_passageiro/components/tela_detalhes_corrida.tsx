@@ -1,13 +1,15 @@
-import { ArrowLeft, Calendar, Car, Clock, CreditCard, Loader2, MapPin, Navigation, Route } from "lucide-react";
+import { ArrowLeft, Calendar, Car, Clock, CreditCard, Loader2, MapPin, Navigation, RefreshCw, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDetalhesCorrida } from "../hooks/hook_detalhes_corrida";
 import { STATUS_CORRIDA_LABELS } from "../types/tipos_perfil_passageiro";
+import type { EnderecoCorrida } from "../types/tipos_perfil_passageiro";
 import { MapaCorrida } from "./mapa_corrida";
 
 interface TelaDetalhesCorridaProps {
   rideId: string;
   isRideRequest: boolean;
   onVoltar: () => void;
+  onPedirNovamente?: (origem: EnderecoCorrida, destino: EnderecoCorrida) => void;
 }
 
 function formatarDataHora(iso: string): string {
@@ -49,8 +51,32 @@ function LinhaInfo({
   );
 }
 
-export function TelaDetalhesCorrida({ rideId, isRideRequest, onVoltar }: TelaDetalhesCorridaProps) {
+export function TelaDetalhesCorrida({ rideId, isRideRequest, onVoltar, onPedirNovamente }: TelaDetalhesCorridaProps) {
   const { detalhes, carregando } = useDetalhesCorrida(rideId, isRideRequest);
+
+  const podePedirNovamente =
+    !!onPedirNovamente &&
+    detalhes !== null &&
+    detalhes.origin_lat !== null &&
+    detalhes.origin_lng !== null &&
+    detalhes.dest_lat !== null &&
+    detalhes.dest_lng !== null &&
+    !!detalhes.origin_address &&
+    !!detalhes.dest_address;
+
+  const handlePedirNovamente = () => {
+    if (!podePedirNovamente || !detalhes) return;
+    onPedirNovamente!(
+      {
+        coordenada: { lat: detalhes.origin_lat!, lng: detalhes.origin_lng! },
+        endereco: detalhes.origin_address!,
+      },
+      {
+        coordenada: { lat: detalhes.dest_lat!, lng: detalhes.dest_lng! },
+        endereco: detalhes.dest_address!,
+      }
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[60] bg-background flex flex-col">
@@ -204,6 +230,17 @@ export function TelaDetalhesCorrida({ rideId, isRideRequest, onVoltar }: TelaDet
                   R$ {detalhes.price_paid.toFixed(2).replace(".", ",")}
                 </span>
               </div>
+            )}
+
+            {/* Pedir novamente */}
+            {podePedirNovamente && (
+              <Button
+                onClick={handlePedirNovamente}
+                className="w-full h-12 gap-2 font-semibold"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Pedir novamente
+              </Button>
             )}
           </>
         )}

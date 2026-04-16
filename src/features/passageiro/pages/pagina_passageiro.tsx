@@ -246,6 +246,13 @@ export default function PaginaPassageiro() {
         <PaginaPerfilPassageiro
           userId={passengerId}
           onVoltar={() => setMostraPerfil(false)}
+          onPedirNovamente={(novaOrigem, novoDestino) => {
+            setOrigem(novaOrigem);
+            setDestino(novoDestino);
+            setEtapa("endereco");
+            setMostraPerfil(false);
+            toast.success("Endereços preenchidos. Confirme para buscar motoristas.");
+          }}
         />
       )}
 
