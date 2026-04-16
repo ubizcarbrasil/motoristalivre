@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowDownLeft, ArrowUpRight, Receipt, PiggyBank, TrendingUp } from "lucide-react";
 import type { SaldoCarteira, TransacaoCarteira } from "../types/tipos_painel";
 import { buscarSaldoCarteira, buscarTransacoes } from "../services/servico_painel";
 import { TIPOS_TRANSACAO_LABELS } from "../constants/constantes_painel";
 import { SheetSolicitarSaque } from "@/compartilhados/components/sheet_solicitar_saque";
+import { HistoricoSaques } from "@/compartilhados/components/historico_saques";
 import { garantirCarteira } from "@/compartilhados/services/servico_saque";
 
 interface AbaCarteiraProps {
