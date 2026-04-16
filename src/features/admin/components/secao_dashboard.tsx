@@ -82,7 +82,20 @@ export function SecaoDashboard() {
   }
 
   if (carregando) {
-    return <p className="p-6 text-muted-foreground">Carregando...</p>;
+    return (
+      <div className="space-y-6 p-4 sm:p-6">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className="border-border bg-card animate-pulse">
+              <CardContent className="p-4">
+                <div className="h-3 w-20 rounded bg-muted mb-2" />
+                <div className="h-6 w-16 rounded bg-muted" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -106,7 +119,11 @@ export function SecaoDashboard() {
           <CardContent className="p-4">
             <h3 className="mb-3 text-sm font-medium text-foreground">Motoristas online</h3>
             {motoristasOnline.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum motorista online</p>
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <Wifi className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">Nenhum motorista online no momento</p>
+                <p className="text-xs text-muted-foreground/60">Motoristas aparecem aqui quando ficam online</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {motoristasOnline.map((m) => (
@@ -127,7 +144,11 @@ export function SecaoDashboard() {
           <CardContent className="p-4">
             <h3 className="mb-3 text-sm font-medium text-foreground">Afiliados ativos hoje</h3>
             {afiliadosAtivos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum afiliado ativo</p>
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <Users className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">Nenhum afiliado cadastrado</p>
+                <p className="text-xs text-muted-foreground/60">Convide estabelecimentos para gerar corridas</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {afiliadosAtivos.map((a) => (
