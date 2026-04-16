@@ -30,3 +30,13 @@ export async function buscarTenantDaCorrida(rideId: string): Promise<string | nu
     .maybeSingle();
   return data?.tenant_id ?? null;
 }
+
+export async function existeAvaliacao(rideId: string, passengerId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("reviews")
+    .select("id")
+    .eq("ride_id", rideId)
+    .eq("passenger_id", passengerId)
+    .maybeSingle();
+  return !!data;
+}
