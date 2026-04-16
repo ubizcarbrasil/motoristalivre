@@ -7,6 +7,7 @@ import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
+import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -42,11 +43,18 @@ export default function PaginaPassageiro() {
     grupoNome,
     rideRequestId,
     passengerId,
+    resetarSolicitacao,
   } = useSolicitacao();
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
+  const [avaliacaoPendente, setAvaliacaoPendente] = useState<{
+    ride_id: string;
+    driver_id: string;
+    nome: string;
+    avatar: string | null;
+  } | null>(null);
 
   const rastreamento = useRastreamento(
     corridaAceita?.ride_id ?? null,
@@ -61,13 +69,29 @@ export default function PaginaPassageiro() {
     }
   }, [corridaAceita, etapa, setEtapa]);
 
-  // Fechar overlays se corrida terminou
+  // Quando corrida termina: mostrar avaliação ou cancelar
   useEffect(() => {
-    if (corridaAceita?.status === "completed" || corridaAceita?.status === "cancelled") {
+    if (!corridaAceita) return;
+    if (corridaAceita.status === "completed" && corridaAceita.ride_id) {
       setMostraRastreamento(false);
       setMostraChat(false);
+      setAvaliacaoPendente({
+        ride_id: corridaAceita.ride_id,
+        driver_id: corridaAceita.motorista.id,
+        nome: corridaAceita.motorista.nome,
+        avatar: corridaAceita.motorista.avatar_url,
+      });
+    } else if (corridaAceita.status === "cancelled" || corridaAceita.status === "expired") {
+      setMostraRastreamento(false);
+      setMostraChat(false);
+      resetarSolicitacao();
     }
-  }, [corridaAceita?.status]);
+  }, [corridaAceita?.status, corridaAceita?.ride_id, resetarSolicitacao]);
+
+  const concluirAvaliacao = useCallback(() => {
+    setAvaliacaoPendente(null);
+    resetarSolicitacao();
+  }, [resetarSolicitacao]);
 
   const abrirRastreamento = useCallback(() => {
     rastreamento.conectar();
@@ -180,6 +204,17 @@ export default function PaginaPassageiro() {
           outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
           outroTelefone={corridaAceita.motorista.telefone}
           onVoltar={() => setMostraChat(false)}
+        />
+      )}
+
+      {avaliacaoPendente && passengerId && (
+        <TelaAvaliacao
+          rideId={avaliacaoPendente.ride_id}
+          driverId={avaliacaoPendente.driver_id}
+          passengerId={passengerId}
+          motoristaNome={avaliacaoPendente.nome}
+          motoristaAvatar={avaliacaoPendente.avatar}
+          onConcluir={concluirAvaliacao}
         />
       )}
 
