@@ -19,6 +19,7 @@ import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_moto
 import PaginaLanding from "@/features/landing/pages/pagina_landing";
 import PaginaValidacaoCorrida from "@/features/validacao_corrida/pages/pagina_validacao_corrida";
 import PaginaPersonas from "@/features/dev_personas/pages/pagina_personas";
+import PaginaInstalar from "@/features/instalacao/pages/pagina_instalar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/cadastro" element={<PaginaCadastro />} />
             <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
             <Route path="/dev/personas" element={<PaginaPersonas />} />
+            <Route path="/instalar" element={<PaginaInstalar />} />
 
             {/* Rotas protegidas */}
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
