@@ -38,6 +38,7 @@ export function usePainel() {
   const [timeoutSec, setTimeoutSec] = useState<number>(TIMEOUT_DISPATCH_SEG);
   const [carregando, setCarregando] = useState(true);
   const [corridaAtiva, setCorridaAtiva] = useState<Awaited<ReturnType<typeof buscarCorridaAtiva>>>(null);
+  const [solicitacaoPendente, setSolicitacaoPendente] = useState<{ tenantNome: string } | null>(null);
 
   const userId = usuario?.id;
 
