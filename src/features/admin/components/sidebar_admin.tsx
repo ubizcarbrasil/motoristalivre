@@ -14,9 +14,7 @@ import {
 import { LogOut } from "lucide-react";
 import { MENU_ADMIN } from "../constants/constantes_admin";
 import type { SecaoAdmin } from "../types/tipos_admin";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useLogout } from "@/compartilhados/hooks/hook_logout";
 
 interface SidebarAdminProps {
   secaoAtiva: SecaoAdmin;
@@ -26,13 +24,7 @@ interface SidebarAdminProps {
 export function SidebarAdmin({ secaoAtiva, onNavegar }: SidebarAdminProps) {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
-  const navigate = useNavigate();
-
-  async function handleSair() {
-    await supabase.auth.signOut();
-    toast.success("Você saiu da conta");
-    navigate("/entrar");
-  }
+  const { sair } = useLogout();
 
   function handleNavegar(secao: SecaoAdmin) {
     onNavegar(secao);
@@ -79,7 +71,7 @@ export function SidebarAdmin({ secaoAtiva, onNavegar }: SidebarAdminProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleSair}
+              onClick={sair}
               className="text-muted-foreground hover:text-destructive"
             >
               <LogOut className="h-4 w-4 shrink-0" />

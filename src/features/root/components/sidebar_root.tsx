@@ -5,9 +5,7 @@ import {
 import { LogOut } from "lucide-react";
 import { MENU_ROOT } from "../constants/constantes_root";
 import type { SecaoRoot } from "../types/tipos_root";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useLogout } from "@/compartilhados/hooks/hook_logout";
 
 interface SidebarRootProps {
   secaoAtiva: SecaoRoot;
@@ -17,13 +15,7 @@ interface SidebarRootProps {
 export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const navigate = useNavigate();
-
-  async function handleSair() {
-    await supabase.auth.signOut();
-    toast.success("Você saiu da conta");
-    navigate("/entrar");
-  }
+  const { sair } = useLogout();
 
   return (
     <Sidebar collapsible="icon">
@@ -56,7 +48,7 @@ export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleSair}
+              onClick={sair}
               className="text-muted-foreground hover:text-destructive"
             >
               <LogOut className="h-4 w-4 shrink-0" />
