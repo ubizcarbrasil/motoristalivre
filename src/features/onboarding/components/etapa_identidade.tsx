@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useValidarSubdominio } from "../hooks/hook_validar_subdominio";
+import { CampoUploadImagem } from "./campo_upload_imagem";
 import type { DadosIdentidade } from "../types/tipos_onboarding";
 import { Loader2, Check, X } from "lucide-react";
 
