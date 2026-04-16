@@ -1,80 +1,82 @@
 
 
-## Implementar aceitar/recusar dispatch + Realtime no painel motorista
+O usuário quer ter credenciais de teste (email + senha) para cada tipo de persona do sistema (root_admin, tenant_admin, manager, driver, affiliate, passenger) para conseguir testar todos os fluxos.
 
-### 1. Hook novo `hook_dispatch_realtime.ts`
-Cria hook dedicado em `src/features/painel/hooks/hook_dispatch_realtime.ts` que:
-- Recebe `userId` (motorista) e `tenantTimeoutSec` (configurável).
-- Faz `subscribe` no canal `dispatches:${userId}` escutando `postgres_changes` em `ride_dispatches` filtrado por `driver_id=eq.${userId}`.
-- Trata eventos `INSERT` (novo dispatch pending) → busca dados completos da `ride_request` e seta como `dispatchAtivo`.
-- Trata `UPDATE` → se response mudar para qualquer coisa diferente de `pending`, limpa o dispatch atual.
-- Expõe estado `realtimeAtivo: boolean` (true quando `SUBSCRIBED`).
-- Cleanup do canal no unmount.
+Olhando o schema, o enum `app_role` aparece em vários lugares e os papéis identificados são:
+- `root_admin` → super admin da plataforma (`/root`)
+- `tenant_admin` → dono do grupo (`/admin`)
+- `manager` → gestor do grupo (`/admin`)
+- `driver` → motorista (`/painel`)
+- `affiliate` → afiliado (`/afiliado`)
+- `passenger` → passageiro (`/:slug`)
 
-### 2. Service `servico_painel.ts` — novas funções
-- `aceitarDispatch(dispatchId)` → chama edge function `dispatch-ride` com `action: "accept"` (lógica atômica de aceitar + cancelar outros + criar ride já existe na edge function, conforme linhas 175-216).
-- `recusarDispatch(dispatchId)` → chama edge function `dispatch-ride` com `action: "reject"` (já dispara `tryNextDriver` automaticamente).
-- `marcarDispatchTimeout(dispatchId)` → chama edge function com nova action `timeout` (vamos adicionar) que marca como `timeout` e dispara `tryNextDriver`.
+Não dá pra criar usuários no `auth.users` via migration SQL diretamente de forma confiável (precisa de hash de senha do GoTrue). A forma correta é usar uma **edge function** com `SUPABASE_SERVICE_ROLE_KEY` chamando `supabase.auth.admin.createUser`, e depois inserir na tabela `public.users` com o role correto + tenant_id.
 
-Vantagem: toda a lógica transacional (cancelar outros dispatches, criar ride, retentar próximo motorista, audit log) já está implementada no edge function. Centralizamos lá em vez de duplicar no client (mais seguro e atômico).
+Plano enxuto: criar um seed de personas via edge function que o usuário pode disparar uma vez, e entregar as credenciais em uma página interna (ou só no chat). Vou propor entregar via edge function + página `/dev/personas` protegida só pra ele ver as senhas durante teste.
 
-### 3. Edge function `dispatch-ride` — adicionar action `timeout`
-Adicionar case `"timeout"` no switch HTTP (linha 491) que chama `marcarDispatchTimeout(dispatch_id)` + `tryNextDriver(...)`. Manter todas as outras actions intactas.
+# Plano: Criar usuários de teste para todas as personas
 
-### 4. Buscar `dispatch_timeout_sec` do tenant
-Adicionar `buscarTimeoutDispatch(tenantId)` em `servico_painel.ts` que lê `tenant_settings.dispatch_timeout_sec`. Usado para timeout dinâmico em vez do hardcoded `TIMEOUT_DISPATCH_SEG = 28`.
+## O que vai ser feito
 
-### 5. `hook_painel.ts` — integrar Realtime
-- Importar `useDispatchRealtime` e usar `dispatch` vindo dele em vez do estado local atual (mantém a busca inicial via `buscarDispatchAtivo` para hidratar quando há dispatch já pendente ao abrir o app).
-- Expor `realtimeAtivo` no retorno.
-- Buscar e expor `timeoutSec` do tenant.
-- Adicionar handlers `aceitar` e `recusar` que chamam o serviço e limpam o dispatch local.
+Criar **6 usuários de teste** (um para cada papel) com email/senha previsíveis, cada um já vinculado a um tenant de demonstração, para você poder logar e testar cada fluxo do sistema.
 
-### 6. `CardDispatch` — wireup real
-- Receber `timeoutSec` como prop (em vez de usar constante).
-- `onAceitar` e `onRecusar` agora vêm do hook e fazem ação real.
-- Quando timer chega a 0, chamar `onTimeout` callback (novo prop) que dispara `marcarDispatchTimeout` via service.
-- Mostrar estado de loading nos botões durante a ação (evita double-click).
+## Personas e ordem de grandeza (do mais poderoso ao mais restrito)
 
-### 7. `aba_inicio.tsx` e `pagina_painel.tsx` — passar handlers
-- Substituir `() => {}` pelos handlers reais do hook.
-- Passar `timeoutSec` para o `CardDispatch`.
+| Nível | Persona | Role no banco | Email | Rota após login |
+|---|---|---|---|---|
+| 1 | Super Admin da plataforma | `root_admin` | `root@tribocar.test` | `/root` |
+| 2 | Dono do grupo (tenant) | `tenant_admin` | `admin@tribocar.test` | `/admin` |
+| 3 | Gestor do grupo | `manager` | `manager@tribocar.test` | `/admin` |
+| 4 | Motorista | `driver` | `motorista@tribocar.test` | `/painel` |
+| 5 | Afiliado | `affiliate` | `afiliado@tribocar.test` | `/afiliado` |
+| 6 | Passageiro | `passenger` | `passageiro@tribocar.test` | `/demo` (slug do tenant) |
 
-### 8. `header_painel.tsx` — indicador Realtime
-Hoje o header mostra Online/Offline baseado em `perfil.is_online`. Adicionar pequeno indicador visual extra (bolinha pulsante verde) ao lado do status quando `realtimeAtivo === true`. Se `is_online === true` mas `realtimeAtivo === false`, mostrar bolinha amarela com tooltip "Reconectando…".
+**Senha única para todos:** `Tribo@2025` (fácil de lembrar durante testes).
 
----
+## Como implementar
 
-### Arquitetura/fluxo
+### 1. Edge function `seed-personas` (one-shot)
+- Usa `SUPABASE_SERVICE_ROLE_KEY` para chamar `auth.admin.createUser` com `email_confirm: true` (sem precisar verificar email).
+- Para cada persona: cria o usuário no `auth.users`, depois insere em `public.users` com o `role` correto.
+- Garante que existe um tenant `demo` (slug: `demo`) e popula:
+  - `tenant_branding` com cor primária e nome
+  - `tenant_settings` padrão
+  - linha em `drivers` para o motorista (com slug, veículo)
+  - linha em `affiliates` para o afiliado (aprovado)
+  - linha em `passengers` para o passageiro
+- **Idempotente**: se o email já existe, pula a criação (pode rodar várias vezes sem erro).
+- `verify_jwt = false` para você conseguir disparar uma vez sem estar logado.
 
-```text
-[passageiro solicita] → ride_requests INSERT
-        ↓
-[trigger DB] → POST /dispatch-ride action=trigger → dispatchRide() → INSERT ride_dispatches
-        ↓
-[Realtime postgres_changes] → motorista vê CardDispatch
-        ↓
-   ┌────────────────┬────────────────┐
-   ▼                ▼                ▼
-Aceitar          Recusar         Timeout 28s
-   │                │                │
-   ▼                ▼                ▼
-POST /dispatch-ride action=accept|reject|timeout
-   │                │                │
-   ▼                ▼                ▼
-- update dispatch  - update dispatch  - update dispatch
-- cancel others    - tryNextDriver    - tryNextDriver
-- create ride
-- audit_log
-```
+### 2. Página interna `/dev/personas`
+Tela simples, pública, que mostra:
+- Lista das 6 personas com email + senha + rota de destino
+- Botão **"Criar/Recriar personas"** que dispara a edge function
+- Botão **"Copiar credenciais"** ao lado de cada uma
+- Botão **"Login direto"** que já preenche e entra com aquela persona
 
-### Detalhes técnicos
-- Canal Realtime: `supabase.channel('dispatch-driver-${userId}').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ride_dispatches', filter: 'driver_id=eq.${userId}' }, ...)` + listener de `UPDATE` para limpar quando aceito/cancelado por outro fluxo.
-- Estado `realtimeAtivo` derivado do callback `subscribe((status) => setRealtimeAtivo(status === 'SUBSCRIBED'))`.
-- `tenant_settings.dispatch_timeout_sec` já existe (default 60); usaremos esse valor; mantemos `TIMEOUT_DISPATCH_SEG = 28` apenas como fallback se a config não carregar.
-- A edge function `dispatch-ride` já tem `action: "reject"` que internamente chama `tryNextDriver` — não precisa retrigar via UPDATE de `ride_requests.status`.
+Assim você abre `/dev/personas`, clica em "Criar", e tem todos os logins na mão.
 
-### Arquivos afetados
-- **Novo**: `src/features/painel/hooks/hook_dispatch_realtime.ts`
-- **Editados**: `src/features/painel/hooks/hook_painel.ts`, `src/features/painel/services/servico_painel.ts`, `src/features/painel/components/card_dispatch.tsx`, `src/features/painel/components/aba_inicio.tsx`, `src/features/painel/components/header_painel.tsx`, `src/features/painel/pages/pagina_painel.tsx`, `supabase/functions/dispatch-ride/index.ts`
+## Arquivos que vou criar
+
+- `supabase/functions/seed-personas/index.ts` — cria os 6 usuários + tenant demo + dados relacionados
+- `supabase/config.toml` — adiciona `[functions.seed-personas]` com `verify_jwt = false`
+- `src/features/dev_personas/types/tipos_personas.ts`
+- `src/features/dev_personas/constants/constantes_personas.ts` — lista das 6 personas
+- `src/features/dev_personas/services/servico_personas.ts` — chama a edge function + login direto
+- `src/features/dev_personas/components/card_persona.tsx` — card com email/senha/botões
+- `src/features/dev_personas/hooks/hook_personas.ts`
+- `src/features/dev_personas/pages/pagina_personas.tsx`
+- `src/App.tsx` — adicionar rota pública `/dev/personas`
+
+## Observação de segurança
+
+Esta página `/dev/personas` é **pública** porque é só pra ambiente de teste. Antes de publicar em produção, basta remover a rota do `App.tsx` e a edge function. Posso colocar um aviso visual amarelo no topo da tela: *"Apenas para testes. Remover antes de publicar."*
+
+## O que você terá ao final
+
+1. Acessa `https://...lovable.app/dev/personas`
+2. Clica em **"Criar personas"** (uma vez só)
+3. Vê os 6 cards com login/senha de cada papel
+4. Clica em **"Login direto"** em qualquer um e entra direto na rota correta
+5. Pode testar fluxo completo: pede corrida como passageiro, aceita como motorista, confere comissão como admin, etc.
 
