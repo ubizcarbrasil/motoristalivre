@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
@@ -19,10 +20,12 @@ import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/component
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
-import { Loader2, User } from "lucide-react";
+import { Loader2, LogIn, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     tipoOrigem,
     motorista,
@@ -229,6 +232,22 @@ export default function PaginaPassageiro() {
           aria-label="Meu perfil"
         >
           <User className="w-5 h-5" />
+        </Button>
+      )}
+
+      {!passengerId && etapa !== "buscando" && etapa !== "aceita" && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            const destinoAposLogin = `${location.pathname}${location.search}`;
+            navigate(`/entrar?redirectTo=${encodeURIComponent(destinoAposLogin)}`);
+          }}
+          className="absolute top-4 right-4 z-10 h-10 rounded-full shadow-lg gap-2 px-4"
+          aria-label="Entrar"
+        >
+          <LogIn className="w-4 h-4" />
+          Entrar
         </Button>
       )}
 
