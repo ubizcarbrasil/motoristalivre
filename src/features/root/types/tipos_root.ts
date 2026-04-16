@@ -48,9 +48,11 @@ export interface AfiliadoGlobal {
 export interface SaquePendente {
   id: string;
   donoNome: string | null;
+  donoTipo: "driver" | "affiliate" | "group";
   tenantNome: string;
   valor: number;
   pixKey: string | null;
+  pixKeyType: string | null;
   solicitadoEm: string;
 }
 
