@@ -56,3 +56,76 @@ export async function buscarAvaliacoesEnviadas(passengerId: string): Promise<Ava
     };
   });
 }
+
+export async function buscarHistoricoCorridas(passengerId: string): Promise<CorridaHistorico[]> {
+  const [ridesRes, requestsRes] = await Promise.all([
+    supabase
+      .from("rides")
+      .select("id, created_at, completed_at, price_paid, driver_id, ride_request_id")
+      .eq("passenger_id", passengerId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("ride_requests")
+      .select("id, created_at, status, origin_address, dest_address, final_price, offered_price, suggested_price")
+      .eq("passenger_id", passengerId)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const rides = ridesRes.data ?? [];
+  const requests = requestsRes.data ?? [];
+
+  const driverIds = Array.from(new Set(rides.map((r) => r.driver_id).filter(Boolean)));
+  const mapaDrivers = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+  if (driverIds.length > 0) {
+    const { data: drivers } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url")
+      .in("id", driverIds);
+    (drivers ?? []).forEach((d) => mapaDrivers.set(d.id, d));
+  }
+
+  const mapaRequests = new Map(requests.map((r) => [r.id, r]));
+  const requestIdsUsados = new Set<string>();
+
+  const corridasConcluidas: CorridaHistorico[] = rides.map((r) => {
+    requestIdsUsados.add(r.ride_request_id);
+    const req = mapaRequests.get(r.ride_request_id);
+    const driver = mapaDrivers.get(r.driver_id);
+    return {
+      id: r.id,
+      created_at: r.created_at,
+      completed_at: r.completed_at,
+      status: (req?.status as StatusCorrida) ?? "completed",
+      price_paid: r.price_paid !== null ? Number(r.price_paid) : null,
+      origin_address: req?.origin_address ?? null,
+      dest_address: req?.dest_address ?? null,
+      motorista_nome: driver?.full_name ?? "Motorista",
+      motorista_avatar: driver?.avatar_url ?? null,
+    };
+  });
+
+  const corridasSemMotorista: CorridaHistorico[] = requests
+    .filter((r) => !requestIdsUsados.has(r.id))
+    .map((r) => ({
+      id: r.id,
+      created_at: r.created_at,
+      completed_at: null,
+      status: r.status as StatusCorrida,
+      price_paid:
+        r.final_price !== null
+          ? Number(r.final_price)
+          : r.offered_price !== null
+          ? Number(r.offered_price)
+          : r.suggested_price !== null
+          ? Number(r.suggested_price)
+          : null,
+      origin_address: r.origin_address,
+      dest_address: r.dest_address,
+      motorista_nome: "—",
+      motorista_avatar: null,
+    }));
+
+  return [...corridasConcluidas, ...corridasSemMotorista].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
