@@ -49,6 +49,12 @@ export default function PaginaPassageiro() {
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
+  const [avaliacaoPendente, setAvaliacaoPendente] = useState<{
+    ride_id: string;
+    driver_id: string;
+    nome: string;
+    avatar: string | null;
+  } | null>(null);
 
   const rastreamento = useRastreamento(
     corridaAceita?.ride_id ?? null,
@@ -63,13 +69,29 @@ export default function PaginaPassageiro() {
     }
   }, [corridaAceita, etapa, setEtapa]);
 
-  // Fechar overlays se corrida terminou
+  // Quando corrida termina: mostrar avaliação ou cancelar
   useEffect(() => {
-    if (corridaAceita?.status === "completed" || corridaAceita?.status === "cancelled") {
+    if (!corridaAceita) return;
+    if (corridaAceita.status === "completed" && corridaAceita.ride_id) {
       setMostraRastreamento(false);
       setMostraChat(false);
+      setAvaliacaoPendente({
+        ride_id: corridaAceita.ride_id,
+        driver_id: corridaAceita.motorista.id,
+        nome: corridaAceita.motorista.nome,
+        avatar: corridaAceita.motorista.avatar_url,
+      });
+    } else if (corridaAceita.status === "cancelled" || corridaAceita.status === "expired") {
+      setMostraRastreamento(false);
+      setMostraChat(false);
+      resetarSolicitacao();
     }
-  }, [corridaAceita?.status]);
+  }, [corridaAceita?.status, corridaAceita?.ride_id, resetarSolicitacao]);
+
+  const concluirAvaliacao = useCallback(() => {
+    setAvaliacaoPendente(null);
+    resetarSolicitacao();
+  }, [resetarSolicitacao]);
 
   const abrirRastreamento = useCallback(() => {
     rastreamento.conectar();
