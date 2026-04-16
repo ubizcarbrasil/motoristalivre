@@ -41,3 +41,31 @@ export function filtrarCorridas(
     return true;
   });
 }
+
+export interface ResumoCorridas {
+  totalCorridas: number;
+  totalGasto: number;
+  totalDistancia: number;
+  corridasConcluidas: number;
+}
+
+export function calcularResumoCorridas(corridas: CorridaHistorico[]): ResumoCorridas {
+  let totalGasto = 0;
+  let totalDistancia = 0;
+  let corridasConcluidas = 0;
+
+  for (const c of corridas) {
+    if (c.status === "completed") {
+      corridasConcluidas += 1;
+      if (c.price_paid !== null) totalGasto += c.price_paid;
+      if (c.distance_km !== null) totalDistancia += c.distance_km;
+    }
+  }
+
+  return {
+    totalCorridas: corridas.length,
+    totalGasto,
+    totalDistancia,
+    corridasConcluidas,
+  };
+}
