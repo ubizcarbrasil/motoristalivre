@@ -4,4 +4,5 @@ export interface ContextoAutenticacaoTipo {
   usuario: User | null;
   sessao: Session | null;
   carregando: boolean;
+  temTenant: boolean | null;
 }

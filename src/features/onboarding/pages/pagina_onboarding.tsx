@@ -36,7 +36,8 @@ export default function PaginaOnboarding() {
         configuracao,
       });
       toast.success("Grupo criado com sucesso");
-      navegar("/admin");
+      // Forcar reload para atualizar estado de tenant
+      window.location.href = "/admin";
     } catch (erro) {
       console.error(erro);
       toast.error("Erro ao criar grupo. Tente novamente.");

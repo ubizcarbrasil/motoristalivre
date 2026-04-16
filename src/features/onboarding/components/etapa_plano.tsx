@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PLANOS } from "../constants/constantes_onboarding";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Plano = Tables<"plans">;
 
 interface EtapaPlanoProps {
   planoSelecionado: string;
@@ -10,6 +14,32 @@ interface EtapaPlanoProps {
 }
 
 export function EtapaPlano({ planoSelecionado, onSelecionar, onAvancar, onVoltar }: EtapaPlanoProps) {
+  const [planos, setPlanos] = useState<Plano[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("plans")
+      .select("*")
+      .order("price_monthly", { ascending: true })
+      .then(({ data }) => {
+        setPlanos(data ?? []);
+        if (data && data.length > 0 && !planoSelecionado) {
+          const pro = data.find((p) => p.name === "Pro");
+          onSelecionar(pro?.id ?? data[0].id);
+        }
+        setCarregando(false);
+      });
+  }, []);
+
+  if (carregando) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
       <div>
@@ -20,8 +50,10 @@ export function EtapaPlano({ planoSelecionado, onSelecionar, onAvancar, onVoltar
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {PLANOS.map((plano) => {
+        {planos.map((plano, index) => {
           const selecionado = plano.id === planoSelecionado;
+          const destaque = index === 1;
+          const features = Array.isArray(plano.features) ? plano.features as string[] : [];
 
           return (
             <button
@@ -34,24 +66,27 @@ export function EtapaPlano({ planoSelecionado, onSelecionar, onAvancar, onVoltar
                   : "border-border bg-card hover:border-muted-foreground/30"
               }`}
             >
-              {plano.destaque && (
+              {destaque && (
                 <span className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   Recomendado
                 </span>
               )}
 
               <div className="mb-4">
-                <h3 className="text-base font-semibold text-foreground">{plano.nome}</h3>
+                <h3 className="text-base font-semibold text-foreground">{plano.name}</h3>
                 <div className="mt-2">
                   <span className="text-2xl font-bold text-foreground">
-                    R${plano.precoMensal.toFixed(2).replace(".", ",")}
+                    R${Number(plano.price_monthly).toFixed(0)}
                   </span>
-                  <span className="text-sm text-muted-foreground">/mês</span>
+                  <span className="text-sm text-muted-foreground">/mes</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {plano.max_drivers >= 9999 ? "Motoristas ilimitados" : `Ate ${plano.max_drivers} motoristas`}
+                </p>
               </div>
 
               <ul className="space-y-2">
-                {plano.features.map((feature) => (
+                {features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     {feature}
@@ -67,7 +102,7 @@ export function EtapaPlano({ planoSelecionado, onSelecionar, onAvancar, onVoltar
         <Button variant="outline" onClick={onVoltar} className="flex-1">
           Voltar
         </Button>
-        <Button onClick={onAvancar} className="flex-1">
+        <Button onClick={onAvancar} disabled={!planoSelecionado} className="flex-1">
           Continuar
         </Button>
       </div>

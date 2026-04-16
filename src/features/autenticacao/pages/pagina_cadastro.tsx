@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
-import { Navigate } from "react-router-dom";
 
 export default function PaginaCadastro() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
@@ -18,6 +17,7 @@ export default function PaginaCadastro() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [slugGrupo, setSlugGrupo] = useState("");
+  const [tipoCadastro, setTipoCadastro] = useState<"passageiro" | "grupo">("grupo");
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
@@ -36,8 +36,12 @@ export default function PaginaCadastro() {
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
-    if (!nome.trim() || !email.trim() || !senha.trim() || !slugGrupo.trim()) {
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
       toast({ title: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+    if (tipoCadastro === "passageiro" && !slugGrupo.trim()) {
+      toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
     if (senha.length < 6) {
@@ -45,11 +49,17 @@ export default function PaginaCadastro() {
       return;
     }
     setCarregando(true);
+
+    const metadata: Record<string, string> = { full_name: nome.trim() };
+    if (tipoCadastro === "passageiro" && slugGrupo.trim()) {
+      metadata.tenant_slug = slugGrupo.trim();
+    }
+
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password: senha,
       options: {
-        data: { full_name: nome.trim(), tenant_slug: slugGrupo.trim() },
+        data: metadata,
         emailRedirectTo: window.location.origin,
       },
     });
@@ -62,14 +72,17 @@ export default function PaginaCadastro() {
   }
 
   async function handleGoogle() {
-    if (!slugGrupo.trim()) {
-      toast({ title: "Informe o slug do grupo antes de continuar", variant: "destructive" });
+    if (tipoCadastro === "passageiro" && !slugGrupo.trim()) {
+      toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
-    localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
+    if (tipoCadastro === "passageiro" && slugGrupo.trim()) {
+      localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
+    }
     setCarregandoGoogle(true);
+    const redirectPath = tipoCadastro === "grupo" ? "/onboarding" : "/painel";
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/painel`,
+      redirect_uri: `${window.location.origin}${redirectPath}`,
     });
     if (result?.error) {
       toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
@@ -88,7 +101,7 @@ export default function PaginaCadastro() {
           </div>
           <h1 className="text-xl font-bold text-foreground">Verifique seu email</h1>
           <p className="text-sm text-muted-foreground">
-            Enviamos um link de confirmacao para <strong className="text-foreground">{email}</strong>. 
+            Enviamos um link de confirmacao para <strong className="text-foreground">{email}</strong>.
             Clique no link para ativar sua conta.
           </p>
           <Button variant="outline" className="w-full" onClick={() => navigate("/entrar")}>
@@ -100,25 +113,53 @@ export default function PaginaCadastro() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="fixed inset-0 bg-background flex items-center justify-center px-6 overflow-y-auto">
+      <div className="w-full max-w-sm space-y-6 py-10">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Criar conta</h1>
           <p className="text-sm text-muted-foreground">Preencha os dados para comecar</p>
         </div>
 
+        {/* Tipo de cadastro */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setTipoCadastro("grupo")}
+            className={`rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+              tipoCadastro === "grupo"
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
+            }`}
+          >
+            Criar meu grupo
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoCadastro("passageiro")}
+            className={`rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+              tipoCadastro === "passageiro"
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
+            }`}
+          >
+            Entrar em um grupo
+          </button>
+        </div>
+
         <form onSubmit={handleCadastro} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="slugGrupo" className="text-foreground">Slug do grupo</Label>
-            <Input
-              id="slugGrupo"
-              type="text"
-              placeholder="ex: meu-grupo"
-              value={slugGrupo}
-              onChange={(e) => setSlugGrupo(e.target.value)}
-              required
-            />
-          </div>
+          {tipoCadastro === "passageiro" && (
+            <div className="space-y-2">
+              <Label htmlFor="slugGrupo" className="text-foreground">Slug do grupo</Label>
+              <Input
+                id="slugGrupo"
+                type="text"
+                placeholder="ex: meu-grupo"
+                value={slugGrupo}
+                onChange={(e) => setSlugGrupo(e.target.value)}
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="nome" className="text-foreground">Nome completo</Label>

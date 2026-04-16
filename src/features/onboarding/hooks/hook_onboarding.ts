@@ -5,7 +5,7 @@ import { IDENTIDADE_INICIAL, CONFIGURACAO_INICIAL } from "../constants/constante
 export function useOnboarding() {
   const [etapaAtual, setEtapaAtual] = useState<EtapaOnboarding>(0);
   const [identidade, setIdentidade] = useState<DadosIdentidade>(IDENTIDADE_INICIAL);
-  const [planoSelecionado, setPlanoSelecionado] = useState("pro");
+  const [planoSelecionado, setPlanoSelecionado] = useState("");
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
   const [configuracao, setConfiguracao] = useState<DadosConfiguracao>(CONFIGURACAO_INICIAL);
   const [enviando, setEnviando] = useState(false);
