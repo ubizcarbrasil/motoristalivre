@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { NavegacaoInferior } from "../components/navegacao_inferior";
 import { AbaInicio } from "../components/aba_inicio";
 import { AbaPerfil } from "../components/aba_perfil";
-import { AbaTribo } from "../components/aba_tribo";
 import { AbaCarteira } from "../components/aba_carteira";
-import { AbaPrecos } from "../components/aba_precos";
+import { AbaMeusLinks } from "../components/aba_meus_links";
+import { AbaConfiguracoes } from "../components/aba_configuracoes";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
   const {
@@ -32,6 +33,20 @@ export default function PaginaPainel() {
   } = usePainel();
 
   const [mostraChat, setMostraChat] = useState(false);
+  const [ehAdmin, setEhAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const role = data?.role;
+        setEhAdmin(role === "tenant_admin" || role === "manager" || role === "root_admin");
+      });
+  }, [userId]);
 
   if (carregando) {
     return (
@@ -74,39 +89,22 @@ export default function PaginaPainel() {
           onRecusarDispatch={recusarDispatch}
           onTimeoutDispatch={timeoutDispatch}
           onNavegar={setAba}
-          onPrecos={() => setAba("precos")}
         />
       )}
 
-      {aba === "perfil" && (
-        <AbaPerfil perfil={perfil} onAtualizar={setPerfil} />
+      {aba === "meus_links" && (
+        <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
       )}
 
-      {aba === "tribo" && (
-        <AbaTribo
-          tenantId={tenant.id}
-          tenantNome={tenant.name}
-          tenantSlug={tenant.slug}
-          motoristaSlug={perfil.slug}
-        />
+      {aba === "carteira" && <AbaCarteira userId={userId} />}
+
+      {aba === "perfil" && <AbaPerfil perfil={perfil} onAtualizar={setPerfil} />}
+
+      {aba === "configuracoes" && (
+        <AbaConfiguracoes driverId={userId} tenantId={tenant.id} ehAdmin={ehAdmin} />
       )}
 
-      {aba === "carteira" && (
-        <AbaCarteira userId={userId} />
-      )}
-
-      {aba === "precos" && (
-        <AbaPrecos
-          perfil={perfil}
-          tenantId={tenant.id}
-          onVoltar={() => setAba("inicio")}
-          onAtualizar={setPerfil}
-        />
-      )}
-
-      {aba !== "precos" && (
-        <NavegacaoInferior abaAtiva={aba} onMudar={setAba} />
-      )}
+      <NavegacaoInferior abaAtiva={aba} onMudar={setAba} />
 
       {mostraChat && corridaAtiva && (
         <TelaChat
