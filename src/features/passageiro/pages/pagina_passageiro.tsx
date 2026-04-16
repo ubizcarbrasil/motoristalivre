@@ -52,6 +52,7 @@ export default function PaginaPassageiro() {
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
+  const [mostraPerfil, setMostraPerfil] = useState(false);
   const [avaliacaoPendente, setAvaliacaoPendente] = useState<{
     ride_id: string;
     driver_id: string;
