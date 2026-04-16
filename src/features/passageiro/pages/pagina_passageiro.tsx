@@ -46,6 +46,7 @@ export default function PaginaPassageiro() {
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
+  const [mostraChat, setMostraChat] = useState(false);
 
   const rastreamento = useRastreamento(
     corridaAceita?.ride_id ?? null,
@@ -60,10 +61,11 @@ export default function PaginaPassageiro() {
     }
   }, [corridaAceita, etapa, setEtapa]);
 
-  // Fechar rastreamento se corrida terminou
+  // Fechar overlays se corrida terminou
   useEffect(() => {
     if (corridaAceita?.status === "completed" || corridaAceita?.status === "cancelled") {
       setMostraRastreamento(false);
+      setMostraChat(false);
     }
   }, [corridaAceita?.status]);
 
