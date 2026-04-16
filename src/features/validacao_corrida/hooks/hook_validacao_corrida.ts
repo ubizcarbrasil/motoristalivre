@@ -16,8 +16,17 @@ export function useValidacaoCorrida(rideId: string | undefined): EstadoValidacao
   });
 
   useEffect(() => {
-    if (!rideId) {
-      setEstado({ carregando: false, resposta: null, erro: "ID inválido" });
+    const UUID_REGEX =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!rideId || !UUID_REGEX.test(rideId)) {
+      // Trata ID ausente ou formato inválido (ex.: ":id" literal) como
+      // "não encontrada" em vez de dar erro 400 na edge function.
+      setEstado({
+        carregando: false,
+        resposta: { encontrada: false },
+        erro: null,
+      });
       return;
     }
 
