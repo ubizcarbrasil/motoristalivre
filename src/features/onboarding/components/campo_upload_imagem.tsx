@@ -4,15 +4,30 @@ import { Label } from "@/components/ui/label";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
+interface DimensoesMinimas {
+  largura: number;
+  altura: number;
+}
+
 interface CampoUploadImagemProps {
   label: string;
   valor: string;
   pasta: string;
   aspecto: "square" | "wide";
+  dimensoesMinimas?: DimensoesMinimas;
   onChange: (url: string) => void;
 }
 
-export function CampoUploadImagem({ label, valor, pasta, aspecto, onChange }: CampoUploadImagemProps) {
+function carregarImagem(arquivo: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(arquivo);
+  });
+}
+
+export function CampoUploadImagem({ label, valor, pasta, aspecto, dimensoesMinimas, onChange }: CampoUploadImagemProps) {
   const [enviando, setEnviando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +45,23 @@ export function CampoUploadImagem({ label, valor, pasta, aspecto, onChange }: Ca
     if (arquivo.size > 2 * 1024 * 1024) {
       toast.error("Imagem deve ter no máximo 2MB");
       return;
+    }
+
+    // Validar dimensões mínimas
+    if (dimensoesMinimas) {
+      try {
+        const img = await carregarImagem(arquivo);
+        const { largura, altura } = dimensoesMinimas;
+        if (img.naturalWidth < largura || img.naturalHeight < altura) {
+          toast.error(`Dimensões mínimas: ${largura}×${altura}px. Sua imagem: ${img.naturalWidth}×${img.naturalHeight}px`);
+          URL.revokeObjectURL(img.src);
+          return;
+        }
+        URL.revokeObjectURL(img.src);
+      } catch {
+        toast.error("Não foi possível ler as dimensões da imagem");
+        return;
+      }
     }
 
     setEnviando(true);
@@ -63,6 +95,11 @@ export function CampoUploadImagem({ label, valor, pasta, aspecto, onChange }: Ca
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
+      {dimensoesMinimas && (
+        <p className="text-[10px] text-muted-foreground">
+          Mín. {dimensoesMinimas.largura}×{dimensoesMinimas.altura}px
+        </p>
+      )}
       <input
         ref={inputRef}
         type="file"
