@@ -140,15 +140,6 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar, onPedirNovame
           }
         />
       )}
-            onPedirNovamente
-              ? (origem, destino) => {
-                  onPedirNovamente(origem, destino);
-                  setCorridaSelecionada(null);
-                }
-              : undefined
-          }
-        />
-      )}
     </div>
   );
 }
