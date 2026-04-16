@@ -1,82 +1,55 @@
 
 
-O usuário quer ter credenciais de teste (email + senha) para cada tipo de persona do sistema (root_admin, tenant_admin, manager, driver, affiliate, passenger) para conseguir testar todos os fluxos.
+## Diagnóstico
 
-Olhando o schema, o enum `app_role` aparece em vários lugares e os papéis identificados são:
-- `root_admin` → super admin da plataforma (`/root`)
-- `tenant_admin` → dono do grupo (`/admin`)
-- `manager` → gestor do grupo (`/admin`)
-- `driver` → motorista (`/painel`)
-- `affiliate` → afiliado (`/afiliado`)
-- `passenger` → passageiro (`/:slug`)
+A tela "Link não encontrado" no print **não é o NotFound 404 genérico** — é a tela de erro do `pagina_passageiro.tsx` (linhas 197–206). Ela é exibida quando o hook `useSolicitacao` seta `erro = true`, o que acontece quando `buscarMotorista(slug, slugPerfil)` retorna `null`.
 
-Não dá pra criar usuários no `auth.users` via migration SQL diretamente de forma confiável (precisa de hash de senha do GoTrue). A forma correta é usar uma **edge function** com `SUPABASE_SERVICE_ROLE_KEY` chamando `supabase.auth.admin.createUser`, e depois inserir na tabela `public.users` com o role correto + tenant_id.
+### Causa raiz: a rota `/demo` cai em `/:slug/:driver_slug` errado
 
-Plano enxuto: criar um seed de personas via edge function que o usuário pode disparar uma vez, e entregar as credenciais em uma página interna (ou só no chat). Vou propor entregar via edge function + página `/dev/personas` protegida só pra ele ver as senhas durante teste.
+Olhando o `App.tsx`:
+```
+<Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+```
 
-# Plano: Criar usuários de teste para todas as personas
+Quando o passageiro faz "Login direto" via `/dev/personas`, ele é redirecionado para `/demo`. O `PaginaPassageiro` é montado, e o `useSolicitacao` faz:
 
-## O que vai ser feito
+```ts
+const slugPerfil = params.affiliate_slug || params.driver_slug || "";
+// slug = "demo", slugPerfil = ""
+if (tipoOrigem === "motorista" && params.slug) {
+  const m = await buscarMotorista("demo", "");  // ← driver_slug vazio!
+  if (!m) { setErro(true); return; }            // ← cai aqui
+}
+```
 
-Criar **6 usuários de teste** (um para cada papel) com email/senha previsíveis, cada um já vinculado a um tenant de demonstração, para você poder logar e testar cada fluxo do sistema.
+O service `buscarMotorista` faz `.eq("slug", "")` em `drivers`, não acha ninguém, retorna `null`, e a tela mostra "Link não encontrado".
 
-## Personas e ordem de grandeza (do mais poderoso ao mais restrito)
+A página `/demo` (sem slug de motorista) **nunca foi pensada para funcionar sozinha** — o fluxo correto é o passageiro abrir um link tipo `/demo/motorista-demo` ou `/demo/a/afiliado-demo`. Sem motorista no path, não há para quem pedir corrida.
 
-| Nível | Persona | Role no banco | Email | Rota após login |
-|---|---|---|---|---|
-| 1 | Super Admin da plataforma | `root_admin` | `root@tribocar.test` | `/root` |
-| 2 | Dono do grupo (tenant) | `tenant_admin` | `admin@tribocar.test` | `/admin` |
-| 3 | Gestor do grupo | `manager` | `manager@tribocar.test` | `/admin` |
-| 4 | Motorista | `driver` | `motorista@tribocar.test` | `/painel` |
-| 5 | Afiliado | `affiliate` | `afiliado@tribocar.test` | `/afiliado` |
-| 6 | Passageiro | `passenger` | `passageiro@tribocar.test` | `/demo` (slug do tenant) |
+### Por que o motorista também não aparece
 
-**Senha única para todos:** `Tribo@2025` (fácil de lembrar durante testes).
+Mesmo se você acessar `/demo/motorista-demo` direto, pode dar erro porque:
+- A edge function `seed-personas` cria o driver com `slug: "motorista-demo"` ✅
+- Mas o `useRedirecionamento` manda o passageiro para `/demo` (sem o `/motorista-demo`) ❌
 
-## Como implementar
+## O que precisa ser corrigido
 
-### 1. Edge function `seed-personas` (one-shot)
-- Usa `SUPABASE_SERVICE_ROLE_KEY` para chamar `auth.admin.createUser` com `email_confirm: true` (sem precisar verificar email).
-- Para cada persona: cria o usuário no `auth.users`, depois insere em `public.users` com o `role` correto.
-- Garante que existe um tenant `demo` (slug: `demo`) e popula:
-  - `tenant_branding` com cor primária e nome
-  - `tenant_settings` padrão
-  - linha em `drivers` para o motorista (com slug, veículo)
-  - linha em `affiliates` para o afiliado (aprovado)
-  - linha em `passengers` para o passageiro
-- **Idempotente**: se o email já existe, pula a criação (pode rodar várias vezes sem erro).
-- `verify_jwt = false` para você conseguir disparar uma vez sem estar logado.
+### 1. Ajustar destino do passageiro nas personas
+Em `constantes_personas.ts`, mudar:
+```ts
+rotaDestino: `/${TENANT_DEMO_SLUG}`           // ❌ /demo
+rotaDestino: `/${TENANT_DEMO_SLUG}/motorista-demo`  // ✅ /demo/motorista-demo
+```
 
-### 2. Página interna `/dev/personas`
-Tela simples, pública, que mostra:
-- Lista das 6 personas com email + senha + rota de destino
-- Botão **"Criar/Recriar personas"** que dispara a edge function
-- Botão **"Copiar credenciais"** ao lado de cada uma
-- Botão **"Login direto"** que já preenche e entra com aquela persona
+E também em `hook_redirecionamento.ts`, o caso `passenger` precisa redirecionar para um link válido (tenant + motorista padrão), não só `/demo`.
 
-Assim você abre `/dev/personas`, clica em "Criar", e tem todos os logins na mão.
+### 2. Tornar a tela mais amigável quando faltar slug de motorista
+Em `pagina_passageiro.tsx`, ao invés de "Link não encontrado" cru, mostrar uma tela de **seleção** ("Escolha um motorista do grupo Demo") listando os motoristas online do tenant, ou pelo menos um link/CTA de volta. Isso evita confundir o usuário em testes.
 
-## Arquivos que vou criar
+### 3. Confirmar que o seed roda antes do login
+Se o usuário clicou "Login direto" sem antes clicar em "Criar/Recriar personas", o tenant `demo` e o driver `motorista-demo` não existem ainda. Vou adicionar uma checagem no `useRedirecionamento` (ou no `servico_personas`) que dispara o seed automaticamente antes do primeiro login direto, de forma idempotente.
 
-- `supabase/functions/seed-personas/index.ts` — cria os 6 usuários + tenant demo + dados relacionados
-- `supabase/config.toml` — adiciona `[functions.seed-personas]` com `verify_jwt = false`
-- `src/features/dev_personas/types/tipos_personas.ts`
-- `src/features/dev_personas/constants/constantes_personas.ts` — lista das 6 personas
-- `src/features/dev_personas/services/servico_personas.ts` — chama a edge function + login direto
-- `src/features/dev_personas/components/card_persona.tsx` — card com email/senha/botões
-- `src/features/dev_personas/hooks/hook_personas.ts`
-- `src/features/dev_personas/pages/pagina_personas.tsx`
-- `src/App.tsx` — adicionar rota pública `/dev/personas`
+## Arquivos a editar
 
-## Observação de segurança
-
-Esta página `/dev/personas` é **pública** porque é só pra ambiente de teste. Antes de publicar em produção, basta remover a rota do `App.tsx` e a edge function. Posso colocar um aviso visual amarelo no topo da tela: *"Apenas para testes. Remover antes de publicar."*
-
-## O que você terá ao final
-
-1. Acessa `https://...lovable.app/dev/personas`
-2. Clica em **"Criar personas"** (uma vez só)
-3. Vê os 6 cards com login/senha de cada papel
-4. Clica em **"Login direto"** em qualquer um e entra direto na rota correta
-5. Pode testar fluxo completo: pede corrida como passageiro, aceita como motorista, confere comissão como admin, etc.
-
+- `src/features/dev_personas/constants/constantes_personas.ts` — corrigir `rotaDestino` do passageiro para `/demo/motorista-demo`
+- `src/features/autenticacao/hooks/hook_redirecionamento.ts` — para `passenger`, buscar um motorista do tenant e redirecionar para `/{tenant_slug}/{
