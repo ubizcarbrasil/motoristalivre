@@ -109,6 +109,7 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             valor={dados.logoUrl}
             pasta="logos"
             aspecto="square"
+            dimensoesMinimas={{ largura: 200, altura: 200 }}
             onChange={(url) => atualizar("logoUrl", url)}
           />
           <CampoUploadImagem
@@ -116,6 +117,7 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             valor={dados.capaUrl}
             pasta="capas"
             aspecto="wide"
+            dimensoesMinimas={{ largura: 800, altura: 300 }}
             onChange={(url) => atualizar("capaUrl", url)}
           />
         </div>
