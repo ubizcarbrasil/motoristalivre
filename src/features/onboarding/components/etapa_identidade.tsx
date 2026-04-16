@@ -103,6 +103,23 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
           />
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <CampoUploadImagem
+            label="Logo"
+            valor={dados.logoUrl}
+            pasta="logos"
+            aspecto="square"
+            onChange={(url) => atualizar("logoUrl", url)}
+          />
+          <CampoUploadImagem
+            label="Imagem de capa"
+            valor={dados.capaUrl}
+            pasta="capas"
+            aspecto="wide"
+            onChange={(url) => atualizar("capaUrl", url)}
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="descricao">Descrição</Label>
           <Textarea
