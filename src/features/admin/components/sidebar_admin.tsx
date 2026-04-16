@@ -33,7 +33,7 @@ export function SidebarAdmin({ secaoAtiva, onNavegar }: SidebarAdminProps) {
       </SidebarHeader>
       <SidebarContent>
         {MENU_ADMIN.map((grupo) => (
-          <SidebarGroup key={grupo.titulo} defaultOpen>
+          <SidebarGroup key={grupo.titulo}>
             <SidebarGroupLabel className="text-xs uppercase tracking-widest text-muted-foreground">
               {!collapsed && grupo.titulo}
             </SidebarGroupLabel>
