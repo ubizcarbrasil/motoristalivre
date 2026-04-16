@@ -1,0 +1,46 @@
+import {
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
+} from "@/components/ui/sidebar";
+import { MENU_ROOT } from "../constants/constantes_root";
+import type { SecaoRoot } from "../types/tipos_root";
+
+interface SidebarRootProps {
+  secaoAtiva: SecaoRoot;
+  onNavegar: (s: SecaoRoot) => void;
+}
+
+export function SidebarRoot({ secaoAtiva, onNavegar }: SidebarRootProps) {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b border-border px-4 py-4">
+        {!collapsed && <span className="text-sm font-semibold tracking-wide text-foreground">TriboCar Root</span>}
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {MENU_ROOT.map((item) => {
+                const ativo = secaoAtiva === item.id;
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => onNavegar(item.id)}
+                      className={ativo ? "bg-accent/20 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}
+                    >
+                      <item.icone className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
