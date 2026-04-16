@@ -116,6 +116,12 @@ export function useSolicitacao() {
     }
     setConfirmando(true);
     try {
+      // Garante que o usuário logado existe como passageiro neste tenant
+      const { error: errPassenger } = await supabase.rpc("ensure_passenger", {
+        _tenant_id: tenantId,
+      });
+      if (errPassenger) throw errPassenger;
+
       const { data, error } = await supabase
         .from("ride_requests")
         .insert({
@@ -144,8 +150,9 @@ export function useSolicitacao() {
       setRideRequestId(data.id);
       setEtapa("buscando");
     } catch (e) {
-      toast.error("Erro ao solicitar corrida");
-      console.error(e);
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      toast.error(`Erro ao solicitar corrida: ${msg}`);
+      console.error("[solicitar corrida]", e);
     } finally {
       setConfirmando(false);
     }
