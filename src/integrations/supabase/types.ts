@@ -400,6 +400,7 @@ export type Database = {
           created_at: string
           id: string
           pix_key: string | null
+          pix_key_type: Database["public"]["Enums"]["pix_key_type"] | null
           processed_at: string | null
           processed_by: string | null
           requested_at: string
@@ -412,6 +413,7 @@ export type Database = {
           created_at?: string
           id?: string
           pix_key?: string | null
+          pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
           processed_at?: string | null
           processed_by?: string | null
           requested_at?: string
@@ -424,6 +426,7 @@ export type Database = {
           created_at?: string
           id?: string
           pix_key?: string | null
+          pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
           processed_at?: string | null
           processed_by?: string | null
           requested_at?: string
@@ -1225,6 +1228,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_payout: { Args: { _payout_id: string }; Returns: undefined }
       create_tenant_with_owner: {
         Args: { _name: string; _plan_id?: string; _slug: string }
         Returns: string
@@ -1233,12 +1237,26 @@ export type Database = {
         Args: { _tenant_slug: string }
         Returns: undefined
       }
+      ensure_wallet: {
+        Args: { _owner_type: Database["public"]["Enums"]["wallet_owner_type"] }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
+      reject_payout: { Args: { _payout_id: string }; Returns: undefined }
+      request_payout: {
+        Args: {
+          _amount: number
+          _owner_type: Database["public"]["Enums"]["wallet_owner_type"]
+          _pix_key: string
+          _pix_key_type: Database["public"]["Enums"]["pix_key_type"]
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
@@ -1254,7 +1272,14 @@ export type Database = {
       dispatch_mode: "auto" | "manual" | "hybrid"
       dispatch_response: "pending" | "accepted" | "rejected" | "timeout"
       payment_method: "dinheiro" | "pix" | "cartao" | "saldo"
-      payout_status: "pending" | "processing" | "completed" | "failed"
+      payout_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "approved"
+        | "rejected"
+      pix_key_type: "cpf" | "email" | "telefone" | "aleatoria"
       referral_type: "driver" | "affiliate"
       ride_origin_type: "driver_link" | "affiliate_link" | "group_link"
       ride_status:
@@ -1418,7 +1443,15 @@ export const Constants = {
       dispatch_mode: ["auto", "manual", "hybrid"],
       dispatch_response: ["pending", "accepted", "rejected", "timeout"],
       payment_method: ["dinheiro", "pix", "cartao", "saldo"],
-      payout_status: ["pending", "processing", "completed", "failed"],
+      payout_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "approved",
+        "rejected",
+      ],
+      pix_key_type: ["cpf", "email", "telefone", "aleatoria"],
       referral_type: ["driver", "affiliate"],
       ride_origin_type: ["driver_link", "affiliate_link", "group_link"],
       ride_status: [
