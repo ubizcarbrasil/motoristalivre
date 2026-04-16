@@ -13,6 +13,7 @@ import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
 import { existeAvaliacao } from "../services/servico_avaliacao";
 import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favoritos";
+import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_recentes";
 import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
@@ -54,6 +55,7 @@ export default function PaginaPassageiro() {
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
+  const recentesCtx = useDestinosRecentes({ passengerId });
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
@@ -114,7 +116,8 @@ export default function PaginaPassageiro() {
   const concluirAvaliacao = useCallback(() => {
     setAvaliacaoPendente(null);
     resetarSolicitacao();
-  }, [resetarSolicitacao]);
+    recentesCtx.recarregar();
+  }, [resetarSolicitacao, recentesCtx]);
 
   const abrirRastreamento = useCallback(() => {
     rastreamento.conectar();
@@ -250,6 +253,7 @@ export default function PaginaPassageiro() {
           onVoltarEnderecos={voltarParaEnderecos}
           confirmando={confirmando}
           favoritos={passengerId ? favoritosCtx.favoritos : []}
+          recentes={passengerId ? recentesCtx.recentes : []}
           onUsarFavorito={passengerId ? usarFavoritoComoCampo : undefined}
           onAdicionarFavoritoTipo={passengerId ? (t) => abrirDialogoFavorito(t) : undefined}
           onFavoritarEndereco={passengerId ? favoritarEndereco : undefined}

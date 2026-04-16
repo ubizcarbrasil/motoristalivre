@@ -3,7 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Crosshair, Loader2, Star } from "lucide-react";
 import { useAutocompletarEndereco } from "../hooks/hook_autocompletar_endereco";
 import { SugestaoFavorito } from "@/features/favoritos_passageiro/components/sugestao_favorito";
+import { SugestaoRecente } from "@/features/favoritos_passageiro/components/sugestao_recente";
 import type { FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
+import type { EnderecoRecente } from "@/features/favoritos_passageiro/types/tipos_recentes";
 import type { EnderecoCompleto } from "../types/tipos_passageiro";
 
 interface CampoEnderecoProps {
@@ -13,8 +15,15 @@ interface CampoEnderecoProps {
   placeholder: string;
   onGeolocalizarOrigem?: () => void;
   favoritos?: FavoritoEndereco[];
+  recentes?: EnderecoRecente[];
   onFavoritarResultado?: (endereco: { address: string; lat: number; lng: number }) => void;
   identificarFavorito?: (lat: number, lng: number, endereco: string) => FavoritoEndereco | undefined;
+}
+
+const PRECISAO_COORDENADA = 4;
+
+function chaveCoord(lat: number, lng: number): string {
+  return `${lat.toFixed(PRECISAO_COORDENADA)},${lng.toFixed(PRECISAO_COORDENADA)}`;
 }
 
 export function CampoEndereco({
@@ -24,6 +33,7 @@ export function CampoEndereco({
   placeholder,
   onGeolocalizarOrigem,
   favoritos = [],
+  recentes = [],
   onFavoritarResultado,
   identificarFavorito,
 }: CampoEnderecoProps) {
@@ -33,9 +43,15 @@ export function CampoEndereco({
 
   const textoExibido = valor?.endereco ?? "";
   const semConsulta = consulta.length < 3;
+
+  // Recentes que NÃO estão entre os favoritos (dedupe por coordenada)
+  const chavesFavoritas = new Set(favoritos.map((f) => chaveCoord(f.lat, f.lng)));
+  const recentesFiltrados = recentes.filter((r) => !chavesFavoritas.has(chaveCoord(r.lat, r.lng)));
+
   const mostrarFavoritos = focado && semConsulta && favoritos.length > 0;
+  const mostrarRecentes = focado && semConsulta && recentesFiltrados.length > 0;
   const mostrarResultados = focado && (consulta.length >= 3 || resultados.length > 0);
-  const mostrarDropdown = mostrarFavoritos || mostrarResultados;
+  const mostrarDropdown = mostrarFavoritos || mostrarRecentes || mostrarResultados;
 
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
@@ -95,6 +111,37 @@ export function CampoEndereco({
                     });
                     setFocado(false);
                   }}
+                />
+              ))}
+            </>
+          )}
+
+          {mostrarRecentes && (
+            <>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">
+                Endereços recentes
+              </p>
+              {recentesFiltrados.slice(0, 5).map((r) => (
+                <SugestaoRecente
+                  key={`${r.lat}-${r.lng}-${r.ultimaUtilizacao}`}
+                  recente={r}
+                  onSelecionar={() => {
+                    onSelecionar({
+                      coordenada: { lat: r.lat, lng: r.lng },
+                      endereco: r.address,
+                    });
+                    setFocado(false);
+                  }}
+                  onFavoritar={
+                    onFavoritarResultado
+                      ? () =>
+                          onFavoritarResultado({
+                            address: r.address,
+                            lat: r.lat,
+                            lng: r.lng,
+                          })
+                      : undefined
+                  }
                 />
               ))}
             </>
