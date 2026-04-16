@@ -1,8 +1,10 @@
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CabecalhoPerfilPassageiro } from "../components/cabecalho_perfil_passageiro";
 import { GridEstatisticasPassageiro } from "../components/grid_estatisticas_passageiro";
 import { ListaAvaliacoesEnviadas } from "../components/lista_avaliacoes_enviadas";
+import { ListaHistoricoCorridas } from "../components/lista_historico_corridas";
 import { usePerfilPassageiro } from "../hooks/hook_perfil_passageiro";
 
 interface PaginaPerfilPassageiroProps {
@@ -11,7 +13,7 @@ interface PaginaPerfilPassageiroProps {
 }
 
 export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfilPassageiroProps) {
-  const { perfil, avaliacoes, carregando } = usePerfilPassageiro(userId);
+  const { perfil, avaliacoes, corridas, carregando } = usePerfilPassageiro(userId);
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -42,12 +44,24 @@ export default function PaginaPerfilPassageiro({ userId, onVoltar }: PaginaPerfi
             <CabecalhoPerfilPassageiro perfil={perfil} />
             <GridEstatisticasPassageiro perfil={perfil} />
 
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">
-                Minhas avaliações enviadas
-              </h2>
-              <ListaAvaliacoesEnviadas avaliacoes={avaliacoes} />
-            </section>
+            <Tabs defaultValue="corridas" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 h-9">
+                <TabsTrigger value="corridas" className="text-xs">
+                  Corridas
+                </TabsTrigger>
+                <TabsTrigger value="avaliacoes" className="text-xs">
+                  Avaliações
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="corridas" className="mt-4">
+                <ListaHistoricoCorridas corridas={corridas} />
+              </TabsContent>
+
+              <TabsContent value="avaliacoes" className="mt-4">
+                <ListaAvaliacoesEnviadas avaliacoes={avaliacoes} />
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </main>
