@@ -55,6 +55,7 @@ export default function PaginaPassageiro() {
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
+  const recentesCtx = useDestinosRecentes({ passengerId });
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
@@ -251,6 +252,7 @@ export default function PaginaPassageiro() {
           onVoltarEnderecos={voltarParaEnderecos}
           confirmando={confirmando}
           favoritos={passengerId ? favoritosCtx.favoritos : []}
+          recentes={passengerId ? recentesCtx.recentes : []}
           onUsarFavorito={passengerId ? usarFavoritoComoCampo : undefined}
           onAdicionarFavoritoTipo={passengerId ? (t) => abrirDialogoFavorito(t) : undefined}
           onFavoritarEndereco={passengerId ? favoritarEndereco : undefined}
