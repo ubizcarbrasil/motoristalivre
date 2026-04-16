@@ -16,6 +16,7 @@ import PaginaAfiliado from "@/features/afiliado/pages/pagina_afiliado";
 import PaginaRoot from "@/features/root/pages/pagina_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
 import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_motorista";
+import PaginaLanding from "@/features/landing/pages/pagina_landing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +30,7 @@ const App = () => (
         <ProvedorAutenticacao>
           <Routes>
             {/* Rotas públicas */}
-            <Route path="/" element={<Navigate to="/entrar" replace />} />
+            <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
             <Route path="/cadastro" element={<PaginaCadastro />} />
 
