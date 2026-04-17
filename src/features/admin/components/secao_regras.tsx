@@ -82,8 +82,8 @@ export function SecaoRegras() {
       </div>
 
       <div className="space-y-2">
-        <Label>Timeout: {timeout}s</Label>
-        <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={15} max={120} step={5} />
+        <Label>Tempo para o motorista responder: {timeout}s (recomendado 60-180s)</Label>
+        <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={30} max={180} step={5} />
       </div>
 
       <div className="space-y-2">
