@@ -84,7 +84,13 @@ export default function PaginaCadastro() {
 
     if (error) {
       setCarregando(false);
-      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
+      const msg = error.message || "";
+      const descricao = /known to be weak|easy to guess|pwned|leaked/i.test(msg)
+        ? "Essa senha é muito comum e fácil de adivinhar. Escolha uma mais forte (misture letras, números e símbolos)."
+        : /already registered|already exists/i.test(msg)
+        ? "Este email já está cadastrado. Tente entrar."
+        : msg;
+      toast({ title: "Erro ao criar conta", description: descricao, variant: "destructive" });
       return;
     }
 
