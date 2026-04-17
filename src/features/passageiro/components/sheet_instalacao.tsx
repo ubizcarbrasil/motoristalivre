@@ -1,19 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-
-function isIOS(): boolean {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-}
-
-function isAndroid(): boolean {
-  return /Android/.test(navigator.userAgent);
-}
-
-function isStandalone(): boolean {
-  return window.matchMedia("(display-mode: standalone)").matches
-    || ("standalone" in window.navigator && (window.navigator as unknown as { standalone: boolean }).standalone);
-}
+import { ehIOS, ehAndroid, estaInstalado } from "@/compartilhados/utils/detectar_pwa";
 
 const STORAGE_KEY = "tribocar_pwa_dismissed";
 
@@ -22,7 +10,7 @@ export function SheetInstalacao() {
 
   useEffect(() => {
     const jaDismissed = localStorage.getItem(STORAGE_KEY);
-    if (jaDismissed || isStandalone()) return;
+    if (jaDismissed || estaInstalado()) return;
 
     const timer = setTimeout(() => setVisivel(true), 2000);
     return () => clearTimeout(timer);
