@@ -1,6 +1,8 @@
 // Helpers para gerar beeps via Web Audio API sem precisar de arquivos externos.
 // Funciona em iOS Safari após primeira interação do usuário.
 
+export type TipoSomChamada = "suave" | "padrao" | "sirene";
+
 let contextoAudio: AudioContext | null = null;
 
 function obterContexto(): AudioContext | null {
@@ -62,8 +64,58 @@ export function tocarBeep(opcoes: OpcoesBeep = {}) {
   osc.stop(fim + 0.02);
 }
 
-export function tocarPadraoAlerta(intenso = false) {
-  // Padrão "ding-ding" (duas notas curtas em terça maior)
+/**
+ * Sirene policial: alterna 2 frequências em sweep contínuo.
+ */
+function tocarSirene(intenso: boolean) {
+  const ctx = obterContexto();
+  if (!ctx || ctx.state !== "running") return;
+
+  const inicio = ctx.currentTime;
+  const duracaoTotal = intenso ? 0.9 : 0.7;
+  const volume = intenso ? 0.22 : 0.16;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+
+  // Sweep entre 600Hz e 1100Hz (estilo sirene)
+  osc.frequency.setValueAtTime(600, inicio);
+  osc.frequency.linearRampToValueAtTime(1100, inicio + duracaoTotal / 2);
+  osc.frequency.linearRampToValueAtTime(600, inicio + duracaoTotal);
+
+  gain.gain.setValueAtTime(0, inicio);
+  gain.gain.linearRampToValueAtTime(volume, inicio + 0.02);
+  gain.gain.linearRampToValueAtTime(volume, inicio + duracaoTotal - 0.05);
+  gain.gain.linearRampToValueAtTime(0, inicio + duracaoTotal);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(inicio);
+  osc.stop(inicio + duracaoTotal + 0.02);
+}
+
+/**
+ * Toca o padrão de alerta de acordo com o tipo escolhido.
+ */
+export function tocarPadraoAlerta(intenso = false, tipo: TipoSomChamada = "padrao") {
+  if (tipo === "suave") {
+    // Uma única nota grave e curta, baixo volume
+    tocarBeep({
+      frequencia: 660,
+      duracaoMs: 200,
+      volume: intenso ? 0.16 : 0.11,
+      tipo: "sine",
+    });
+    return;
+  }
+
+  if (tipo === "sirene") {
+    tocarSirene(intenso);
+    return;
+  }
+
+  // padrao: "ding-ding" (duas notas curtas em terça maior)
   tocarBeep({ frequencia: 880, duracaoMs: 160, volume: intenso ? 0.25 : 0.18 });
   tocarBeep({ frequencia: 1175, duracaoMs: 200, volume: intenso ? 0.28 : 0.2, delayMs: 200 });
 }
@@ -75,4 +127,12 @@ export function vibrarPadrao(intenso = false) {
   } catch {
     // ignore
   }
+}
+
+/**
+ * Pré-visualização do som (toca uma vez) — usado no seletor de configurações.
+ */
+export async function previewSomChamada(tipo: TipoSomChamada) {
+  await destravarAudio();
+  tocarPadraoAlerta(false, tipo);
 }

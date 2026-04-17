@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { destravarAudio, tocarPadraoAlerta, vibrarPadrao } from "../utils/audio_alerta";
+import { destravarAudio, tocarPadraoAlerta, vibrarPadrao, type TipoSomChamada } from "../utils/audio_alerta";
 
 const CHAVE_MUTE = "tribocar_dispatch_mute";
+const CHAVE_SOM = "tribocar_dispatch_som";
 const INTERVALO_NORMAL_MS = 2200;
 const INTERVALO_INTENSO_MS = 1100;
+
+const SONS_VALIDOS: TipoSomChamada[] = ["suave", "padrao", "sirene"];
+
+function lerSomSalvo(): TipoSomChamada {
+  if (typeof window === "undefined") return "padrao";
+  const valor = localStorage.getItem(CHAVE_SOM);
+  return SONS_VALIDOS.includes(valor as TipoSomChamada) ? (valor as TipoSomChamada) : "padrao";
+}
 
 interface Props {
   ativo: boolean;
@@ -13,14 +22,17 @@ interface Props {
 /**
  * Toca beep + vibra enquanto houver dispatch pendente.
  * Para automaticamente quando `ativo` vira false.
- * Respeita preferência salva no localStorage.
+ * Respeita preferência salva no localStorage (mute + tipo de som).
  */
 export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
   const [silenciado, setSilenciadoState] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(CHAVE_MUTE) === "1";
   });
+  const [tipoSom, setTipoSomState] = useState<TipoSomChamada>(lerSomSalvo);
   const intervaloRef = useRef<number | null>(null);
+  const tipoSomRef = useRef<TipoSomChamada>(tipoSom);
+  tipoSomRef.current = tipoSom;
 
   const setSilenciado = useCallback((valor: boolean) => {
     setSilenciadoState(valor);
@@ -33,6 +45,13 @@ export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
     setSilenciado(!silenciado);
   }, [silenciado, setSilenciado]);
 
+  const setTipoSom = useCallback((valor: TipoSomChamada) => {
+    setTipoSomState(valor);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(CHAVE_SOM, valor);
+    }
+  }, []);
+
   // Destrava áudio em qualquer interação do usuário (necessário no iOS)
   useEffect(() => {
     const handler = () => {
@@ -44,6 +63,20 @@ export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
       window.removeEventListener("pointerdown", handler);
       window.removeEventListener("keydown", handler);
     };
+  }, []);
+
+  // Sincroniza preferência caso outra aba/tela altere
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === CHAVE_SOM) {
+        setTipoSomState(lerSomSalvo());
+      }
+      if (e.key === CHAVE_MUTE) {
+        setSilenciadoState(e.newValue === "1");
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   useEffect(() => {
@@ -60,7 +93,7 @@ export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
 
     // Toca imediatamente ao começar / mudar de cadência
     destravarAudio().then(() => {
-      tocarPadraoAlerta(intenso);
+      tocarPadraoAlerta(intenso, tipoSomRef.current);
       vibrarPadrao(intenso);
     });
 
@@ -68,7 +101,7 @@ export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
       window.clearInterval(intervaloRef.current);
     }
     intervaloRef.current = window.setInterval(() => {
-      tocarPadraoAlerta(intenso);
+      tocarPadraoAlerta(intenso, tipoSomRef.current);
       vibrarPadrao(intenso);
     }, intervaloMs);
 
@@ -80,5 +113,5 @@ export function useAlertaDispatch({ ativo, segundosRestantes }: Props) {
     };
   }, [ativo, silenciado, segundosRestantes]);
 
-  return { silenciado, alternarSilenciado };
+  return { silenciado, alternarSilenciado, tipoSom, setTipoSom };
 }

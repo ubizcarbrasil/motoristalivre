@@ -45,7 +45,7 @@ export default function PaginaPainel() {
     return Math.max(0, timeoutSec - elapsed);
   }, [dispatch, timeoutSec]);
 
-  const { silenciado, alternarSilenciado } = useAlertaDispatch({
+  const { silenciado, alternarSilenciado, tipoSom, setTipoSom } = useAlertaDispatch({
     ativo: !!dispatch,
     segundosRestantes,
   });
@@ -121,7 +121,13 @@ export default function PaginaPainel() {
       {aba === "perfil" && <AbaPerfil perfil={perfil} onAtualizar={setPerfil} />}
 
       {aba === "configuracoes" && (
-        <AbaConfiguracoes driverId={userId} tenantId={tenant.id} ehAdmin={ehAdmin} />
+        <AbaConfiguracoes
+          driverId={userId}
+          tenantId={tenant.id}
+          ehAdmin={ehAdmin}
+          tipoSom={tipoSom}
+          onMudarSom={setTipoSom}
+        />
       )}
 
       <NavegacaoInferior abaAtiva={aba} onMudar={setAba} />
