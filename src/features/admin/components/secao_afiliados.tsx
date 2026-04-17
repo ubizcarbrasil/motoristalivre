@@ -66,7 +66,41 @@ export function SecaoAfiliados() {
 
   return (
     <div className="p-4 sm:p-6">
-      <div className="overflow-x-auto rounded-md border border-border">
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {afiliados.map((a) => (
+          <div key={a.id} className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground truncate">{a.nomeEstabelecimento || a.slug}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{a.tipo || "—"}</p>
+              </div>
+              <Badge variant={a.aprovado ? "default" : "secondary"} className="shrink-0">
+                {a.aprovado ? "Aprovado" : "Pendente"}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Corridas</p>
+                <p className="text-foreground font-medium">{a.corridasGeradas}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Ganhos</p>
+                <p className="text-foreground font-medium">R$ {a.ganhos.toFixed(2)}</p>
+              </div>
+            </div>
+            {!a.aprovado && (
+              <Button size="sm" className="w-full" onClick={() => aprovar(a.id)}>Aprovar</Button>
+            )}
+          </div>
+        ))}
+        {afiliados.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Nenhum afiliado cadastrado</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>

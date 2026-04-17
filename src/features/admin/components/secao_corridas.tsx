@@ -94,7 +94,43 @@ export function SecaoCorridas() {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border">
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {filtradas.map((c) => (
+          <div key={c.id} className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">{c.passageiro || "—"}</p>
+                <p className="text-xs text-muted-foreground truncate">com {c.motorista || "—"}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className="text-sm font-semibold text-foreground">
+                  {c.valor ? `R$ ${c.valor.toFixed(2)}` : "—"}
+                </span>
+                <Badge variant={c.status === "completed" ? "default" : "secondary"} className="text-xs">
+                  {c.status}
+                </Badge>
+              </div>
+            </div>
+            {(c.origem || c.destino) && (
+              <div className="space-y-0.5 text-xs text-muted-foreground pt-1 border-t border-border">
+                {c.origem && <p className="truncate">De: {c.origem}</p>}
+                {c.destino && <p className="truncate">Para: {c.destino}</p>}
+              </div>
+            )}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{new Date(c.criadaEm).toLocaleDateString("pt-BR")}</span>
+              {c.transbordo && <Badge variant="outline" className="text-xs">Transbordo</Badge>}
+            </div>
+          </div>
+        ))}
+        {filtradas.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Nenhuma corrida encontrada</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
