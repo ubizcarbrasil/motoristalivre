@@ -30,9 +30,8 @@ interface Props {
  * Toca beep + vibra enquanto houver dispatch pendente.
  * Para automaticamente quando `ativo` vira false.
  *
- * Preferência de som:
- * - localStorage: cache local rápido (renderiza imediato)
- * - tabela drivers.alert_sound: fonte da verdade, sincroniza entre dispositivos
+ * Expõe `audioDestravado` (estado real do AudioContext) e `testarAlerta`
+ * (dispara o som por 5s sem depender de dispatch real).
  */
 export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props) {
   const [silenciado, setSilenciadoState] = useState<boolean>(() => {
@@ -40,7 +39,9 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
     return localStorage.getItem(CHAVE_MUTE) === "1";
   });
   const [tipoSom, setTipoSomState] = useState<TipoSomChamada>(lerSomLocal);
+  const [audioDestravado, setAudioDestravado] = useState(false);
   const intervaloRef = useRef<number | null>(null);
+  const intervaloTesteRef = useRef<number | null>(null);
   const tipoSomRef = useRef<TipoSomChamada>(tipoSom);
   tipoSomRef.current = tipoSom;
 
@@ -60,16 +61,15 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
       setTipoSomState(valor);
       gravarSomLocal(valor);
       if (driverId) {
-        // Sincroniza com banco (fire-and-forget; localStorage é fallback)
         salvarSomMotorista(driverId, valor).catch(() => {
-          // ignore — preferência local continua valendo
+          // ignore
         });
       }
     },
     [driverId],
   );
 
-  // Hidrata do banco (sobrepõe localStorage se houver valor diferente)
+  // Hidrata do banco
   useEffect(() => {
     if (!driverId) return;
     let cancelado = false;
@@ -87,8 +87,9 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
 
   // Destrava áudio em qualquer interação do usuário (necessário no iOS)
   useEffect(() => {
-    const handler = () => {
-      destravarAudio();
+    const handler = async () => {
+      const ok = await destravarAudio();
+      if (ok) setAudioDestravado(true);
     };
     window.addEventListener("pointerdown", handler, { once: false, passive: true });
     window.addEventListener("keydown", handler, { once: false, passive: true });
@@ -98,7 +99,7 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
     };
   }, []);
 
-  // Sincroniza preferência caso outra aba/tela altere
+  // Sync entre abas
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === CHAVE_SOM) {
@@ -124,8 +125,8 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
     const intenso = (segundosRestantes ?? 999) <= 15;
     const intervaloMs = intenso ? INTERVALO_INTENSO_MS : INTERVALO_NORMAL_MS;
 
-    // Toca imediatamente ao começar / mudar de cadência
-    destravarAudio().then(() => {
+    destravarAudio().then((ok) => {
+      if (ok) setAudioDestravado(true);
       tocarPadraoAlerta(intenso, tipoSomRef.current);
       vibrarPadrao(intenso);
     });
@@ -146,5 +147,29 @@ export function useAlertaDispatch({ ativo, segundosRestantes, driverId }: Props)
     };
   }, [ativo, silenciado, segundosRestantes]);
 
-  return { silenciado, alternarSilenciado, tipoSom, setTipoSom };
+  // Disparado pelo botão "Testar alerta" — toca por 5 segundos
+  const testarAlerta = useCallback(async () => {
+    const ok = await destravarAudio();
+    if (ok) setAudioDestravado(true);
+    tocarPadraoAlerta(false, tipoSomRef.current);
+    vibrarPadrao(false);
+
+    if (intervaloTesteRef.current) {
+      window.clearInterval(intervaloTesteRef.current);
+    }
+    const inicio = Date.now();
+    intervaloTesteRef.current = window.setInterval(() => {
+      if (Date.now() - inicio >= 5000) {
+        if (intervaloTesteRef.current) {
+          window.clearInterval(intervaloTesteRef.current);
+          intervaloTesteRef.current = null;
+        }
+        return;
+      }
+      tocarPadraoAlerta(false, tipoSomRef.current);
+      vibrarPadrao(false);
+    }, INTERVALO_NORMAL_MS);
+  }, []);
+
+  return { silenciado, alternarSilenciado, tipoSom, setTipoSom, audioDestravado, testarAlerta };
 }

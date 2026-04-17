@@ -16,6 +16,7 @@ interface AbaInicioProps {
   dispatch: DispatchAtivo | null;
   timeoutSec: number;
   realtimeAtivo: boolean;
+  audioDestravado?: boolean;
   temCorridaAtiva: boolean;
   localizacaoAtiva: boolean;
   silenciado?: boolean;
@@ -37,6 +38,7 @@ export function AbaInicio({
   dispatch,
   timeoutSec,
   realtimeAtivo,
+  audioDestravado,
   temCorridaAtiva,
   localizacaoAtiva,
   silenciado,
@@ -55,6 +57,7 @@ export function AbaInicio({
         perfil={perfil}
         tenantSlug={tenantSlug}
         realtimeAtivo={realtimeAtivo}
+        audioDestravado={audioDestravado}
         onToggleOnline={onToggleOnline}
       />
 

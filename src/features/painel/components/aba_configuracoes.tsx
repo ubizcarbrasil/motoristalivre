@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Plus, Users } from "lucide-react";
+import { Loader2, Plus, Users, Bell, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,13 +26,41 @@ interface AbaConfiguracoesProps {
   ehAdmin: boolean;
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
+  onTestarAlerta?: () => void | Promise<void>;
 }
 
-export function AbaConfiguracoes({ driverId, tenantId, ehAdmin, tipoSom, onMudarSom }: AbaConfiguracoesProps) {
+export function AbaConfiguracoes({
+  driverId,
+  tenantId,
+  ehAdmin,
+  tipoSom,
+  onMudarSom,
+  onTestarAlerta,
+}: AbaConfiguracoesProps) {
   const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
   const [convites, setConvites] = useState<ConviteGrupo[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [idCopiado, setIdCopiado] = useState(false);
   const navigate = useNavigate();
+
+  const idCurto = driverId.slice(0, 8);
+
+  const copiarId = async () => {
+    try {
+      await navigator.clipboard.writeText(driverId);
+      setIdCopiado(true);
+      toast.success("ID copiado");
+      setTimeout(() => setIdCopiado(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
+  const testar = async () => {
+    if (!onTestarAlerta) return;
+    await onTestarAlerta();
+    toast.success("Tocando alerta por 5 segundos");
+  };
 
   const recarregar = useCallback(async () => {
     const [g, c] = await Promise.all([
@@ -70,6 +98,38 @@ export function AbaConfiguracoes({ driverId, tenantId, ehAdmin, tipoSom, onMudar
       <Separator />
 
       <SeletorSomChamada valor={tipoSom} onChange={onMudarSom} />
+
+      {onTestarAlerta && (
+        <Button
+          variant="outline"
+          className="w-full h-12 gap-2"
+          onClick={testar}
+        >
+          <Bell className="w-4 h-4" />
+          Testar alerta de chamada (5 segundos)
+        </Button>
+      )}
+
+      <div className="rounded-xl bg-card border border-border p-3 space-y-1">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+          ID do motorista logado
+        </p>
+        <button
+          type="button"
+          onClick={copiarId}
+          className="w-full flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 hover:bg-secondary transition-colors"
+        >
+          <span className="text-sm font-mono text-foreground">{idCurto}…</span>
+          {idCopiado ? (
+            <Check className="w-4 h-4 text-primary" />
+          ) : (
+            <Copy className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+        <p className="text-[11px] text-muted-foreground">
+          Use este ID no simulador de dispatch para testar.
+        </p>
+      </div>
 
       <Separator />
 
