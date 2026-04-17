@@ -1,78 +1,81 @@
 
 
-## Diagnóstico da experiência ruim
+## Objetivo
 
-5 problemas reais cruzados com o código:
+Adicionar 3 atalhos rápidos:
+1. **Painel → Aplicativo de corridas**: botão que leva o motorista logado direto pro app de passageiro do seu próprio grupo (`/{slug-do-tenant}`), sem deslogar.
+2. **App de corridas → Painel**: atalho discreto pro motorista voltar ao painel.
+3. **Instalar PWA**: atalho dentro do painel pra fixar app na tela do celular.
 
-**1. "Lento, não parece PWA"** — `index.html` tem manifest mas **não há service worker registrado**. Sem `vite-plugin-pwa`, sem precache. Cada abertura baixa tudo de novo.
+---
 
-**2. "Som só toca com tela aberta"** — Tudo client-side. Quando motorista bloqueia o celular, o navegador suspende JS e o WebSocket cai (logs confirmam: `CHANNEL_ERROR` toda vez no `visibility → visible`). **Não há Web Push nem Notification API**. Sem service worker, não dá pra acordar o app.
+## O que vou fazer
 
-**3. "Aceitar demora pro passageiro ver"** — `hook_corrida_aceita.ts` provavelmente sem polling fallback agressivo (motorista tem 5s, passageiro precisa ser <2s porque está esperando ansioso).
+### 1. Botão "Solicitar corrida" no painel do motorista
 
-**4. "Chat demora enviar"** — `hook_chat_realtime.ts` provavelmente faz `await insert` antes de mostrar a bolha (sem otimistic update). 300-800ms de lag perceptível.
+**Onde**: `src/features/painel/components/aba_inicio.tsx` — adicionar dentro do `AcessoRapido` ou logo abaixo da barra de "Compartilhar localização / Chat".
 
-**5. "Botões travando"** — Falta haptic, falta `touch-action: manipulation` (delay 300ms iOS), animação `animate-pulse-subtle` competindo com renders.
+**Como**:
+- Novo item no `AcessoRapido` com ícone `Car`/`MapPin` rotulado **"Solicitar corrida"**.
+- Ao clicar, navega para `/{tenantSlug}` (já existe a rota `/:slug` que abre `PaginaPassageiro` com o tenant atual).
+- Como o motorista já está autenticado, a sessão Supabase é mantida — ele entra logado direto.
 
-## Plano de ataque (4 frentes)
+**Arquivos**:
+- `src/features/painel/components/acesso_rapido.tsx` (adicionar item "Solicitar corrida" + receber `tenantSlug` e callback `onSolicitarCorrida`)
+- `src/features/painel/components/aba_inicio.tsx` (passar `tenantSlug` e callback que faz `navigate(`/${tenantSlug}`)`)
 
-### Frente 1 — PWA real
-- Instalar `vite-plugin-pwa` com Workbox
-- Guardar registro contra iframes/preview hosts (regra do Lovable)
-- `navigateFallbackDenylist: [/^\/~oauth/]`
-- Refinar `manifest.json` (já existe parcial)
-- Resultado: app instalado abre em ~300ms
+### 2. Atalho "Voltar ao painel" no app de corridas
 
-### Frente 2 — Push em background pro motorista
-- Service Worker + Web Push API + VAPID
-- Migration: coluna `push_subscription jsonb` em `drivers`
-- Edge function `send-push` (web-push + VAPID)
-- `dispatch-ride` dispara push junto com criar `ride_dispatches`
-- Toque na notification abre app já no card de aceite
-- Funciona com tela bloqueada em Android e iOS 16.4+ (PWA instalado)
+**Onde**: `src/features/passageiro/pages/pagina_passageiro.tsx` — botão flutuante discreto no canto superior, visível apenas quando o usuário logado for motorista.
 
-### Frente 3 — Otimistic UI + realtime mais agressivo
-- **Chat**: bolha aparece em <50ms com status "enviando…" → "enviado"
-- **Passageiro vendo aceite**: polling 2s + reconexão visibility-aware (igual motorista mas mais rápido)
-- **Botão Aceitar**: feedback visual + haptic em <16ms antes do insert completar
+**Como**:
+- Detectar se o usuário logado tem perfil de motorista (consulta rápida em `drivers` por `id = user.id`).
+- Se sim, mostrar botão flutuante com ícone `LayoutDashboard` + label "Painel" no topo direito (acima do mapa, ao lado do botão de perfil que já existe).
+- Ao clicar: `navigate("/painel")`.
+- Botão escondido durante corrida ativa pra não atrapalhar fluxo.
 
-### Frente 4 — Polimento tátil
-- `navigator.vibrate(50)` nos botões críticos (Aceitar, Recusar, Enviar)
-- `touch-action: manipulation` global
-- Trocar `animate-pulse-subtle` por animação CSS pura mais leve
+**Arquivos**:
+- `src/features/passageiro/pages/pagina_passageiro.tsx` (adicionar botão + verificação de role)
+- Novo hook curto `src/features/passageiro/hooks/hook_eh_motorista.ts` (verifica via `drivers.id = user.id`) — ou inline simples se preferir mais leve
 
-## Arquivos a editar/criar
+### 3. Atalho "Instalar app" no painel
 
-**PWA:**
-- `vite.config.ts`, `package.json`, `public/manifest.json`, `index.html`, `src/main.tsx` (guard iframe)
+**Onde**: dentro de **Configurações** (aba já existente) e também como item rápido no `AcessoRapido`.
 
-**Push:**
-- Migration: `drivers.push_subscription`
-- `supabase/functions/send-push/index.ts` (novo)
-- `supabase/functions/dispatch-ride/index.ts` (editar — disparar push)
-- `src/compartilhados/services/servico_push.ts` (novo)
-- `src/features/painel/hooks/hook_push_notification.ts` (novo)
-- `public/sw-push.js` (handler de push do SW)
-- Secrets novos: `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY` (eu gero ambos)
+**Como**:
+- Já existe a rota `/instalar` com tutorial completo (iOS e Android).
+- Adicionar item **"Instalar app"** com ícone `Download` no `AcessoRapido` que navega para `/instalar`.
+- Adicionar também um card destacado em **Configurações** (`aba_configuracoes.tsx`) explicando rapidamente o benefício e o botão "Como instalar" → `/instalar`.
 
-**Realtime + otimistic:**
-- `src/compartilhados/hooks/hook_chat_realtime.ts`
-- `src/features/passageiro/hooks/hook_corrida_aceita.ts`
-- `src/compartilhados/components/chat/input_mensagem.tsx`
-- `src/features/painel/components/card_dispatch.tsx`
+**Arquivos**:
+- `src/features/painel/components/acesso_rapido.tsx` (adicionar item "Instalar app")
+- `src/features/painel/components/aba_configuracoes.tsx` (adicionar card "Instalar na tela inicial")
 
-**Polimento:**
-- `src/index.css`, `src/compartilhados/utils/haptic.ts` (novo)
+---
 
-## ⚠️ Decisões antes de eu implementar
+## Detalhe técnico crítico
 
-**Push em background** — caminho recomendado: **Web Push (PWA instalado)**. Funciona em Android e iOS 16.4+ se o motorista adicionar o app à tela inicial. Sem custo, rápido de implementar. Capacitor (app nativo nas lojas) fica pra depois quando você for publicar.
+- **Sessão preservada**: `navigate("/{slug}")` mantém a sessão Supabase ativa — o motorista chega no app de passageiro já logado e pode pedir corrida normalmente.
+- **Detecção de motorista no app de corridas**: vou consultar `drivers` por `user.id` (uma vez no mount). Cache em estado local pra evitar reconsulta.
+- **Sem alterações de banco**, sem novas migrations, sem mudança em rotas existentes.
 
-**Push pro passageiro também?** Recomendo **só motorista por enquanto** — ele perde corrida se não vê. O passageiro normalmente está com app aberto esperando. Adicionamos depois se necessário.
+---
 
-**Estratégia de execução** — recomendo **tudo de uma vez nesta rodada** porque os problemas se potencializam: sem PWA não tem push, sem push o som não resolve, sem otimistic UI parece amador mesmo com tudo rápido.
+## Arquivos editados (resumo)
 
-Se quiser dividir, a ordem seria: **(1) Otimistic UI + polimento** (resolve "amador" em 1 rodada) → **(2) PWA + Push** (resolve "não chega chamada" em outra rodada).
+- `src/features/painel/components/acesso_rapido.tsx` — adicionar 2 itens (Solicitar corrida + Instalar app)
+- `src/features/painel/components/aba_inicio.tsx` — passar `tenantSlug` e callback de navegação
+- `src/features/painel/components/aba_configuracoes.tsx` — card "Instalar na tela inicial"
+- `src/features/passageiro/pages/pagina_passageiro.tsx` — botão flutuante "Painel" pra motoristas logados
+- (opcional) `src/features/passageiro/hooks/hook_eh_motorista.ts` — hook novo de detecção
 
-Vou seguir com **tudo de uma vez, Web Push, só motorista** salvo se você indicar diferente na próxima mensagem.
+---
+
+## Como testar depois
+
+1. Logar como motorista → no painel aparecem 2 novos atalhos: **"Solicitar corrida"** e **"Instalar app"**.
+2. Clicar em "Solicitar corrida" → vai pra `/{slug}` já logado, mostra mapa do app de passageiro.
+3. No app de passageiro, ver botão **"Painel"** flutuante no topo → clicar volta pra `/painel`.
+4. Clicar em "Instalar app" → abre tutorial passo a passo conforme dispositivo (iOS/Android).
+5. Confirmar que durante uma corrida ativa o botão "Painel" some (pra não atrapalhar).
 
