@@ -65,7 +65,7 @@ export default function PaginaPassageiro() {
   const recentesCtx = useDestinosRecentes({ passengerId });
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
-  const { ehMotorista } = useEhMotorista();
+  const { mostrarBotaoPainel, rotaPainel } = useEhMotorista();
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
   const [mostraPerfil, setMostraPerfil] = useState(false);
@@ -228,11 +228,11 @@ export default function PaginaPassageiro() {
 
       {passengerId && etapa !== "buscando" && etapa !== "aceita" && (
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-          {ehMotorista && (
+          {mostrarBotaoPainel && (
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate("/painel")}
+              onClick={() => navigate(rotaPainel)}
               className="h-10 rounded-full shadow-lg gap-1.5 px-3"
               aria-label="Voltar ao painel"
             >
