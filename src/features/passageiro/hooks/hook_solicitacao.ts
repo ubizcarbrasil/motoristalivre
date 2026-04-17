@@ -26,6 +26,7 @@ import {
 import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
 
 const STORAGE_KEY_GUEST = "tribocar_guest_ride";
+const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
 interface GuestRideStorage {
   guest_passenger_id: string;
@@ -34,12 +35,16 @@ interface GuestRideStorage {
   created_at: number;
 }
 
+interface GuestDadosStorage {
+  nome: string;
+  whatsapp: string;
+}
+
 function carregarGuestStorage(): GuestRideStorage | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_GUEST);
     if (!raw) return null;
     const obj = JSON.parse(raw) as GuestRideStorage;
-    // Expira em 2h
     if (Date.now() - obj.created_at > 2 * 60 * 60 * 1000) {
       localStorage.removeItem(STORAGE_KEY_GUEST);
       return null;
@@ -47,6 +52,24 @@ function carregarGuestStorage(): GuestRideStorage | null {
     return obj;
   } catch {
     return null;
+  }
+}
+
+function carregarGuestDados(): GuestDadosStorage | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_GUEST_DADOS);
+    if (!raw) return null;
+    return JSON.parse(raw) as GuestDadosStorage;
+  } catch {
+    return null;
+  }
+}
+
+function salvarGuestDados(dados: GuestDadosStorage) {
+  try {
+    localStorage.setItem(STORAGE_KEY_GUEST_DADOS, JSON.stringify(dados));
+  } catch {
+    // ignore
   }
 }
 
