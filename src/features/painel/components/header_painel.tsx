@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, AlertTriangle, WifiOff } from "lucide-react";
+import { CheckCircle2, AlertTriangle, WifiOff, Loader2 } from "lucide-react";
 import type { PerfilMotorista } from "../types/tipos_painel";
 
 interface HeaderPainelProps {
@@ -23,9 +24,23 @@ interface BadgeStatus {
   Icone: typeof CheckCircle2;
 }
 
-function calcularStatus(online: boolean, realtime: boolean, audio: boolean): BadgeStatus | null {
+const TEMPO_TOLERANCIA_OFFLINE_MS = 10000;
+
+function calcularStatus(
+  online: boolean,
+  realtime: boolean,
+  audio: boolean,
+  conectando: boolean,
+): BadgeStatus | null {
   if (!online) return null;
   if (!realtime) {
+    if (conectando) {
+      return {
+        texto: "Conectando…",
+        classe: "bg-muted text-muted-foreground border-border",
+        Icone: Loader2,
+      };
+    }
     return {
       texto: "Sem conexão em tempo real",
       classe: "bg-destructive/15 text-destructive border-destructive/30",
@@ -53,7 +68,25 @@ export function HeaderPainel({
   audioDestravado = false,
   onToggleOnline,
 }: HeaderPainelProps) {
-  const status = calcularStatus(perfil.is_online, realtimeAtivo, audioDestravado);
+  // Estado "conectando" = realtime ainda não ficou ativo OU caiu há menos de 10s
+  const [conectando, setConectando] = useState(true);
+  const ultimoOnlineRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (realtimeAtivo) {
+      ultimoOnlineRef.current = Date.now();
+      setConectando(false);
+      return;
+    }
+    // Realtime caiu — dar tolerância antes de mostrar vermelho
+    setConectando(true);
+    const desde = ultimoOnlineRef.current ?? Date.now();
+    const restante = Math.max(0, TEMPO_TOLERANCIA_OFFLINE_MS - (Date.now() - desde));
+    const timer = window.setTimeout(() => setConectando(false), restante);
+    return () => window.clearTimeout(timer);
+  }, [realtimeAtivo]);
+
+  const status = calcularStatus(perfil.is_online, realtimeAtivo, audioDestravado, conectando);
 
   return (
     <div className="px-5 pt-12 pb-4 space-y-3">
@@ -76,7 +109,7 @@ export function HeaderPainel({
         <div
           className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium ${status.classe}`}
         >
-          <status.Icone className="w-4 h-4 shrink-0" />
+          <status.Icone className={`w-4 h-4 shrink-0 ${status.Icone === Loader2 ? "animate-spin" : ""}`} />
           <span className="truncate">{status.texto}</span>
         </div>
       )}
