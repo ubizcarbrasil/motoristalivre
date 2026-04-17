@@ -1,18 +1,29 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, DollarSign, Link, Loader2 } from "lucide-react";
+import { MapPin, Clock, DollarSign, Link, Loader2, Volume2, VolumeX } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { DispatchAtivo } from "../types/tipos_painel";
 import { TIMEOUT_DISPATCH_SEG } from "../constants/constantes_painel";
 
 interface CardDispatchProps {
   dispatch: DispatchAtivo;
   timeoutSec?: number;
+  silenciado?: boolean;
+  onAlternarSom?: () => void;
   onAceitar: () => void | Promise<void>;
   onRecusar: () => void | Promise<void>;
   onTimeout?: () => void | Promise<void>;
 }
 
-export function CardDispatch({ dispatch, timeoutSec = TIMEOUT_DISPATCH_SEG, onAceitar, onRecusar, onTimeout }: CardDispatchProps) {
+export function CardDispatch({
+  dispatch,
+  timeoutSec = TIMEOUT_DISPATCH_SEG,
+  silenciado,
+  onAlternarSom,
+  onAceitar,
+  onRecusar,
+  onTimeout,
+}: CardDispatchProps) {
   const [restante, setRestante] = useState(timeoutSec);
   const [acao, setAcao] = useState<"aceitar" | "recusar" | null>(null);
 
@@ -44,6 +55,13 @@ export function CardDispatch({ dispatch, timeoutSec = TIMEOUT_DISPATCH_SEG, onAc
   const progresso = (restante / timeoutSec) * 100;
   const desabilitado = acao !== null;
 
+  // Cores progressivas: > 30s primary, 15-30s amber, < 15s destructive
+  const corBarra =
+    restante > 30 ? "bg-primary" : restante > 15 ? "bg-amber-500" : "bg-destructive";
+  const corContador =
+    restante > 30 ? "text-primary" : restante > 15 ? "text-amber-500" : "text-destructive";
+  const intensoUrgente = restante <= 15;
+
   const handleAceitar = async () => {
     setAcao("aceitar");
     await onAceitar();
@@ -55,10 +73,31 @@ export function CardDispatch({ dispatch, timeoutSec = TIMEOUT_DISPATCH_SEG, onAc
   };
 
   return (
-    <div className="mx-5 rounded-2xl border-2 border-foreground/20 bg-card p-4 space-y-3 animate-pulse-subtle">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-primary uppercase tracking-wider">Corrida chegando</span>
-        <span className="text-xs text-muted-foreground">{restante}s</span>
+    <div
+      className={cn(
+        "mx-5 rounded-2xl border-2 border-foreground/20 bg-card p-4 space-y-3",
+        intensoUrgente ? "animate-pulse border-destructive/60" : "animate-pulse-subtle"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+            Corrida chegando
+          </span>
+          <div className={cn("text-4xl font-bold leading-none mt-1 tabular-nums", corContador)}>
+            {restante}s
+          </div>
+        </div>
+        {onAlternarSom && (
+          <button
+            type="button"
+            onClick={onAlternarSom}
+            aria-label={silenciado ? "Ativar som" : "Silenciar"}
+            className="shrink-0 w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground transition-colors"
+          >
+            {silenciado ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -92,9 +131,9 @@ export function CardDispatch({ dispatch, timeoutSec = TIMEOUT_DISPATCH_SEG, onAc
         <span>{dispatch.origem_nome}</span>
       </div>
 
-      <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+          className={cn("h-full transition-all duration-1000 ease-linear rounded-full", corBarra)}
           style={{ width: `${progresso}%` }}
         />
       </div>
