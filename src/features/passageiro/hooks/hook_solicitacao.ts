@@ -101,6 +101,8 @@ export function useSolicitacao() {
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [guestPassengerId, setGuestPassengerId] = useState<string | null>(null);
   const [precisaDadosGuest, setPrecisaDadosGuest] = useState(false);
+  const [dadosGuest, setDadosGuest] = useState<GuestDadosStorage | null>(() => carregarGuestDados());
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     async function carregar() {
