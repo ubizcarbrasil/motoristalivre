@@ -389,6 +389,31 @@ export function useSolicitacao() {
     confirmarCorridaGuestRef.current = confirmarCorridaGuest;
   }, [confirmarCorridaGuest]);
 
+  // Fallback: se 5s após criar a corrida ela ainda estiver "pending",
+  // chama a edge function manualmente (caso o trigger no DB falhe).
+  useEffect(() => {
+    if (!rideRequestId || etapa !== "buscando") return;
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("ride_requests")
+          .select("status")
+          .eq("id", rideRequestId)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.status === "pending") {
+          console.warn("[fallback dispatch] corrida ainda pending após 5s, chamando edge");
+          await supabase.functions.invoke("dispatch-ride", {
+            body: { action: "dispatch", ride_request_id: rideRequestId },
+          });
+        }
+      } catch (e) {
+        console.error("[fallback dispatch]", e);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [rideRequestId, etapa]);
+
   const cancelarSolicitacao = useCallback(async () => {
     if (!rideRequestId) {
       // Nada criado ainda — só reseta o estado local
