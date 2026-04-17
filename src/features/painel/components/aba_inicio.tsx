@@ -84,7 +84,7 @@ export function AbaInicio({
       )}
 
       <GridStats stats={stats} />
-      <AcessoRapido onNavegar={onNavegar} />
+      <AcessoRapido onNavegar={onNavegar} tenantSlug={tenantSlug} />
       <ListaCorridas corridas={corridas} />
     </div>
   );
