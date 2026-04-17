@@ -45,10 +45,8 @@ export default function PaginaCadastro() {
     return <Navigate to="/painel" replace />;
   }
 
-  const precisaSlug =
-    tipoCadastro === "passageiro" ||
-    tipoCadastro === "afiliado" ||
-    tipoCadastro === "motorista";
+  // Passageiro NÃO precisa de slug — ele entra em qualquer tribo via link de motorista
+  const precisaSlug = tipoCadastro === "afiliado" || tipoCadastro === "motorista";
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
@@ -60,8 +58,8 @@ export default function PaginaCadastro() {
       toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
-    if (senha.length < 6) {
-      toast({ title: "A senha deve ter no minimo 6 caracteres", variant: "destructive" });
+    if (senha.length < 8) {
+      toast({ title: "A senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
     }
     setCarregando(true);
@@ -86,7 +84,13 @@ export default function PaginaCadastro() {
 
     if (error) {
       setCarregando(false);
-      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
+      const msg = error.message || "";
+      const descricao = /known to be weak|easy to guess|pwned|leaked/i.test(msg)
+        ? "Essa senha é muito comum e fácil de adivinhar. Escolha uma mais forte (misture letras, números e símbolos)."
+        : /already registered|already exists/i.test(msg)
+        ? "Este email já está cadastrado. Tente entrar."
+        : msg;
+      toast({ title: "Erro ao criar conta", description: descricao, variant: "destructive" });
       return;
     }
 
@@ -204,6 +208,12 @@ export default function PaginaCadastro() {
           ))}
         </div>
 
+        {tipoCadastro === "passageiro" && (
+          <p className="text-xs text-muted-foreground text-center -mt-2">
+            Crie sua conta uma vez. Você pode pedir corrida em qualquer tribo abrindo o link do motorista.
+          </p>
+        )}
+
         <form onSubmit={handleCadastro} className="space-y-4">
           {precisaSlug && (
             <div className="space-y-2">
@@ -260,13 +270,16 @@ export default function PaginaCadastro() {
             <Input
               id="senha"
               type="password"
-              placeholder="Minimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
             />
+            <p className="text-xs text-muted-foreground">
+              Use uma senha forte: misture letras, números e símbolos.
+            </p>
           </div>
 
           <Button type="submit" className="w-full h-11" disabled={carregando}>
