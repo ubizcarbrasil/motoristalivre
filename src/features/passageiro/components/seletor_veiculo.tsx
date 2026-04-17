@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Car, Bike } from "lucide-react";
 import type { PrecoCalculado, FormaPagamento } from "../types/tipos_passageiro";
 import { formatarPreco } from "../utils/utilitarios_passageiro";
 import { SeletorPagamento } from "./seletor_pagamento";
+import { SugestoesOferta } from "./sugestoes_oferta";
 
 interface SeletorVeiculoProps {
   precos: PrecoCalculado[];
@@ -67,19 +69,12 @@ export function SeletorVeiculo({
         })}
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs text-muted-foreground">Sua oferta</label>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">R$</span>
-          <Input
-            type="number"
-            min={0}
-            value={valorOferta}
-            onChange={(e) => onMudarOferta(Number(e.target.value))}
-            className="bg-secondary border-0 h-11 text-base font-semibold"
-          />
-        </div>
-      </div>
+      <CampoOferta
+        valorOferta={valorOferta}
+        onMudarOferta={onMudarOferta}
+        precoBase={precos.find((p) => p.veiculo.id === veiculoSelecionado)?.preco ?? valorOferta}
+      />
+
 
       <SeletorPagamento selecionado={formaPagamento} onSelecionar={onMudarFormaPagamento} />
 
