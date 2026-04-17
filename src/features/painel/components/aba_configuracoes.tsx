@@ -7,6 +7,7 @@ import { SecaoMeuPreco } from "./secao_meu_preco";
 import { SecaoRegrasLink } from "./secao_regras_link";
 import { CardConviteGrupo } from "./card_convite_grupo";
 import { BuscaGrupo } from "./busca_grupo";
+import { SeletorSomChamada } from "./seletor_som_chamada";
 import {
   buscarMeusGrupos,
   buscarConvitesPendentes,
@@ -17,14 +18,17 @@ import type {
   GrupoMotorista,
   ConviteGrupo,
 } from "../types/tipos_configuracoes";
+import type { TipoSomChamada } from "../utils/audio_alerta";
 
 interface AbaConfiguracoesProps {
   driverId: string;
   tenantId: string;
   ehAdmin: boolean;
+  tipoSom: TipoSomChamada;
+  onMudarSom: (tipo: TipoSomChamada) => void;
 }
 
-export function AbaConfiguracoes({ driverId, tenantId, ehAdmin }: AbaConfiguracoesProps) {
+export function AbaConfiguracoes({ driverId, tenantId, ehAdmin, tipoSom, onMudarSom }: AbaConfiguracoesProps) {
   const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
   const [convites, setConvites] = useState<ConviteGrupo[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -62,6 +66,10 @@ export function AbaConfiguracoes({ driverId, tenantId, ehAdmin }: AbaConfiguraco
       <Separator />
 
       <SecaoRegrasLink driverId={driverId} tenantId={tenantId} ehAdmin={ehAdmin} />
+
+      <Separator />
+
+      <SeletorSomChamada valor={tipoSom} onChange={onMudarSom} />
 
       <Separator />
 
