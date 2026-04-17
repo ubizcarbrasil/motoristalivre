@@ -65,16 +65,22 @@ export default function PaginaPassageiro() {
     setFormaPagamento,
     confirmarCorrida,
     confirmarCorridaGuest,
+    onSalvarDadosGuestEBuscar,
+    dadosGuest,
     precisaDadosGuest,
     fecharDadosGuest,
     voltarParaEnderecos,
     confirmando,
+    cancelando,
+    cancelarSolicitacao,
     grupoNome,
     rideRequestId,
     guestPassengerId,
     passengerId,
     resetarSolicitacao,
+    rota: rotaAtual,
   } = useSolicitacao();
+
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
