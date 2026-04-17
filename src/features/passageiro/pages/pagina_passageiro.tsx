@@ -347,54 +347,57 @@ export default function PaginaPassageiro() {
         />
       )}
 
-      {mostraRastreamento && (
-        <TelaRastreamento
-          posicaoMotorista={rastreamento.posicao}
-          posicaoPassageiro={origem?.coordenada ?? null}
-          distanciaKm={rastreamento.distanciaKm}
-          etaMin={rastreamento.etaMin}
-          conectado={rastreamento.conectado}
-          onVoltar={fecharRastreamento}
-        />
-      )}
+      <Suspense fallback={null}>
+        {mostraRastreamento && (
+          <TelaRastreamento
+            posicaoMotorista={rastreamento.posicao}
+            posicaoPassageiro={origem?.coordenada ?? null}
+            distanciaKm={rastreamento.distanciaKm}
+            etaMin={rastreamento.etaMin}
+            conectado={rastreamento.conectado}
+            onVoltar={fecharRastreamento}
+          />
+        )}
 
-      {mostraChat && corridaAceita && passengerId && (
-        <TelaChat
-          rideId={corridaAceita.ride_id ?? ""}
-          meuId={passengerId}
-          meuPapel="passenger"
-          outroNome={corridaAceita.motorista.nome}
-          outroAvatar={corridaAceita.motorista.avatar_url}
-          outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
-          outroTelefone={corridaAceita.motorista.telefone}
-          onVoltar={() => setMostraChat(false)}
-        />
-      )}
+        {mostraChat && corridaAceita && passengerId && (
+          <TelaChat
+            rideId={corridaAceita.ride_id ?? ""}
+            meuId={passengerId}
+            meuPapel="passenger"
+            outroNome={corridaAceita.motorista.nome}
+            outroAvatar={corridaAceita.motorista.avatar_url}
+            outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
+            outroTelefone={corridaAceita.motorista.telefone}
+            onVoltar={() => setMostraChat(false)}
+          />
+        )}
 
-      {avaliacaoPendente && passengerId && (
-        <TelaAvaliacao
-          rideId={avaliacaoPendente.ride_id}
-          driverId={avaliacaoPendente.driver_id}
-          passengerId={passengerId}
-          motoristaNome={avaliacaoPendente.nome}
-          motoristaAvatar={avaliacaoPendente.avatar}
-          onConcluir={concluirAvaliacao}
-        />
-      )}
+        {avaliacaoPendente && passengerId && (
+          <TelaAvaliacao
+            rideId={avaliacaoPendente.ride_id}
+            driverId={avaliacaoPendente.driver_id}
+            passengerId={passengerId}
+            motoristaNome={avaliacaoPendente.nome}
+            motoristaAvatar={avaliacaoPendente.avatar}
+            onConcluir={concluirAvaliacao}
+          />
+        )}
 
-      {mostraPerfil && passengerId && (
-        <PaginaPerfilPassageiro
-          userId={passengerId}
-          onVoltar={() => setMostraPerfil(false)}
-          onPedirNovamente={(novaOrigem, novoDestino) => {
-            setOrigem(novaOrigem);
-            setDestino(novoDestino);
-            setEtapa("endereco");
-            setMostraPerfil(false);
-            toast.success("Endereços preenchidos. Confirme para buscar motoristas.");
-          }}
-        />
-      )}
+        {mostraPerfil && passengerId && (
+          <PaginaPerfilPassageiro
+            userId={passengerId}
+            onVoltar={() => setMostraPerfil(false)}
+            onPedirNovamente={(novaOrigem, novoDestino) => {
+              setOrigem(novaOrigem);
+              setDestino(novoDestino);
+              setEtapa("endereco");
+              setMostraPerfil(false);
+              toast.success("Endereços preenchidos. Confirme para buscar motoristas.");
+            }}
+          />
+        )}
+      </Suspense>
+
 
       <DialogoEditarFavorito
         aberto={favoritoDialogo.aberto}
