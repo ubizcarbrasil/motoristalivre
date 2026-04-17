@@ -1,11 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSimulador } from "../hooks/hook_simulador";
+import { usePresencaMotoristas } from "../hooks/hook_presenca_motoristas";
 import { FormularioSimulacao } from "../components/formulario_simulacao";
+import { ListaMotoristasSimulador } from "../components/lista_motoristas_simulador";
 import { LogSimulacao } from "../components/log_simulacao";
 
 export default function PaginaSimuladorDispatch() {
   const sim = useSimulador();
+  const idsConectadosRealtime = usePresencaMotoristas();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -24,11 +27,9 @@ export default function PaginaSimuladorDispatch() {
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         <FormularioSimulacao
           tenants={sim.tenants}
-          motoristas={sim.motoristas}
           tenantId={sim.tenantId}
           setTenantId={sim.setTenantId}
           motoristaId={sim.motoristaId}
-          setMotoristaId={sim.setMotoristaId}
           origem={sim.origem}
           setOrigem={sim.setOrigem}
           destino={sim.destino}
@@ -42,6 +43,13 @@ export default function PaginaSimuladorDispatch() {
           enviando={sim.enviando}
           carregandoTenants={sim.carregandoTenants}
           onDisparar={sim.dispararSimulacao}
+        />
+
+        <ListaMotoristasSimulador
+          motoristas={sim.motoristas}
+          motoristaIdSelecionado={sim.motoristaId}
+          onSelecionar={sim.setMotoristaId}
+          idsConectadosRealtime={idsConectadosRealtime}
         />
 
         <LogSimulacao logs={sim.logs} onLimpar={sim.limparLogs} />
