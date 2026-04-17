@@ -16,6 +16,10 @@ interface DialogoDadosPassageiroProps {
   onFechar: () => void;
   onConfirmar: (dados: DadosGuestInput) => Promise<void> | void;
   enviando?: boolean;
+  textoBotao?: string;
+  titulo?: string;
+  descricao?: string;
+  valorInicial?: { nome?: string; whatsapp?: string };
 }
 
 export function DialogoDadosPassageiro({
@@ -23,9 +27,13 @@ export function DialogoDadosPassageiro({
   onFechar,
   onConfirmar,
   enviando = false,
+  textoBotao = "Chamar motorista",
+  titulo = "Quase lá!",
+  descricao = "Para o motorista entrar em contato, deixe seu nome e WhatsApp.",
+  valorInicial,
 }: DialogoDadosPassageiroProps) {
-  const [nome, setNome] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [nome, setNome] = useState(valorInicial?.nome ?? "");
+  const [whatsapp, setWhatsapp] = useState(valorInicial?.whatsapp ?? "");
   const [erro, setErro] = useState<string | null>(null);
 
   const podeEnviar = nome.trim().length >= 2 && whatsappValido(whatsapp);
