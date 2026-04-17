@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Verifica se o usuário autenticado também tem perfil de motorista.
- * Faz uma única consulta ao montar.
+ * Verifica se o usuário autenticado é motorista e/ou dono de tenant.
+ * Retorna também a rota de retorno apropriada para o "Painel" no app de corridas.
  */
 export function useEhMotorista() {
   const [ehMotorista, setEhMotorista] = useState(false);
+  const [ehDono, setEhDono] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
@@ -18,19 +19,20 @@ export function useEhMotorista() {
       if (!userId) {
         if (ativo) {
           setEhMotorista(false);
+          setEhDono(false);
           setCarregando(false);
         }
         return;
       }
 
-      const { data } = await supabase
-        .from("drivers")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
+      const [{ data: motoristaData }, { data: tenantDono }] = await Promise.all([
+        supabase.from("drivers").select("id").eq("id", userId).maybeSingle(),
+        supabase.from("tenants").select("id").eq("owner_user_id", userId).maybeSingle(),
+      ]);
 
       if (ativo) {
-        setEhMotorista(Boolean(data));
+        setEhMotorista(Boolean(motoristaData));
+        setEhDono(Boolean(tenantDono));
         setCarregando(false);
       }
     };
@@ -41,5 +43,9 @@ export function useEhMotorista() {
     };
   }, []);
 
-  return { ehMotorista, carregando };
+  // Dono tem prioridade: volta para /admin. Motorista comum: /painel.
+  const rotaPainel = ehDono ? "/admin" : "/painel";
+  const mostrarBotaoPainel = ehDono || ehMotorista;
+
+  return { ehMotorista, ehDono, mostrarBotaoPainel, rotaPainel, carregando };
 }
