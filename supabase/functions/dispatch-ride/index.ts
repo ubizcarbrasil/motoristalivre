@@ -11,7 +11,8 @@ const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 interface TenantSettings {
-  dispatch_mode: "owner_priority" | "proximity" | "broadcast";
+  // Enum real no DB: 'auto' | 'manual' | 'hybrid'
+  dispatch_mode: "auto" | "manual" | "hybrid";
   dispatch_radius_km: number;
   dispatch_timeout_sec: number;
   dispatch_max_attempts: number;
