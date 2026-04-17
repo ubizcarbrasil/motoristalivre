@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { NavegacaoInferior } from "../components/navegacao_inferior";
 import { AbaInicio } from "../components/aba_inicio";
@@ -9,6 +9,7 @@ import { AbaConfiguracoes } from "../components/aba_configuracoes";
 import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
+import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {

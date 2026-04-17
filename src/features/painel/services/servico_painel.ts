@@ -304,7 +304,7 @@ export async function buscarTimeoutDispatch(tenantId: string): Promise<number> {
     .select("dispatch_timeout_sec")
     .eq("tenant_id", tenantId)
     .maybeSingle();
-  return data?.dispatch_timeout_sec ?? 28;
+  return data?.dispatch_timeout_sec ?? 120;
 }
 
 export async function buscarTenantDoMotorista(userId: string) {

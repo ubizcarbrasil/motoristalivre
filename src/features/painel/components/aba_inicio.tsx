@@ -18,6 +18,8 @@ interface AbaInicioProps {
   realtimeAtivo: boolean;
   temCorridaAtiva: boolean;
   localizacaoAtiva: boolean;
+  silenciado?: boolean;
+  onAlternarSom?: () => void;
   onToggleLocalizacao: () => void;
   onAbrirChat: () => void;
   onToggleOnline: () => void;
@@ -37,6 +39,8 @@ export function AbaInicio({
   realtimeAtivo,
   temCorridaAtiva,
   localizacaoAtiva,
+  silenciado,
+  onAlternarSom,
   onToggleLocalizacao,
   onAbrirChat,
   onToggleOnline,
@@ -68,6 +72,8 @@ export function AbaInicio({
         <CardDispatch
           dispatch={dispatch}
           timeoutSec={timeoutSec}
+          silenciado={silenciado}
+          onAlternarSom={onAlternarSom}
           onAceitar={onAceitarDispatch}
           onRecusar={onRecusarDispatch}
           onTimeout={onTimeoutDispatch}
