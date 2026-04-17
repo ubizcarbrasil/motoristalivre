@@ -1,12 +1,14 @@
-import { Home, Link2, Wallet, User, Settings } from "lucide-react";
+import { Home, Link2, Wallet, User, Settings, Crown } from "lucide-react";
 import type { AbaPainel } from "../types/tipos_painel";
 
 interface NavegacaoInferiorProps {
   abaAtiva: AbaPainel;
   onMudar: (aba: AbaPainel) => void;
+  mostrarTribo?: boolean;
 }
 
-const ITENS: { id: AbaPainel; label: string; icone: typeof Home }[] = [
+const ITEM_TRIBO = { id: "tribo" as AbaPainel, label: "Tribo", icone: Crown };
+const ITENS_BASE: { id: AbaPainel; label: string; icone: typeof Home }[] = [
   { id: "inicio", label: "Início", icone: Home },
   { id: "meus_links", label: "Links", icone: Link2 },
   { id: "carteira", label: "Carteira", icone: Wallet },
@@ -14,18 +16,21 @@ const ITENS: { id: AbaPainel; label: string; icone: typeof Home }[] = [
   { id: "configuracoes", label: "Config", icone: Settings },
 ];
 
-export function NavegacaoInferior({ abaAtiva, onMudar }: NavegacaoInferiorProps) {
+export function NavegacaoInferior({ abaAtiva, onMudar, mostrarTribo = false }: NavegacaoInferiorProps) {
+  const itens = mostrarTribo
+    ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
+    : ITENS_BASE;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border">
       <div className="flex items-center justify-around h-14">
-        {ITENS.map(({ id, label, icone: Icone }) => {
+        {itens.map(({ id, label, icone: Icone }) => {
           const ativo = abaAtiva === id;
           return (
             <button
               key={id}
               type="button"
               onClick={() => onMudar(id)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
                 ativo ? "text-primary" : "text-muted-foreground"
               }`}
             >

@@ -1,5 +1,6 @@
 export type AbaPainel =
   | "inicio"
+  | "tribo"
   | "meus_links"
   | "carteira"
   | "perfil"

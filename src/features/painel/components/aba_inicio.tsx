@@ -7,6 +7,7 @@ import { ToggleLocalizacao } from "../components/toggle_localizacao";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import type { PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo, AbaPainel } from "../types/tipos_painel";
+import type { TriboMotorista } from "../types/tipos_tribos";
 
 interface AbaInicioProps {
   perfil: PerfilMotorista;
@@ -28,6 +29,9 @@ interface AbaInicioProps {
   onRecusarDispatch: () => void | Promise<void>;
   onTimeoutDispatch: () => void | Promise<void>;
   onNavegar: (aba: AbaPainel) => void;
+  tribos?: TriboMotorista[];
+  triboAtivaId?: string | null;
+  onSelecionarTribo?: (id: string) => void;
 }
 
 export function AbaInicio({
@@ -50,6 +54,9 @@ export function AbaInicio({
   onRecusarDispatch,
   onTimeoutDispatch,
   onNavegar,
+  tribos,
+  triboAtivaId,
+  onSelecionarTribo,
 }: AbaInicioProps) {
   return (
     <div className="pb-20 space-y-4">
@@ -59,6 +66,9 @@ export function AbaInicio({
         realtimeAtivo={realtimeAtivo}
         audioDestravado={audioDestravado}
         onToggleOnline={onToggleOnline}
+        tribos={tribos}
+        triboAtivaId={triboAtivaId}
+        onSelecionarTribo={onSelecionarTribo}
       />
 
       {temCorridaAtiva && (

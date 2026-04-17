@@ -11,7 +11,7 @@ import PaginaEntrar from "@/features/autenticacao/pages/pagina_entrar";
 import PaginaCadastro from "@/features/autenticacao/pages/pagina_cadastro";
 import PaginaOnboarding from "@/features/onboarding/pages/pagina_onboarding";
 import PaginaPainel from "@/features/painel/pages/pagina_painel";
-import PaginaAdmin from "@/features/admin/pages/pagina_admin";
+// PaginaAdmin removido — admin agora é acessado via /painel?aba=tribo
 import PaginaAfiliado from "@/features/afiliado/pages/pagina_afiliado";
 import PaginaRoot from "@/features/root/pages/pagina_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
@@ -48,7 +48,7 @@ const App = () => (
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
             <Route path="/painel" element={<RotaProtegida><PaginaPainel /></RotaProtegida>} />
             <Route path="/links" element={<Navigate to="/painel?aba=meus_links" replace />} />
-            <Route path="/admin" element={<RotaProtegida><PaginaAdmin /></RotaProtegida>} />
+            <Route path="/admin" element={<Navigate to="/painel?aba=tribo" replace />} />
             {/* /afiliado removido — afiliados usam /painel unificado */}
             <Route path="/afiliado" element={<Navigate to="/painel" replace />} />
             <Route path="/root" element={<RotaProtegida><PaginaRoot /></RotaProtegida>} />

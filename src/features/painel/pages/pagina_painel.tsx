@@ -6,11 +6,13 @@ import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
 import { AbaConfiguracoes } from "../components/aba_configuracoes";
+import { AbaTribo } from "../components/aba_tribo";
 import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
 import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { usePublicarPresencaMotorista } from "../hooks/hook_publicar_presenca";
+import { useTribosMotorista } from "../hooks/hook_tribos_motorista";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
@@ -38,8 +40,26 @@ export default function PaginaPainel() {
 
   const [mostraChat, setMostraChat] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
+  const [triboAtivaId, setTriboAtivaId] = useState<string | null>(null);
 
-  // Calcula segundos restantes do dispatch ativo (para cadência do alerta)
+  const { tribos } = useTribosMotorista(userId);
+
+  // Define tribo ativa: principal por padrão, ou primeira da lista
+  useEffect(() => {
+    if (!triboAtivaId && tribos.length > 0) {
+      const principal = tribos.find((t) => t.ehPrincipal) ?? tribos[0];
+      setTriboAtivaId(principal.id);
+    }
+  }, [tribos, triboAtivaId]);
+
+  const triboAtiva = useMemo(
+    () => tribos.find((t) => t.id === triboAtivaId) ?? null,
+    [tribos, triboAtivaId],
+  );
+
+  const ehDonoDeAlguma = tribos.some((t) => t.papel === "dono");
+  const mostrarAbaTribo = ehDonoDeAlguma || tribos.length > 0;
+
   const segundosRestantes = useMemo(() => {
     if (!dispatch) return undefined;
     const elapsed = Math.floor((Date.now() - new Date(dispatch.dispatched_at).getTime()) / 1000);
@@ -52,7 +72,6 @@ export default function PaginaPainel() {
     driverId: userId ?? undefined,
   });
 
-  // Publica presença do motorista pra o simulador/admin saber quem está com painel aberto
   usePublicarPresencaMotorista(userId ?? undefined);
 
   useEffect(() => {
@@ -97,7 +116,7 @@ export default function PaginaPainel() {
       {aba === "inicio" && (
         <AbaInicio
           perfil={perfil}
-          tenantSlug={tenant.slug}
+          tenantSlug={triboAtiva?.slug ?? tenant.slug}
           stats={stats}
           corridas={corridasRecentes}
           dispatch={dispatch}
@@ -115,8 +134,13 @@ export default function PaginaPainel() {
           onRecusarDispatch={recusarDispatch}
           onTimeoutDispatch={timeoutDispatch}
           onNavegar={setAba}
+          tribos={tribos}
+          triboAtivaId={triboAtivaId}
+          onSelecionarTribo={setTriboAtivaId}
         />
       )}
+
+      {aba === "tribo" && triboAtiva && <AbaTribo tribo={triboAtiva} />}
 
       {aba === "meus_links" && (
         <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
@@ -137,7 +161,7 @@ export default function PaginaPainel() {
         />
       )}
 
-      <NavegacaoInferior abaAtiva={aba} onMudar={setAba} />
+      <NavegacaoInferior abaAtiva={aba} onMudar={setAba} mostrarTribo={mostrarAbaTribo} />
 
       {mostraChat && corridaAtiva && (
         <TelaChat

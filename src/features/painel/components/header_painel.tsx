@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, AlertTriangle, WifiOff, Loader2 } from "lucide-react";
 import type { PerfilMotorista } from "../types/tipos_painel";
+import type { TriboMotorista } from "../types/tipos_tribos";
+import { SeletorTribo } from "./seletor_tribo";
 
 interface HeaderPainelProps {
   perfil: PerfilMotorista;
@@ -9,6 +11,9 @@ interface HeaderPainelProps {
   realtimeAtivo?: boolean;
   audioDestravado?: boolean;
   onToggleOnline: () => void;
+  tribos?: TriboMotorista[];
+  triboAtivaId?: string | null;
+  onSelecionarTribo?: (id: string) => void;
 }
 
 function saudacao(): string {
@@ -67,8 +72,10 @@ export function HeaderPainel({
   realtimeAtivo = false,
   audioDestravado = false,
   onToggleOnline,
+  tribos,
+  triboAtivaId,
+  onSelecionarTribo,
 }: HeaderPainelProps) {
-  // Estado "conectando" = realtime ainda não ficou ativo OU caiu há menos de 10s
   const [conectando, setConectando] = useState(true);
   const ultimoOnlineRef = useRef<number | null>(null);
 
@@ -78,7 +85,6 @@ export function HeaderPainel({
       setConectando(false);
       return;
     }
-    // Realtime caiu — dar tolerância antes de mostrar vermelho
     setConectando(true);
     const desde = ultimoOnlineRef.current ?? Date.now();
     const restante = Math.max(0, TEMPO_TOLERANCIA_OFFLINE_MS - (Date.now() - desde));
@@ -87,23 +93,32 @@ export function HeaderPainel({
   }, [realtimeAtivo]);
 
   const status = calcularStatus(perfil.is_online, realtimeAtivo, audioDestravado, conectando);
+  const mostrarSeletor = tribos && tribos.length > 0 && onSelecionarTribo;
 
   return (
     <div className="px-5 pt-12 pb-4 space-y-3">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-base font-semibold text-foreground">
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-foreground truncate">
             {saudacao()}, {perfil.nome.split(" ")[0]}
           </p>
-          <p className="text-xs text-muted-foreground">{tenantSlug}.tribocar.com</p>
+          <p className="text-xs text-muted-foreground truncate">{tenantSlug}.tribocar.com</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className={`text-xs font-medium ${perfil.is_online ? "text-primary" : "text-muted-foreground"}`}>
             {perfil.is_online ? "Online" : "Offline"}
           </span>
           <Switch checked={perfil.is_online} onCheckedChange={onToggleOnline} />
         </div>
       </div>
+
+      {mostrarSeletor && (
+        <SeletorTribo
+          tribos={tribos}
+          triboAtivaId={triboAtivaId ?? null}
+          onSelecionar={onSelecionarTribo}
+        />
+      )}
 
       {status && (
         <div
