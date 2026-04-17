@@ -58,8 +58,8 @@ export default function PaginaCadastro() {
       toast({ title: "Informe o slug do grupo", variant: "destructive" });
       return;
     }
-    if (senha.length < 6) {
-      toast({ title: "A senha deve ter no minimo 6 caracteres", variant: "destructive" });
+    if (senha.length < 8) {
+      toast({ title: "A senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
     }
     setCarregando(true);
