@@ -5,6 +5,7 @@ interface NavegacaoInferiorProps {
   abaAtiva: AbaPainel;
   onMudar: (aba: AbaPainel) => void;
   mostrarTribo?: boolean;
+  modoSomenteDono?: boolean;
 }
 
 const ITEM_TRIBO = { id: "tribo" as AbaPainel, label: "Tribo", icone: Crown };
@@ -16,10 +17,23 @@ const ITENS_BASE: { id: AbaPainel; label: string; icone: typeof Home }[] = [
   { id: "configuracoes", label: "Config", icone: Settings },
 ];
 
-export function NavegacaoInferior({ abaAtiva, onMudar, mostrarTribo = false }: NavegacaoInferiorProps) {
-  const itens = mostrarTribo
-    ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
-    : ITENS_BASE;
+const ITENS_SOMENTE_DONO: { id: AbaPainel; label: string; icone: typeof Home }[] = [
+  { id: "tribo", label: "Tribo", icone: Crown },
+  { id: "carteira", label: "Carteira", icone: Wallet },
+  { id: "configuracoes", label: "Config", icone: Settings },
+];
+
+export function NavegacaoInferior({
+  abaAtiva,
+  onMudar,
+  mostrarTribo = false,
+  modoSomenteDono = false,
+}: NavegacaoInferiorProps) {
+  const itens = modoSomenteDono
+    ? ITENS_SOMENTE_DONO
+    : mostrarTribo
+      ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
+      : ITENS_BASE;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border">
       <div className="flex items-center justify-around h-14">

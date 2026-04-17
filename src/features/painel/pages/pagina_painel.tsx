@@ -59,6 +59,15 @@ export default function PaginaPainel() {
 
   const ehDonoDeAlguma = tribos.some((t) => t.papel === "dono");
   const mostrarAbaTribo = ehDonoDeAlguma || tribos.length > 0;
+  const semPerfilMotorista = !perfil || !tenant;
+  const podeAcessarComoDono = semPerfilMotorista && ehDonoDeAlguma && !!triboAtiva;
+
+  // Se não é motorista mas é dono de tribo, força aba "tribo"
+  useEffect(() => {
+    if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
+      setAba("tribo");
+    }
+  }, [podeAcessarComoDono, aba, setAba]);
 
   const segundosRestantes = useMemo(() => {
     if (!dispatch) return undefined;
@@ -99,6 +108,33 @@ export default function PaginaPainel() {
     if (solicitacaoPendente) {
       return <TelaAguardandoAprovacao nomeGrupo={solicitacaoPendente.tenantNome} />;
     }
+
+    // Dono de tribo sem perfil de motorista: renderiza apenas o painel da tribo
+    if (podeAcessarComoDono && userId && triboAtiva) {
+      return (
+        <div className="min-h-screen bg-background text-foreground pb-20">
+          {(aba === "tribo" || aba === "inicio") && <AbaTribo tribo={triboAtiva} />}
+          {aba === "carteira" && <AbaCarteira userId={userId} />}
+          {aba === "configuracoes" && (
+            <AbaConfiguracoes
+              driverId={userId}
+              tenantId={triboAtiva.id}
+              ehAdmin={true}
+              tipoSom={tipoSom}
+              onMudarSom={setTipoSom}
+              onTestarAlerta={testarAlerta}
+            />
+          )}
+          <NavegacaoInferior
+            abaAtiva={aba === "inicio" ? "tribo" : aba}
+            onMudar={setAba}
+            mostrarTribo={true}
+            modoSomenteDono
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
