@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import { CampoEndereco } from "./campo_endereco";
 import { StripMotorista } from "./strip_motorista";
 import { SeletorVeiculo } from "./seletor_veiculo";
@@ -46,6 +46,7 @@ interface BottomSheetProps {
   onAdicionarFavoritoTipo?: (tipo: TipoFavorito) => void;
   onFavoritarEndereco?: (endereco: { address: string; lat: number; lng: number }) => void;
   identificarFavorito?: (lat: number, lng: number, endereco: string) => FavoritoEndereco | undefined;
+  onEscolherNoMapa?: (alvo: "origem" | "destino") => void;
 }
 
 export function BottomSheet({
@@ -76,6 +77,7 @@ export function BottomSheet({
   onAdicionarFavoritoTipo,
   onFavoritarEndereco,
   identificarFavorito,
+  onEscolherNoMapa,
 }: BottomSheetProps) {
   const podeBuscar = origem !== null && destino !== null && !carregandoRota;
   const mostrarChipsFavoritos =
@@ -85,7 +87,7 @@ export function BottomSheet({
     <div className="absolute bottom-0 left-0 right-0 z-20 bg-background rounded-t-2xl border-t border-border shadow-2xl">
       <div className="w-10 h-1 rounded-full bg-border mx-auto mt-3 mb-2" />
 
-      <div className="px-5 pb-6 space-y-3 max-h-[70vh] overflow-y-auto">
+      <div className="px-5 pt-1 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 max-h-[75vh] overflow-y-auto">
         <p className="text-lg font-semibold text-foreground">{saudacaoPorHorario()}</p>
 
         {tipoOrigem === "motorista" && motorista && (
@@ -134,6 +136,31 @@ export function BottomSheet({
                 identificarFavorito={identificarFavorito}
               />
             </div>
+
+            {onEscolherNoMapa && (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEscolherNoMapa("origem")}
+                  className="flex-1 h-9 text-xs"
+                >
+                  <MapPin className="w-3.5 h-3.5 mr-1" />
+                  Origem no mapa
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEscolherNoMapa("destino")}
+                  className="flex-1 h-9 text-xs"
+                >
+                  <MapPin className="w-3.5 h-3.5 mr-1" />
+                  Destino no mapa
+                </Button>
+              </div>
+            )}
 
             <Button
               onClick={onBuscarMotoristas}
