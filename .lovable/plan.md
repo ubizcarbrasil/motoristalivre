@@ -1,81 +1,44 @@
 
 
-## Objetivo
+## Diagnóstico
 
-Adicionar 3 atalhos rápidos:
-1. **Painel → Aplicativo de corridas**: botão que leva o motorista logado direto pro app de passageiro do seu próprio grupo (`/{slug-do-tenant}`), sem deslogar.
-2. **App de corridas → Painel**: atalho discreto pro motorista voltar ao painel.
-3. **Instalar PWA**: atalho dentro do painel pra fixar app na tela do celular.
+Os atalhos foram adicionados corretamente em `/painel` (painel do motorista comum), mas você está em `/admin` (painel do dono do grupo). São duas telas diferentes:
 
----
+- `/painel` → motorista pessoa física (motorista comum) → **tem os atalhos**
+- `/admin` → dono/admin do grupo → **não tem os atalhos** (é onde você está)
+
+Como você é dono do grupo, faz total sentido ter os mesmos 3 atalhos no `/admin`.
 
 ## O que vou fazer
 
-### 1. Botão "Solicitar corrida" no painel do motorista
+### 1. Adicionar os 3 atalhos no header do `/admin`
 
-**Onde**: `src/features/painel/components/aba_inicio.tsx` — adicionar dentro do `AcessoRapido` ou logo abaixo da barra de "Compartilhar localização / Chat".
+Em `src/features/admin/components/header_admin.tsx`, adicionar 3 botões à direita do título:
+- **Solicitar corrida** → `navigate("/{tenantSlug}")` (pega o slug do tenant do dono logado)
+- **Painel motorista** → `navigate("/painel")` (caso o admin também tenha cadastro de motorista)
+- **Instalar app** → `navigate("/instalar")`
 
-**Como**:
-- Novo item no `AcessoRapido` com ícone `Car`/`MapPin` rotulado **"Solicitar corrida"**.
-- Ao clicar, navega para `/{tenantSlug}` (já existe a rota `/:slug` que abre `PaginaPassageiro` com o tenant atual).
-- Como o motorista já está autenticado, a sessão Supabase é mantida — ele entra logado direto.
+No mobile (viewport atual 430px), mostrar só ícones; no desktop, ícone + label.
 
-**Arquivos**:
-- `src/features/painel/components/acesso_rapido.tsx` (adicionar item "Solicitar corrida" + receber `tenantSlug` e callback `onSolicitarCorrida`)
-- `src/features/painel/components/aba_inicio.tsx` (passar `tenantSlug` e callback que faz `navigate(`/${tenantSlug}`)`)
+### 2. Buscar o tenant slug do admin logado
 
-### 2. Atalho "Voltar ao painel" no app de corridas
+Criar hook curto `src/features/admin/hooks/hook_tenant_admin.ts` que consulta `users` → `tenant_id` → `tenants.slug` do usuário logado (uma vez no mount).
 
-**Onde**: `src/features/passageiro/pages/pagina_passageiro.tsx` — botão flutuante discreto no canto superior, visível apenas quando o usuário logado for motorista.
+### 3. Botão "Voltar ao /admin" no app de corridas
 
-**Como**:
-- Detectar se o usuário logado tem perfil de motorista (consulta rápida em `drivers` por `id = user.id`).
-- Se sim, mostrar botão flutuante com ícone `LayoutDashboard` + label "Painel" no topo direito (acima do mapa, ao lado do botão de perfil que já existe).
-- Ao clicar: `navigate("/painel")`.
-- Botão escondido durante corrida ativa pra não atrapalhar fluxo.
+O botão flutuante "Painel" que já existe em `pagina_passageiro.tsx` hoje vai pra `/painel`. Vou ajustar pra detectar se o usuário é dono do grupo (consulta `tenants.owner_id = user.id`) e nesse caso o botão leva pra `/admin` em vez de `/painel`. Se for só motorista comum, continua indo pra `/painel`.
 
-**Arquivos**:
-- `src/features/passageiro/pages/pagina_passageiro.tsx` (adicionar botão + verificação de role)
-- Novo hook curto `src/features/passageiro/hooks/hook_eh_motorista.ts` (verifica via `drivers.id = user.id`) — ou inline simples se preferir mais leve
+## Arquivos editados
 
-### 3. Atalho "Instalar app" no painel
+- `src/features/admin/components/header_admin.tsx` — adicionar 3 botões de atalho
+- `src/features/admin/hooks/hook_tenant_admin.ts` — **novo** hook pra pegar slug
+- `src/features/passageiro/hooks/hook_eh_motorista.ts` — estender pra detectar também se é admin/dono e retornar a rota de volta correta (`/admin` ou `/painel`)
+- `src/features/passageiro/pages/pagina_passageiro.tsx` — usar a rota retornada pelo hook
 
-**Onde**: dentro de **Configurações** (aba já existente) e também como item rápido no `AcessoRapido`.
+## Como testar
 
-**Como**:
-- Já existe a rota `/instalar` com tutorial completo (iOS e Android).
-- Adicionar item **"Instalar app"** com ícone `Download` no `AcessoRapido` que navega para `/instalar`.
-- Adicionar também um card destacado em **Configurações** (`aba_configuracoes.tsx`) explicando rapidamente o benefício e o botão "Como instalar" → `/instalar`.
-
-**Arquivos**:
-- `src/features/painel/components/acesso_rapido.tsx` (adicionar item "Instalar app")
-- `src/features/painel/components/aba_configuracoes.tsx` (adicionar card "Instalar na tela inicial")
-
----
-
-## Detalhe técnico crítico
-
-- **Sessão preservada**: `navigate("/{slug}")` mantém a sessão Supabase ativa — o motorista chega no app de passageiro já logado e pode pedir corrida normalmente.
-- **Detecção de motorista no app de corridas**: vou consultar `drivers` por `user.id` (uma vez no mount). Cache em estado local pra evitar reconsulta.
-- **Sem alterações de banco**, sem novas migrations, sem mudança em rotas existentes.
-
----
-
-## Arquivos editados (resumo)
-
-- `src/features/painel/components/acesso_rapido.tsx` — adicionar 2 itens (Solicitar corrida + Instalar app)
-- `src/features/painel/components/aba_inicio.tsx` — passar `tenantSlug` e callback de navegação
-- `src/features/painel/components/aba_configuracoes.tsx` — card "Instalar na tela inicial"
-- `src/features/passageiro/pages/pagina_passageiro.tsx` — botão flutuante "Painel" pra motoristas logados
-- (opcional) `src/features/passageiro/hooks/hook_eh_motorista.ts` — hook novo de detecção
-
----
-
-## Como testar depois
-
-1. Logar como motorista → no painel aparecem 2 novos atalhos: **"Solicitar corrida"** e **"Instalar app"**.
-2. Clicar em "Solicitar corrida" → vai pra `/{slug}` já logado, mostra mapa do app de passageiro.
-3. No app de passageiro, ver botão **"Painel"** flutuante no topo → clicar volta pra `/painel`.
-4. Clicar em "Instalar app" → abre tutorial passo a passo conforme dispositivo (iOS/Android).
-5. Confirmar que durante uma corrida ativa o botão "Painel" some (pra não atrapalhar).
+1. Logar como dono do grupo → ir em `/admin` → ver 3 botões no topo da tela ao lado de "Dashboard"
+2. Clicar em **Solicitar corrida** → vai pro app de passageiro do seu grupo
+3. No app de passageiro, clicar no botão flutuante "Painel" → volta pro `/admin`
+4. Clicar em **Instalar app** → tutorial de PWA
 
