@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
-import { OverlayBusca } from "../components/overlay_busca";
+import { OverlayBuscaMapa } from "../components/overlay_busca_mapa";
 import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
-import { TelaRastreamento } from "../components/tela_rastreamento";
-import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
-import { TelaAvaliacao } from "../components/tela_avaliacao";
-import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
 import { DialogoDadosPassageiro } from "../components/dialogo_dados_passageiro";
-import { SeletorLocalMapa } from "../components/seletor_local_mapa";
 import { BotaoInstalarPwa } from "../components/botao_instalar_pwa";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
@@ -21,10 +16,28 @@ import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_
 import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import type { EnderecoCompleto } from "../types/tipos_passageiro";
-import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
 import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
+
+// Lazy imports — componentes pesados que não aparecem na renderização inicial
+const TelaRastreamento = lazy(() =>
+  import("../components/tela_rastreamento").then((m) => ({ default: m.TelaRastreamento }))
+);
+const TelaChat = lazy(() =>
+  import("@/compartilhados/components/chat/tela_chat").then((m) => ({ default: m.TelaChat }))
+);
+const TelaAvaliacao = lazy(() =>
+  import("../components/tela_avaliacao").then((m) => ({ default: m.TelaAvaliacao }))
+);
+const ListaMotoristasTenant = lazy(() =>
+  import("../components/lista_motoristas_tenant").then((m) => ({ default: m.ListaMotoristasTenant }))
+);
+const SeletorLocalMapa = lazy(() =>
+  import("../components/seletor_local_mapa").then((m) => ({ default: m.SeletorLocalMapa }))
+);
+const PaginaPerfilPassageiro = lazy(() => import("@/features/perfil_passageiro/pages/pagina_perfil_passageiro"));
+
 
 export default function PaginaPassageiro() {
   const {
