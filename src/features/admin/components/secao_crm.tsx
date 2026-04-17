@@ -102,7 +102,47 @@ export function SecaoCRM() {
         <Button size="sm" variant="outline" onClick={() => { /* TODO */ }}>Campanha cashback</Button>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border">
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {filtrados.map((c) => (
+          <div key={c.id} className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">{c.nome || "Sem nome"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{c.telefone || "—"}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`h-2 w-6 rounded-full ${CORES_FREQUENCIA[c.frequencia]}`} />
+                <Badge variant="secondary" className="text-xs">{LABELS_FREQUENCIA[c.frequencia]}</Badge>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Corridas</p>
+                <p className="text-foreground font-medium">{c.totalCorridas}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Gasto</p>
+                <p className="text-foreground font-medium">R$ {c.totalGasto.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Cashback</p>
+                <p className="text-foreground font-medium">R$ {c.saldoCashback.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+              <span>Origem: {c.origem || "—"}</span>
+              <span>{c.ultimoAcesso ? new Date(c.ultimoAcesso).toLocaleDateString("pt-BR") : "—"}</span>
+            </div>
+          </div>
+        ))}
+        {filtrados.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Nenhum cliente encontrado</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>

@@ -77,7 +77,43 @@ export function SecaoMotoristas() {
 
   return (
     <div className="p-4 sm:p-6">
-      <div className="overflow-x-auto rounded-md border border-border">
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {motoristas.map((m) => (
+          <div key={m.id} className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  {m.online && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                  <p className="font-medium text-foreground truncate">{m.nome}</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">/{m.slug}</p>
+              </div>
+              <Badge variant={m.status === "active" ? "default" : "destructive"} className="shrink-0">
+                {m.status === "active" ? "Ativo" : m.status === "banned" ? "Suspenso" : "Inativo"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Corridas: <span className="text-foreground font-medium">{m.corridasTotal}</span></span>
+              {m.status === "active" ? (
+                <Button size="sm" variant="destructive" onClick={() => alterarStatus(m.id, "banned")}>
+                  Suspender
+                </Button>
+              ) : (
+                <Button size="sm" variant="default" onClick={() => alterarStatus(m.id, "active")}>
+                  Aprovar
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+        {motoristas.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Nenhum motorista cadastrado</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
