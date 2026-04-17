@@ -237,19 +237,7 @@ export default function PaginaPassageiro() {
       )}
 
       {!passengerId && etapa !== "buscando" && etapa !== "aceita" && (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            const destinoAposLogin = `${location.pathname}${location.search}`;
-            navigate(`/entrar?redirectTo=${encodeURIComponent(destinoAposLogin)}`);
-          }}
-          className="absolute top-4 right-4 z-10 h-10 rounded-full shadow-lg gap-2 px-4"
-          aria-label="Entrar"
-        >
-          <LogIn className="w-4 h-4" />
-          Entrar
-        </Button>
+        <BannerLoginNecessario />
       )}
 
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
