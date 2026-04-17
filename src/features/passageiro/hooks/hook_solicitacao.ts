@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
@@ -21,14 +21,38 @@ import {
   buscarRota,
   calcularPreco,
   buscarTenantPorSlug,
+  criarCorridaGuest,
 } from "../services/servico_passageiro";
 import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
+
+const STORAGE_KEY_GUEST = "tribocar_guest_ride";
+
+interface GuestRideStorage {
+  guest_passenger_id: string;
+  ride_request_id: string;
+  tenant_id: string;
+  created_at: number;
+}
+
+function carregarGuestStorage(): GuestRideStorage | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_GUEST);
+    if (!raw) return null;
+    const obj = JSON.parse(raw) as GuestRideStorage;
+    // Expira em 2h
+    if (Date.now() - obj.created_at > 2 * 60 * 60 * 1000) {
+      localStorage.removeItem(STORAGE_KEY_GUEST);
+      return null;
+    }
+    return obj;
+  } catch {
+    return null;
+  }
+}
 
 export function useSolicitacao() {
   const params = useParams<{ slug: string; driver_slug?: string; affiliate_slug?: string }>();
   const { usuario } = useAutenticacao();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const tipoOrigem: TipoOrigem = params.affiliate_slug ? "afiliado" : "motorista";
   const slugPerfil = params.affiliate_slug || params.driver_slug || "";
@@ -52,6 +76,8 @@ export function useSolicitacao() {
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("dinheiro");
   const [confirmando, setConfirmando] = useState(false);
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const [guestPassengerId, setGuestPassengerId] = useState<string | null>(null);
+  const [precisaDadosGuest, setPrecisaDadosGuest] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -59,7 +85,6 @@ export function useSolicitacao() {
         setCarregando(true);
         setTenantSemMotorista(null);
 
-        // Caso especial: rota /:slug sem driver_slug nem affiliate_slug
         if (params.slug && !params.driver_slug && !params.affiliate_slug) {
           const tenant = await buscarTenantPorSlug(params.slug);
           if (!tenant) { setErro(true); return; }
@@ -89,6 +114,20 @@ export function useSolicitacao() {
     carregar();
   }, [params.slug, params.driver_slug, params.affiliate_slug, slugPerfil, tipoOrigem]);
 
+  // Restaura corrida guest do localStorage (ex.: refresh enquanto buscando)
+  useEffect(() => {
+    if (usuario) return;
+    const tenantAtual = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
+    if (!tenantAtual) return;
+
+    const armazenado = carregarGuestStorage();
+    if (armazenado && armazenado.tenant_id === tenantAtual) {
+      setGuestPassengerId(armazenado.guest_passenger_id);
+      setRideRequestId(armazenado.ride_request_id);
+      setEtapa("buscando");
+    }
+  }, [usuario, motorista?.tenant_id, afiliado?.tenant_id]);
+
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
 
@@ -111,43 +150,46 @@ export function useSolicitacao() {
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
 
-  const confirmarCorrida = useCallback(async () => {
-    if (!usuario) {
-      const destinoAposLogin = `${location.pathname}${location.search}`;
-      toast("Entre para solicitar a corrida", {
-        description: "Você será redirecionado de volta após o login.",
-      });
-      navigate(`/entrar?redirectTo=${encodeURIComponent(destinoAposLogin)}`);
-      return;
-    }
+  const validarParaConfirmar = useCallback((): boolean => {
     if (!tenantId || !origem || !destino || !rota) {
       toast.error("Defina origem e destino antes de confirmar");
+      return false;
+    }
+    return true;
+  }, [tenantId, origem, destino, rota]);
+
+  const confirmarCorrida = useCallback(async () => {
+    if (!validarParaConfirmar()) return;
+
+    // Sem login → abre popup pra coletar nome + WhatsApp
+    if (!usuario) {
+      setPrecisaDadosGuest(true);
       return;
     }
+
     setConfirmando(true);
     try {
-      // Garante que o usuário logado existe como passageiro neste tenant
       const { error: errPassenger } = await supabase.rpc("ensure_passenger", {
-        _tenant_id: tenantId,
+        _tenant_id: tenantId!,
       });
       if (errPassenger) throw errPassenger;
 
       const { data, error } = await supabase
         .from("ride_requests")
         .insert({
-          tenant_id: tenantId,
+          tenant_id: tenantId!,
           passenger_id: usuario.id,
           origin_type: motorista ? "driver_link" : "affiliate_link",
           origin_driver_id: motorista?.id ?? null,
           origin_affiliate_id: afiliado?.id ?? null,
-          origin_lat: origem.coordenada.lat,
-          origin_lng: origem.coordenada.lng,
-          origin_address: origem.endereco,
-          dest_lat: destino.coordenada.lat,
-          dest_lng: destino.coordenada.lng,
-          dest_address: destino.endereco,
-          distance_km: rota.distancia_km,
-          estimated_min: rota.duracao_min,
+          origin_lat: origem!.coordenada.lat,
+          origin_lng: origem!.coordenada.lng,
+          origin_address: origem!.endereco,
+          dest_lat: destino!.coordenada.lat,
+          dest_lng: destino!.coordenada.lng,
+          dest_address: destino!.endereco,
+          distance_km: rota!.distancia_km,
+          estimated_min: rota!.duracao_min,
           offered_price: valorOferta,
           suggested_price: valorOferta,
           payment_method: formaPagamento,
@@ -160,15 +202,65 @@ export function useSolicitacao() {
       setRideRequestId(data.id);
       setEtapa("buscando");
     } catch (e: unknown) {
-      const err = e as { code?: string; message?: string; details?: string; hint?: string };
-      const code = err?.code ? ` [${err.code}]` : "";
+      const err = e as { code?: string; message?: string };
       const msg = err?.message ?? "Erro desconhecido";
-      toast.error(`Erro ao solicitar corrida${code}: ${msg}`);
+      toast.error(`Erro ao solicitar corrida: ${msg}`);
       console.error("[solicitar corrida]", e);
     } finally {
       setConfirmando(false);
     }
-  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, navigate, location.pathname, location.search]);
+  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]);
+
+  const confirmarCorridaGuest = useCallback(
+    async (dados: { nome: string; whatsapp: string }) => {
+      if (!validarParaConfirmar()) return;
+      setConfirmando(true);
+      try {
+        const resultado = await criarCorridaGuest({
+          tenantId: tenantId!,
+          fullName: dados.nome,
+          whatsapp: dados.whatsapp,
+          origem: {
+            lat: origem!.coordenada.lat,
+            lng: origem!.coordenada.lng,
+            endereco: origem!.endereco,
+          },
+          destino: {
+            lat: destino!.coordenada.lat,
+            lng: destino!.coordenada.lng,
+            endereco: destino!.endereco,
+          },
+          distanciaKm: rota!.distancia_km,
+          duracaoMin: rota!.duracao_min,
+          valorOferta,
+          formaPagamento,
+          origemTipo: motorista ? "driver_link" : "affiliate_link",
+          origemDriverId: motorista?.id ?? null,
+          origemAfiliadoId: afiliado?.id ?? null,
+        });
+
+        const armazenar: GuestRideStorage = {
+          guest_passenger_id: resultado.guest_passenger_id,
+          ride_request_id: resultado.ride_request_id,
+          tenant_id: tenantId!,
+          created_at: Date.now(),
+        };
+        localStorage.setItem(STORAGE_KEY_GUEST, JSON.stringify(armazenar));
+
+        setGuestPassengerId(resultado.guest_passenger_id);
+        setRideRequestId(resultado.ride_request_id);
+        setPrecisaDadosGuest(false);
+        setEtapa("buscando");
+      } catch (e: unknown) {
+        const err = e as { message?: string };
+        toast.error(`Erro ao solicitar corrida: ${err?.message ?? "tente novamente"}`);
+        console.error("[guest ride]", e);
+      } finally {
+        setConfirmando(false);
+      }
+    },
+    [tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]
+  );
 
   const voltarParaEnderecos = useCallback(() => {
     setEtapa("endereco");
@@ -187,7 +279,9 @@ export function useSolicitacao() {
     setOrigem(null);
     setDestino(null);
     setRideRequestId(null);
+    setGuestPassengerId(null);
     setValorOferta(0);
+    localStorage.removeItem(STORAGE_KEY_GUEST);
   }, []);
 
   return {
@@ -215,11 +309,15 @@ export function useSolicitacao() {
     formaPagamento,
     setFormaPagamento,
     confirmarCorrida,
+    confirmarCorridaGuest,
+    precisaDadosGuest,
+    fecharDadosGuest: () => setPrecisaDadosGuest(false),
     voltarParaEnderecos,
     confirmando,
     tenantId,
     grupoNome,
     rideRequestId,
+    guestPassengerId,
     irParaCorridaAceita,
     resetarSolicitacao,
     passengerId: usuario?.id,
