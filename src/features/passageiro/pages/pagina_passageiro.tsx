@@ -21,7 +21,7 @@ import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/component
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogIn, User } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
