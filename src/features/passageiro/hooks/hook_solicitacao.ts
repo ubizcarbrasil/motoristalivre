@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ import {
 import { OPCOES_VEICULOS } from "../constants/constantes_passageiro";
 
 const STORAGE_KEY_GUEST = "tribocar_guest_ride";
+const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
 interface GuestRideStorage {
   guest_passenger_id: string;
@@ -34,12 +35,16 @@ interface GuestRideStorage {
   created_at: number;
 }
 
+interface GuestDadosStorage {
+  nome: string;
+  whatsapp: string;
+}
+
 function carregarGuestStorage(): GuestRideStorage | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_GUEST);
     if (!raw) return null;
     const obj = JSON.parse(raw) as GuestRideStorage;
-    // Expira em 2h
     if (Date.now() - obj.created_at > 2 * 60 * 60 * 1000) {
       localStorage.removeItem(STORAGE_KEY_GUEST);
       return null;
@@ -47,6 +52,24 @@ function carregarGuestStorage(): GuestRideStorage | null {
     return obj;
   } catch {
     return null;
+  }
+}
+
+function carregarGuestDados(): GuestDadosStorage | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_GUEST_DADOS);
+    if (!raw) return null;
+    return JSON.parse(raw) as GuestDadosStorage;
+  } catch {
+    return null;
+  }
+}
+
+function salvarGuestDados(dados: GuestDadosStorage) {
+  try {
+    localStorage.setItem(STORAGE_KEY_GUEST_DADOS, JSON.stringify(dados));
+  } catch {
+    // ignore
   }
 }
 
@@ -78,6 +101,8 @@ export function useSolicitacao() {
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [guestPassengerId, setGuestPassengerId] = useState<string | null>(null);
   const [precisaDadosGuest, setPrecisaDadosGuest] = useState(false);
+  const [dadosGuest, setDadosGuest] = useState<GuestDadosStorage | null>(() => carregarGuestDados());
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -175,6 +200,12 @@ export function useSolicitacao() {
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
 
+    // Se for guest e ainda não tem dados, abre o popup ANTES de buscar
+    if (!usuario && !dadosGuest) {
+      setPrecisaDadosGuest(true);
+      return;
+    }
+
     setCarregandoRota(true);
     const rotaResult = await buscarRota(origem.coordenada, destino.coordenada);
     if (rotaResult) {
@@ -189,7 +220,36 @@ export function useSolicitacao() {
       setEtapa("veiculo");
     }
     setCarregandoRota(false);
-  }, [origem, destino, configPreco]);
+  }, [origem, destino, configPreco, usuario, dadosGuest]);
+
+  // Quando guest preencher os dados via dialog (vindo do "Buscar motoristas"),
+  // já calcula a rota e segue pra etapa de veículo
+  const onSalvarDadosGuestEBuscar = useCallback(
+    async (dados: { nome: string; whatsapp: string }) => {
+      const novosDados: GuestDadosStorage = { nome: dados.nome, whatsapp: dados.whatsapp };
+      salvarGuestDados(novosDados);
+      setDadosGuest(novosDados);
+      setPrecisaDadosGuest(false);
+
+      if (!origem || !destino || !configPreco) return;
+      setCarregandoRota(true);
+      const rotaResult = await buscarRota(origem.coordenada, destino.coordenada);
+      if (rotaResult) {
+        setRota(rotaResult);
+        const precosCalc = OPCOES_VEICULOS.map((v) => ({
+          veiculo: v,
+          preco: calcularPreco(configPreco, rotaResult.distancia_km, rotaResult.duracao_min, v.multiplicador),
+        }));
+        setPrecos(precosCalc);
+        const precoCompacto = precosCalc.find((p) => p.veiculo.id === "compacto");
+        setValorOferta(Math.round(precoCompacto?.preco ?? 0));
+        setEtapa("veiculo");
+      }
+      setCarregandoRota(false);
+    },
+    [origem, destino, configPreco]
+  );
+
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
@@ -202,15 +262,8 @@ export function useSolicitacao() {
     return true;
   }, [tenantId, origem, destino, rota]);
 
-  const confirmarCorrida = useCallback(async () => {
-    if (!validarParaConfirmar()) return;
-
-    // Sem login → abre popup pra coletar nome + WhatsApp
-    if (!usuario) {
-      setPrecisaDadosGuest(true);
-      return;
-    }
-
+  // Cria corrida para usuário autenticado
+  const criarCorridaAutenticado = useCallback(async () => {
     setConfirmando(true);
     try {
       const { error: errPassenger } = await supabase.rpc("ensure_passenger", {
@@ -222,7 +275,7 @@ export function useSolicitacao() {
         .from("ride_requests")
         .insert({
           tenant_id: tenantId!,
-          passenger_id: usuario.id,
+          passenger_id: usuario!.id,
           origin_type: motorista ? "driver_link" : "affiliate_link",
           origin_driver_id: motorista?.id ?? null,
           origin_affiliate_id: afiliado?.id ?? null,
@@ -246,14 +299,33 @@ export function useSolicitacao() {
       setRideRequestId(data.id);
       setEtapa("buscando");
     } catch (e: unknown) {
-      const err = e as { code?: string; message?: string };
-      const msg = err?.message ?? "Erro desconhecido";
-      toast.error(`Erro ao solicitar corrida: ${msg}`);
+      const err = e as { message?: string };
+      toast.error(`Erro ao solicitar corrida: ${err?.message ?? "tente novamente"}`);
       console.error("[solicitar corrida]", e);
     } finally {
       setConfirmando(false);
     }
-  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]);
+  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento]);
+
+  const confirmarCorrida = useCallback(async () => {
+    if (!validarParaConfirmar()) return;
+
+    if (usuario) {
+      await criarCorridaAutenticado();
+      return;
+    }
+
+    // Guest: dados já devem estar salvos (foram pedidos antes do seletor de veículo).
+    // Caso contrário (edge), abre o popup.
+    if (!dadosGuest) {
+      setPrecisaDadosGuest(true);
+      return;
+    }
+
+    // Reusa o fluxo guest com os dados salvos
+    await confirmarCorridaGuestRef.current?.(dadosGuest);
+  }, [usuario, dadosGuest, criarCorridaAutenticado, validarParaConfirmar]);
+
 
   const confirmarCorridaGuest = useCallback(
     async (dados: { nome: string; whatsapp: string }) => {
@@ -291,6 +363,11 @@ export function useSolicitacao() {
         };
         localStorage.setItem(STORAGE_KEY_GUEST, JSON.stringify(armazenar));
 
+        // Salva também os dados do guest pra próxima vez
+        const dadosGuestNovo: GuestDadosStorage = { nome: dados.nome, whatsapp: dados.whatsapp };
+        salvarGuestDados(dadosGuestNovo);
+        setDadosGuest(dadosGuestNovo);
+
         setGuestPassengerId(resultado.guest_passenger_id);
         setRideRequestId(resultado.ride_request_id);
         setPrecisaDadosGuest(false);
@@ -306,11 +383,46 @@ export function useSolicitacao() {
     [tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]
   );
 
+  // Ref pra evitar dependência circular entre confirmarCorrida e confirmarCorridaGuest
+  const confirmarCorridaGuestRef = useRef(confirmarCorridaGuest);
+  useEffect(() => {
+    confirmarCorridaGuestRef.current = confirmarCorridaGuest;
+  }, [confirmarCorridaGuest]);
+
+  const cancelarSolicitacao = useCallback(async () => {
+    if (!rideRequestId) {
+      // Nada criado ainda — só reseta o estado local
+      setEtapa("endereco");
+      return;
+    }
+    setCancelando(true);
+    try {
+      const { error } = await supabase
+        .from("ride_requests")
+        .update({ status: "cancelled" })
+        .eq("id", rideRequestId);
+      if (error) throw error;
+      toast.success("Solicitação cancelada");
+      // Limpa storage da corrida (mantém dados do guest pra próxima)
+      localStorage.removeItem(STORAGE_KEY_GUEST);
+      setRideRequestId(null);
+      setGuestPassengerId(null);
+      setEtapa("endereco");
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      toast.error(`Erro ao cancelar: ${err?.message ?? "tente novamente"}`);
+      console.error("[cancelar corrida]", e);
+    } finally {
+      setCancelando(false);
+    }
+  }, [rideRequestId]);
+
   const voltarParaEnderecos = useCallback(() => {
     setEtapa("endereco");
     setRota(null);
     setPrecos([]);
   }, []);
+
 
   const irParaCorridaAceita = useCallback(() => {
     setEtapa("aceita");
@@ -354,10 +466,14 @@ export function useSolicitacao() {
     setFormaPagamento,
     confirmarCorrida,
     confirmarCorridaGuest,
+    onSalvarDadosGuestEBuscar,
+    dadosGuest,
     precisaDadosGuest,
     fecharDadosGuest: () => setPrecisaDadosGuest(false),
     voltarParaEnderecos,
     confirmando,
+    cancelando,
+    cancelarSolicitacao,
     tenantId,
     grupoNome,
     rideRequestId,

@@ -163,7 +163,31 @@ export async function buscarEnderecosNominatim(query: string): Promise<Array<{ e
   }));
 }
 
+// Cache em memória + sessionStorage para reverse-geocoding
+const cacheReverse = new Map<string, string>();
+const REVERSE_CACHE_PREFIX = "tribocar_rev_";
+
+function chaveReverse(lat: number, lng: number) {
+  return `${lat.toFixed(4)}_${lng.toFixed(4)}`;
+}
+
 export async function reverseGeocodingNominatim(lat: number, lng: number): Promise<string | null> {
+  const chave = chaveReverse(lat, lng);
+
+  // 1. Memória
+  if (cacheReverse.has(chave)) return cacheReverse.get(chave) ?? null;
+
+  // 2. sessionStorage
+  try {
+    const cached = sessionStorage.getItem(REVERSE_CACHE_PREFIX + chave);
+    if (cached) {
+      cacheReverse.set(chave, cached);
+      return cached;
+    }
+  } catch {
+    // ignore
+  }
+
   const params = new URLSearchParams({
     lat: String(lat),
     lon: String(lng),
@@ -178,7 +202,16 @@ export async function reverseGeocodingNominatim(lat: number, lng: number): Promi
     });
     if (!res.ok) return null;
     const dados = await res.json();
-    return (dados?.display_name as string) ?? null;
+    const endereco = (dados?.display_name as string) ?? null;
+    if (endereco) {
+      cacheReverse.set(chave, endereco);
+      try {
+        sessionStorage.setItem(REVERSE_CACHE_PREFIX + chave, endereco);
+      } catch {
+        // ignore quota
+      }
+    }
+    return endereco;
   } catch {
     return null;
   }

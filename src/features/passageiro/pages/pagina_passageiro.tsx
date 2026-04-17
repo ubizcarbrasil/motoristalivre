@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
-import { OverlayBusca } from "../components/overlay_busca";
+import { OverlayBuscaMapa } from "../components/overlay_busca_mapa";
 import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
-import { TelaRastreamento } from "../components/tela_rastreamento";
-import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
-import { TelaAvaliacao } from "../components/tela_avaliacao";
-import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
 import { DialogoDadosPassageiro } from "../components/dialogo_dados_passageiro";
-import { SeletorLocalMapa } from "../components/seletor_local_mapa";
 import { BotaoInstalarPwa } from "../components/botao_instalar_pwa";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
@@ -21,10 +16,28 @@ import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_
 import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import type { EnderecoCompleto } from "../types/tipos_passageiro";
-import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
 import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
+
+// Lazy imports — componentes pesados que não aparecem na renderização inicial
+const TelaRastreamento = lazy(() =>
+  import("../components/tela_rastreamento").then((m) => ({ default: m.TelaRastreamento }))
+);
+const TelaChat = lazy(() =>
+  import("@/compartilhados/components/chat/tela_chat").then((m) => ({ default: m.TelaChat }))
+);
+const TelaAvaliacao = lazy(() =>
+  import("../components/tela_avaliacao").then((m) => ({ default: m.TelaAvaliacao }))
+);
+const ListaMotoristasTenant = lazy(() =>
+  import("../components/lista_motoristas_tenant").then((m) => ({ default: m.ListaMotoristasTenant }))
+);
+const SeletorLocalMapa = lazy(() =>
+  import("../components/seletor_local_mapa").then((m) => ({ default: m.SeletorLocalMapa }))
+);
+const PaginaPerfilPassageiro = lazy(() => import("@/features/perfil_passageiro/pages/pagina_perfil_passageiro"));
+
 
 export default function PaginaPassageiro() {
   const {
@@ -52,16 +65,22 @@ export default function PaginaPassageiro() {
     setFormaPagamento,
     confirmarCorrida,
     confirmarCorridaGuest,
+    onSalvarDadosGuestEBuscar,
+    dadosGuest,
     precisaDadosGuest,
     fecharDadosGuest,
     voltarParaEnderecos,
     confirmando,
+    cancelando,
+    cancelarSolicitacao,
     grupoNome,
     rideRequestId,
     guestPassengerId,
     passengerId,
     resetarSolicitacao,
+    rota: rotaAtual,
   } = useSolicitacao();
+
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
@@ -227,7 +246,11 @@ export default function PaginaPassageiro() {
   }
 
   if (tenantSemMotorista) {
-    return <ListaMotoristasTenant tenantSlug={tenantSemMotorista} />;
+    return (
+      <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
+        <ListaMotoristasTenant tenantSlug={tenantSemMotorista} />
+      </Suspense>
+    );
   }
 
   if (erro) {
@@ -308,7 +331,13 @@ export default function PaginaPassageiro() {
         />
       )}
 
-      {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
+      {etapa === "buscando" && !corridaAceita && (
+        <OverlayBuscaMapa
+          grupoNome={grupoNome}
+          onCancelar={cancelarSolicitacao}
+          cancelando={cancelando}
+        />
+      )}
 
       {etapa === "aceita" && corridaAceita && !mostraRastreamento && !mostraChat && (
         <SheetCorridaAceita
@@ -318,54 +347,57 @@ export default function PaginaPassageiro() {
         />
       )}
 
-      {mostraRastreamento && (
-        <TelaRastreamento
-          posicaoMotorista={rastreamento.posicao}
-          posicaoPassageiro={origem?.coordenada ?? null}
-          distanciaKm={rastreamento.distanciaKm}
-          etaMin={rastreamento.etaMin}
-          conectado={rastreamento.conectado}
-          onVoltar={fecharRastreamento}
-        />
-      )}
+      <Suspense fallback={null}>
+        {mostraRastreamento && (
+          <TelaRastreamento
+            posicaoMotorista={rastreamento.posicao}
+            posicaoPassageiro={origem?.coordenada ?? null}
+            distanciaKm={rastreamento.distanciaKm}
+            etaMin={rastreamento.etaMin}
+            conectado={rastreamento.conectado}
+            onVoltar={fecharRastreamento}
+          />
+        )}
 
-      {mostraChat && corridaAceita && passengerId && (
-        <TelaChat
-          rideId={corridaAceita.ride_id ?? ""}
-          meuId={passengerId}
-          meuPapel="passenger"
-          outroNome={corridaAceita.motorista.nome}
-          outroAvatar={corridaAceita.motorista.avatar_url}
-          outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
-          outroTelefone={corridaAceita.motorista.telefone}
-          onVoltar={() => setMostraChat(false)}
-        />
-      )}
+        {mostraChat && corridaAceita && passengerId && (
+          <TelaChat
+            rideId={corridaAceita.ride_id ?? ""}
+            meuId={passengerId}
+            meuPapel="passenger"
+            outroNome={corridaAceita.motorista.nome}
+            outroAvatar={corridaAceita.motorista.avatar_url}
+            outroSubtitulo={`A caminho · ${corridaAceita.estimated_min} min`}
+            outroTelefone={corridaAceita.motorista.telefone}
+            onVoltar={() => setMostraChat(false)}
+          />
+        )}
 
-      {avaliacaoPendente && passengerId && (
-        <TelaAvaliacao
-          rideId={avaliacaoPendente.ride_id}
-          driverId={avaliacaoPendente.driver_id}
-          passengerId={passengerId}
-          motoristaNome={avaliacaoPendente.nome}
-          motoristaAvatar={avaliacaoPendente.avatar}
-          onConcluir={concluirAvaliacao}
-        />
-      )}
+        {avaliacaoPendente && passengerId && (
+          <TelaAvaliacao
+            rideId={avaliacaoPendente.ride_id}
+            driverId={avaliacaoPendente.driver_id}
+            passengerId={passengerId}
+            motoristaNome={avaliacaoPendente.nome}
+            motoristaAvatar={avaliacaoPendente.avatar}
+            onConcluir={concluirAvaliacao}
+          />
+        )}
 
-      {mostraPerfil && passengerId && (
-        <PaginaPerfilPassageiro
-          userId={passengerId}
-          onVoltar={() => setMostraPerfil(false)}
-          onPedirNovamente={(novaOrigem, novoDestino) => {
-            setOrigem(novaOrigem);
-            setDestino(novoDestino);
-            setEtapa("endereco");
-            setMostraPerfil(false);
-            toast.success("Endereços preenchidos. Confirme para buscar motoristas.");
-          }}
-        />
-      )}
+        {mostraPerfil && passengerId && (
+          <PaginaPerfilPassageiro
+            userId={passengerId}
+            onVoltar={() => setMostraPerfil(false)}
+            onPedirNovamente={(novaOrigem, novoDestino) => {
+              setOrigem(novaOrigem);
+              setDestino(novoDestino);
+              setEtapa("endereco");
+              setMostraPerfil(false);
+              toast.success("Endereços preenchidos. Confirme para buscar motoristas.");
+            }}
+          />
+        )}
+      </Suspense>
+
 
       <DialogoEditarFavorito
         aberto={favoritoDialogo.aberto}
@@ -381,17 +413,21 @@ export default function PaginaPassageiro() {
       <DialogoDadosPassageiro
         aberto={precisaDadosGuest}
         onFechar={fecharDadosGuest}
-        onConfirmar={confirmarCorridaGuest}
-        enviando={confirmando}
+        onConfirmar={rotaAtual ? confirmarCorridaGuest : onSalvarDadosGuestEBuscar}
+        enviando={confirmando || carregandoRota}
+        textoBotao={rotaAtual ? "Chamar motorista" : "Continuar"}
+        valorInicial={dadosGuest ? { nome: dadosGuest.nome, whatsapp: dadosGuest.whatsapp } : undefined}
       />
 
-      <SeletorLocalMapa
-        aberto={seletorMapa.aberto}
-        titulo={seletorMapa.alvo === "origem" ? "Definir origem" : "Definir destino"}
-        centroInicial={centroSeletor}
-        onConfirmar={confirmarLocalDoMapa}
-        onFechar={() => setSeletorMapa((s) => ({ ...s, aberto: false }))}
-      />
+      <Suspense fallback={null}>
+        <SeletorLocalMapa
+          aberto={seletorMapa.aberto}
+          titulo={seletorMapa.alvo === "origem" ? "Definir origem" : "Definir destino"}
+          centroInicial={centroSeletor}
+          onConfirmar={confirmarLocalDoMapa}
+          onFechar={() => setSeletorMapa((s) => ({ ...s, aberto: false }))}
+        />
+      </Suspense>
 
       <SheetInstalacao />
     </div>
