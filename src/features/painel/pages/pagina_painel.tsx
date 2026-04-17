@@ -10,6 +10,7 @@ import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
 import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
+import { usePublicarPresencaMotorista } from "../hooks/hook_publicar_presenca";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
@@ -50,6 +51,9 @@ export default function PaginaPainel() {
     segundosRestantes,
     driverId: userId ?? undefined,
   });
+
+  // Publica presença do motorista pra o simulador/admin saber quem está com painel aberto
+  usePublicarPresencaMotorista(userId ?? undefined);
 
   useEffect(() => {
     if (!userId) return;

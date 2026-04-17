@@ -3,15 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Send } from "lucide-react";
-import type { TenantOpcao, MotoristaOpcao } from "../types/tipos_simulador";
+import type { TenantOpcao } from "../types/tipos_simulador";
 
 interface Props {
   tenants: TenantOpcao[];
-  motoristas: MotoristaOpcao[];
   tenantId: string;
   setTenantId: (v: string) => void;
   motoristaId: string;
-  setMotoristaId: (v: string) => void;
   origem: string;
   setOrigem: (v: string) => void;
   destino: string;
@@ -29,11 +27,9 @@ interface Props {
 
 export function FormularioSimulacao({
   tenants,
-  motoristas,
   tenantId,
   setTenantId,
   motoristaId,
-  setMotoristaId,
   origem,
   setOrigem,
   destino,
@@ -66,25 +62,6 @@ export function FormularioSimulacao({
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Motorista alvo</Label>
-        <Select value={motoristaId} onValueChange={setMotoristaId} disabled={!motoristas.length}>
-          <SelectTrigger>
-            <SelectValue placeholder={motoristas.length ? "Selecione" : "Sem motoristas no grupo"} />
-          </SelectTrigger>
-          <SelectContent>
-            {motoristas.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                <span className={m.is_online ? "" : "text-muted-foreground"}>
-                  {m.is_online ? "🟢" : "⚪"} {m.nome}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">Apenas motoristas online recebem o card visualmente.</p>
-      </div>
-
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">
           <Label htmlFor="origem">Origem</Label>
@@ -113,8 +90,13 @@ export function FormularioSimulacao({
 
       <Button onClick={onDisparar} disabled={enviando || !tenantId || !motoristaId} className="w-full h-11 gap-2">
         {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-        Disparar corrida fake
+        Disparar corrida fake pro motorista alvo
       </Button>
+      {!motoristaId && (
+        <p className="text-xs text-muted-foreground text-center">
+          Selecione um motorista na lista abaixo.
+        </p>
+      )}
     </div>
   );
 }
