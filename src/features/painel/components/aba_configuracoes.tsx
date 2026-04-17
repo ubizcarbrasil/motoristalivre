@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Plus, Users } from "lucide-react";
+import { Loader2, Plus, Users, Bell, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,9 +26,17 @@ interface AbaConfiguracoesProps {
   ehAdmin: boolean;
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
+  onTestarAlerta?: () => void | Promise<void>;
 }
 
-export function AbaConfiguracoes({ driverId, tenantId, ehAdmin, tipoSom, onMudarSom }: AbaConfiguracoesProps) {
+export function AbaConfiguracoes({
+  driverId,
+  tenantId,
+  ehAdmin,
+  tipoSom,
+  onMudarSom,
+  onTestarAlerta,
+}: AbaConfiguracoesProps) {
   const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
   const [convites, setConvites] = useState<ConviteGrupo[]>([]);
   const [carregando, setCarregando] = useState(true);
