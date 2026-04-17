@@ -1,71 +1,53 @@
 
 
-## Plano: Melhorias UX do app do passageiro
+## Diagnóstico: por que a corrida não chama no app do motorista
 
-### 1. Pedir nome + WhatsApp ANTES de buscar (não só ao confirmar)
+Encontrei **3 bugs encadeados** que explicam o problema:
 
-Hoje só pede dados do guest no clique final "Confirmar". Mover pra antes:
+### 1. Trigger ausente em `ride_requests` (CAUSA RAIZ)
+A função `notify_dispatch_ride()` existe no banco, mas **não há TRIGGER attached** na tabela `ride_requests`. Resultado: quando o passageiro cria a corrida, **nada** chama a edge function `dispatch-ride`. Confirmado via `information_schema.triggers` (0 linhas).
 
-- Em `hook_solicitacao.ts`: criar estado `dadosGuest: {nome, whatsapp} | null` salvo em `localStorage` (`tribocar_guest_dados`).
-- Adicionar fluxo "garantir dados" antes do `buscarRotaCallback`. Se for guest e ainda não tem dados, abrir o `DialogoDadosPassageiro` ANTES de mostrar o seletor de veículo.
-- Em `confirmarCorridaGuest`, usar os dados já salvos sem reabrir popup.
-- Para usuário logado: nada muda.
+### 2. Enum `dispatch_mode` não bate com a edge function
+O enum no banco tem valores `auto | manual | hybrid`, mas o código da edge function compara contra `owner_priority | proximity | broadcast`. O tenant Papa-léguas está em `dispatch_mode='manual'` → mesmo se a edge rodar, cai no `else` (trata como broadcast). Não quebra, mas é frágil e errado semanticamente.
 
-### 2. Campo "Sua oferta" travado em `0` + sugestões de valor
+### 3. Enum `dispatch_response` na edge function
+A edge usa response `'rejected'` mas o enum aceita `'rejected'` ✓. OK aqui.
 
-Problema: `type="number"` com valor `0` não deixa apagar o zero (vira "020"). 
+### Confirmação dos fatos
+- Última corrida criada (`2356b03f...`) ficou `cancelled` sem nenhum dispatch novo.
+- Corridas seed antigas (`6b2910d6...`) só funcionaram porque foram criadas via testes manuais com chamada direta da edge.
+- Driver Alecio (`548af796`) está online no tenant Papa-léguas — o problema não é falta de motorista.
 
-Em `seletor_veiculo.tsx`:
-- Trocar `Input type="number"` por `type="text"` com `inputMode="decimal"`, controlando como string interna e parseando para número.
-- Limpar o "0" inicial ao focar (selecionar tudo on focus).
-- Abaixo do campo, mostrar **4 chips de sugestão** baseados no preço do veículo selecionado:
-  - 2 menores: `preco - 2`, `preco - 1`
-  - Preço sugerido (destaque)
-  - 2 maiores: `preco + 2`, `preco + 5`
-- Tap no chip preenche o campo.
+---
 
-### 3. Tela "Buscando" mais imersiva (mapa + carrinhos + botão cancelar)
+## Plano de correção
 
-Substituir o atual `OverlayBusca` (tela preta com ring) por overlay **transparente sobre o mapa**:
+### A. Criar o trigger faltante
+Migração SQL nova: `CREATE TRIGGER trg_notify_dispatch_ride AFTER INSERT ON public.ride_requests FOR EACH ROW EXECUTE FUNCTION public.notify_dispatch_ride();`
 
-- Manter o `<Mapa />` visível por baixo (remover early-return atual em `pagina_passageiro.tsx` que esconde tudo durante "buscando").
-- Criar componente novo `overlay_busca_mapa.tsx`:
-  - Marker da origem (já existe), em volta dele renderizar 4–6 ícones de carrinho via `divIcon` em raios diferentes.
-  - Animação de pulso radial: anel verde expandindo a partir do marker (CSS keyframe).
-  - Animação de zoom suave do mapa: `setInterval` chamando `map.setZoom(z±1)` com `flyTo` a cada 3s pra dar sensação de "varrendo".
-  - Card flutuante no topo: "Buscando motoristas em {grupoNome}" + contador de tempo.
-  - Botão **"Cancelar solicitação"** fixo na parte inferior (vermelho destaque).
-- Lógica de cancelamento em `hook_solicitacao.ts`: nova função `cancelarSolicitacao()` que:
-  - Faz `UPDATE ride_requests SET status='cancelled' WHERE id=rideRequestId`
-  - Limpa `localStorage` do guest
-  - Chama `resetarSolicitacao()`
+### B. Garantir que o anon key esteja disponível para `net.http_post`
+A função usa `current_setting('app.settings.supabase_anon_key', true)`. Se vier vazio, o POST vai sem auth e a edge rejeita. **Solução robusta**: hardcodar o anon key na função (já temos hardcoded a URL) OU usar o service_role via `vault`. Vou hardcodar o anon key na função `notify_dispatch_ride` (mesma migração) — é informação pública, sem risco.
 
-### 4. Performance / carregamento mais ágil
+### C. Corrigir o `dispatch_mode` na edge function
+Atualizar `supabase/functions/dispatch-ride/index.ts` para mapear os valores corretos do enum:
+- `auto` → comportamento de owner_priority (tenta dono primeiro, depois sequencial)
+- `manual` → broadcast (todos online recebem ao mesmo tempo) — combina com seu fluxo atual onde o motorista aceita manualmente
+- `hybrid` → owner_priority por X segundos, depois broadcast
 
-Diagnóstico rápido dos pontos lentos atuais:
-- `pagina_passageiro.tsx` carrega Mapa + Perfil + Avaliação + Chat + Rastreamento todos eagerly mesmo sem usar.
-- Reverse-geocoding (Nominatim) sem cache.
-- Reload completo de tudo após confirmar corrida.
+### D. Adicionar log + fallback no app do passageiro
+Se passados 5 segundos após criar a corrida e ela ainda estiver com `status='pending'` (sem virar `dispatching`), o frontend chama explicitamente a edge function `dispatch-ride` com `action: 'dispatch'` como fallback. Isso garante funcionamento mesmo se o trigger falhar de novo no futuro.
 
-Otimizações:
-- **Code-splitting com `lazy()`** para componentes pesados não-críticos:
-  - `PaginaPerfilPassageiro`, `TelaChat`, `TelaAvaliacao`, `TelaRastreamento`, `SeletorLocalMapa`, `ListaMotoristasTenant` → `React.lazy` + `Suspense` com fallback nulo.
-- **Cache de reverse-geocoding** em `servico_passageiro.ts`: Map em memória + `sessionStorage`, chave = `lat.toFixed(4)_lng.toFixed(4)`.
-- **Skeleton no carregamento inicial** em vez do spinner em tela cheia (mostrar placeholder do mapa + bottom sheet vazio).
-- **Pré-carregar** `configPreco` em paralelo com `motorista`/`afiliado` (já é, mas garantir `Promise.all`).
-- **Reduzir bundle**: confirmar que `leaflet` e `Mapa` ficam num chunk separado via dynamic import quando primeira renderização não exigir mapa imediatamente.
+### E. Suportar passageiro guest no fluxo `accept`
+A função `handleDriverResponse` faz `INSERT INTO rides ... passenger_id: request.passenger_id`. Quando a corrida é guest, `passenger_id` é null e o insert vai falhar a constraint a menos que repassemos `guest_passenger_id`. Vou ajustar a edge para incluir `guest_passenger_id: request.guest_passenger_id` no insert de `rides`.
 
-### Arquivos editados/criados
+### Arquivos
+- **Nova migração**: cria trigger + atualiza `notify_dispatch_ride` com anon key hardcoded.
+- **Editar** `supabase/functions/dispatch-ride/index.ts`: mapeamento de modes correto + suporte guest no accept.
+- **Editar** `src/features/passageiro/hooks/hook_solicitacao.ts`: fallback que chama `supabase.functions.invoke('dispatch-ride', { action: 'dispatch', ride_request_id })` 5s após criar a corrida se ainda estiver `pending`.
 
-**Criar:**
-- `src/features/passageiro/components/overlay_busca_mapa.tsx`
-- `src/features/passageiro/components/sugestoes_oferta.tsx`
+### Como testar
+1. Abrir o link de motorista, sem login, criar uma corrida.
+2. Ver o motorista (Alecio) receber alerta sonoro + popup de chamada na tela `/painel`.
+3. Verificar via SQL: `SELECT status FROM ride_requests ORDER BY created_at DESC LIMIT 1` → deve virar `dispatching`.
+4. Aceitar no app do motorista → corrida vira `accepted`, passageiro vê tela "motorista a caminho".
 
-**Editar:**
-- `src/features/passageiro/hooks/hook_solicitacao.ts` — pedir dados antes de buscar; `cancelarSolicitacao`; persistir dados guest.
-- `src/features/passageiro/components/seletor_veiculo.tsx` — input controlado como string + chips de sugestão.
-- `src/features/passageiro/components/bottom_sheet.tsx` — disparar dialog de dados guest antes do "Buscar motoristas".
-- `src/features/passageiro/pages/pagina_passageiro.tsx` — substituir `OverlayBusca` pelo novo overlay com mapa visível; lazy imports.
-- `src/features/passageiro/services/servico_passageiro.ts` — cache de reverse-geocoding.
-- `src/features/passageiro/components/mapa.tsx` — expor handle pra animar zoom durante busca (via prop `modoBusca?: boolean`).
-- (Remover uso do) `overlay_busca.tsx` — manter arquivo mas de
