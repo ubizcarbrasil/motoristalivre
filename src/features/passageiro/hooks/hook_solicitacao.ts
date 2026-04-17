@@ -363,6 +363,11 @@ export function useSolicitacao() {
         };
         localStorage.setItem(STORAGE_KEY_GUEST, JSON.stringify(armazenar));
 
+        // Salva também os dados do guest pra próxima vez
+        const dadosGuestNovo: GuestDadosStorage = { nome: dados.nome, whatsapp: dados.whatsapp };
+        salvarGuestDados(dadosGuestNovo);
+        setDadosGuest(dadosGuestNovo);
+
         setGuestPassengerId(resultado.guest_passenger_id);
         setRideRequestId(resultado.ride_request_id);
         setPrecisaDadosGuest(false);
