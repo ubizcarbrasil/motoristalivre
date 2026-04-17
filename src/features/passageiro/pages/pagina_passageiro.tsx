@@ -419,13 +419,15 @@ export default function PaginaPassageiro() {
         valorInicial={dadosGuest ? { nome: dadosGuest.nome, whatsapp: dadosGuest.whatsapp } : undefined}
       />
 
-      <SeletorLocalMapa
-        aberto={seletorMapa.aberto}
-        titulo={seletorMapa.alvo === "origem" ? "Definir origem" : "Definir destino"}
-        centroInicial={centroSeletor}
-        onConfirmar={confirmarLocalDoMapa}
-        onFechar={() => setSeletorMapa((s) => ({ ...s, aberto: false }))}
-      />
+      <Suspense fallback={null}>
+        <SeletorLocalMapa
+          aberto={seletorMapa.aberto}
+          titulo={seletorMapa.alvo === "origem" ? "Definir origem" : "Definir destino"}
+          centroInicial={centroSeletor}
+          onConfirmar={confirmarLocalDoMapa}
+          onFechar={() => setSeletorMapa((s) => ({ ...s, aberto: false }))}
+        />
+      </Suspense>
 
       <SheetInstalacao />
     </div>
