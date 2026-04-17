@@ -208,6 +208,12 @@ export default function PaginaCadastro() {
           ))}
         </div>
 
+        {tipoCadastro === "passageiro" && (
+          <p className="text-xs text-muted-foreground text-center -mt-2">
+            Crie sua conta uma vez. Você pode pedir corrida em qualquer tribo abrindo o link do motorista.
+          </p>
+        )}
+
         <form onSubmit={handleCadastro} className="space-y-4">
           {precisaSlug && (
             <div className="space-y-2">
