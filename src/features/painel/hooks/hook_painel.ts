@@ -20,7 +20,7 @@ import { useDispatchRealtime } from "./hook_dispatch_realtime";
 import { useCompartilharLocalizacao } from "./hook_compartilhar_localizacao";
 import { TIMEOUT_DISPATCH_SEG } from "../constants/constantes_painel";
 
-const ABAS_VALIDAS: AbaPainel[] = ["inicio", "meus_links", "carteira", "perfil", "configuracoes"];
+const ABAS_VALIDAS: AbaPainel[] = ["inicio", "tribo", "meus_links", "carteira", "perfil", "configuracoes"];
 
 export function usePainel() {
   const { usuario } = useAutenticacao();
