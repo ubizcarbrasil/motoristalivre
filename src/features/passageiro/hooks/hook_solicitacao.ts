@@ -128,6 +128,50 @@ export function useSolicitacao() {
     }
   }, [usuario, motorista?.tenant_id, afiliado?.tenant_id]);
 
+  // Vincula passageiro autenticado à tribo na primeira vez que abre o link
+  // e mostra boas-vindas com o nome do grupo
+  useEffect(() => {
+    if (!usuario) return;
+    const tenantAtual = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
+    const nomeGrupo = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
+    if (!tenantAtual) return;
+
+    let cancelado = false;
+
+    async function vincular() {
+      try {
+        // Verifica se já existe registro do passageiro neste tenant
+        const { data: existente } = await supabase
+          .from("passengers")
+          .select("id, tenant_id")
+          .eq("id", usuario!.id)
+          .eq("tenant_id", tenantAtual!)
+          .maybeSingle();
+
+        if (cancelado) return;
+        if (existente) return; // já vinculado, nada a fazer
+
+        const { error } = await supabase.rpc("ensure_passenger", {
+          _tenant_id: tenantAtual!,
+        });
+        if (error) throw error;
+        if (cancelado) return;
+
+        if (nomeGrupo) {
+          toast.success(`Bem-vindo à ${nomeGrupo}! 🎉`, {
+            description: "Você agora pode pedir corridas neste grupo.",
+            duration: 5000,
+          });
+        }
+      } catch (e) {
+        console.error("[vincular tribo]", e);
+      }
+    }
+
+    vincular();
+    return () => { cancelado = true; };
+  }, [usuario, motorista?.tenant_id, afiliado?.tenant_id, motorista?.grupo_nome, afiliado?.grupo_nome]);
+
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
 
