@@ -1,25 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Share, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-function ehIOS(): boolean {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-}
-
-function ehAndroid(): boolean {
-  return /Android/.test(navigator.userAgent);
-}
-
-function ehStandalone(): boolean {
-  return window.matchMedia("(display-mode: standalone)").matches
-    || ("standalone" in window.navigator && (window.navigator as unknown as { standalone: boolean }).standalone);
-}
+import { ehIOS, ehAndroid, estaInstalado } from "@/compartilhados/utils/detectar_pwa";
 
 export default function PaginaInstalar() {
   const navigate = useNavigate();
   const ios = ehIOS();
   const android = ehAndroid();
-  const instalado = ehStandalone();
+  const instalado = estaInstalado();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
