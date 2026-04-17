@@ -38,6 +38,18 @@ export default function PaginaPainel() {
   const [mostraChat, setMostraChat] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
 
+  // Calcula segundos restantes do dispatch ativo (para cadência do alerta)
+  const segundosRestantes = useMemo(() => {
+    if (!dispatch) return undefined;
+    const elapsed = Math.floor((Date.now() - new Date(dispatch.dispatched_at).getTime()) / 1000);
+    return Math.max(0, timeoutSec - elapsed);
+  }, [dispatch, timeoutSec]);
+
+  const { silenciado, alternarSilenciado } = useAlertaDispatch({
+    ativo: !!dispatch,
+    segundosRestantes,
+  });
+
   useEffect(() => {
     if (!userId) return;
     supabase
@@ -88,6 +100,8 @@ export default function PaginaPainel() {
           realtimeAtivo={realtimeAtivo}
           temCorridaAtiva={!!corridaAtiva}
           localizacaoAtiva={localizacao.ativo}
+          silenciado={silenciado}
+          onAlternarSom={alternarSilenciado}
           onToggleLocalizacao={localizacao.toggle}
           onAbrirChat={() => setMostraChat(true)}
           onToggleOnline={toggleOnline}
