@@ -45,7 +45,7 @@ export default function PaginaPainel() {
     return Math.max(0, timeoutSec - elapsed);
   }, [dispatch, timeoutSec]);
 
-  const { silenciado, alternarSilenciado, tipoSom, setTipoSom } = useAlertaDispatch({
+  const { silenciado, alternarSilenciado, tipoSom, setTipoSom, audioDestravado, testarAlerta } = useAlertaDispatch({
     ativo: !!dispatch,
     segundosRestantes,
     driverId: userId ?? undefined,
@@ -99,6 +99,7 @@ export default function PaginaPainel() {
           dispatch={dispatch}
           timeoutSec={timeoutSec}
           realtimeAtivo={realtimeAtivo}
+          audioDestravado={audioDestravado}
           temCorridaAtiva={!!corridaAtiva}
           localizacaoAtiva={localizacao.ativo}
           silenciado={silenciado}
@@ -128,6 +129,7 @@ export default function PaginaPainel() {
           ehAdmin={ehAdmin}
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
+          onTestarAlerta={testarAlerta}
         />
       )}
 
