@@ -200,6 +200,12 @@ export function useSolicitacao() {
   const buscarRotaCallback = useCallback(async () => {
     if (!origem || !destino || !configPreco) return;
 
+    // Se for guest e ainda não tem dados, abre o popup ANTES de buscar
+    if (!usuario && !dadosGuest) {
+      setPrecisaDadosGuest(true);
+      return;
+    }
+
     setCarregandoRota(true);
     const rotaResult = await buscarRota(origem.coordenada, destino.coordenada);
     if (rotaResult) {
@@ -214,7 +220,36 @@ export function useSolicitacao() {
       setEtapa("veiculo");
     }
     setCarregandoRota(false);
-  }, [origem, destino, configPreco]);
+  }, [origem, destino, configPreco, usuario, dadosGuest]);
+
+  // Quando guest preencher os dados via dialog (vindo do "Buscar motoristas"),
+  // já calcula a rota e segue pra etapa de veículo
+  const onSalvarDadosGuestEBuscar = useCallback(
+    async (dados: { nome: string; whatsapp: string }) => {
+      const novosDados: GuestDadosStorage = { nome: dados.nome, whatsapp: dados.whatsapp };
+      salvarGuestDados(novosDados);
+      setDadosGuest(novosDados);
+      setPrecisaDadosGuest(false);
+
+      if (!origem || !destino || !configPreco) return;
+      setCarregandoRota(true);
+      const rotaResult = await buscarRota(origem.coordenada, destino.coordenada);
+      if (rotaResult) {
+        setRota(rotaResult);
+        const precosCalc = OPCOES_VEICULOS.map((v) => ({
+          veiculo: v,
+          preco: calcularPreco(configPreco, rotaResult.distancia_km, rotaResult.duracao_min, v.multiplicador),
+        }));
+        setPrecos(precosCalc);
+        const precoCompacto = precosCalc.find((p) => p.veiculo.id === "compacto");
+        setValorOferta(Math.round(precoCompacto?.preco ?? 0));
+        setEtapa("veiculo");
+      }
+      setCarregandoRota(false);
+    },
+    [origem, destino, configPreco]
+  );
+
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const grupoNome = motorista?.grupo_nome ?? afiliado?.grupo_nome ?? "";
