@@ -264,13 +264,16 @@ export default function PaginaCadastro() {
             <Input
               id="senha"
               type="password"
-              placeholder="Minimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
             />
+            <p className="text-xs text-muted-foreground">
+              Use uma senha forte: misture letras, números e símbolos.
+            </p>
           </div>
 
           <Button type="submit" className="w-full h-11" disabled={carregando}>
