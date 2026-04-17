@@ -373,6 +373,38 @@ export type Database = {
           },
         ]
       }
+      guest_passengers: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          tenant_id: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          tenant_id: string
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          tenant_id?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_passengers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passenger_favorites: {
         Row: {
           address: string
@@ -778,6 +810,7 @@ export type Database = {
           distance_km: number | null
           estimated_min: number | null
           final_price: number | null
+          guest_passenger_id: string | null
           id: string
           offered_price: number | null
           origin_address: string | null
@@ -786,7 +819,7 @@ export type Database = {
           origin_lat: number | null
           origin_lng: number | null
           origin_type: Database["public"]["Enums"]["ride_origin_type"] | null
-          passenger_id: string
+          passenger_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           status: Database["public"]["Enums"]["ride_status"]
           suggested_price: number | null
@@ -801,6 +834,7 @@ export type Database = {
           distance_km?: number | null
           estimated_min?: number | null
           final_price?: number | null
+          guest_passenger_id?: string | null
           id?: string
           offered_price?: number | null
           origin_address?: string | null
@@ -809,7 +843,7 @@ export type Database = {
           origin_lat?: number | null
           origin_lng?: number | null
           origin_type?: Database["public"]["Enums"]["ride_origin_type"] | null
-          passenger_id: string
+          passenger_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["ride_status"]
           suggested_price?: number | null
@@ -824,6 +858,7 @@ export type Database = {
           distance_km?: number | null
           estimated_min?: number | null
           final_price?: number | null
+          guest_passenger_id?: string | null
           id?: string
           offered_price?: number | null
           origin_address?: string | null
@@ -832,7 +867,7 @@ export type Database = {
           origin_lat?: number | null
           origin_lng?: number | null
           origin_type?: Database["public"]["Enums"]["ride_origin_type"] | null
-          passenger_id?: string
+          passenger_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["ride_status"]
           suggested_price?: number | null
@@ -840,6 +875,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ride_requests_guest_passenger_id_fkey"
+            columns: ["guest_passenger_id"]
+            isOneToOne: false
+            referencedRelation: "guest_passengers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ride_requests_origin_affiliate_id_fkey"
             columns: ["origin_affiliate_id"]
@@ -878,11 +920,12 @@ export type Database = {
           driver_comment: string | null
           driver_id: string
           driver_rating: number | null
+          guest_passenger_id: string | null
           id: string
           is_transbordo: boolean
           origin_affiliate_id: string | null
           origin_driver_id: string | null
-          passenger_id: string
+          passenger_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           price_paid: number | null
           ride_request_id: string
@@ -896,11 +939,12 @@ export type Database = {
           driver_comment?: string | null
           driver_id: string
           driver_rating?: number | null
+          guest_passenger_id?: string | null
           id?: string
           is_transbordo?: boolean
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
-          passenger_id: string
+          passenger_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           price_paid?: number | null
           ride_request_id: string
@@ -914,11 +958,12 @@ export type Database = {
           driver_comment?: string | null
           driver_id?: string
           driver_rating?: number | null
+          guest_passenger_id?: string | null
           id?: string
           is_transbordo?: boolean
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
-          passenger_id?: string
+          passenger_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           price_paid?: number | null
           ride_request_id?: string
@@ -931,6 +976,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rides_guest_passenger_id_fkey"
+            columns: ["guest_passenger_id"]
+            isOneToOne: false
+            referencedRelation: "guest_passengers"
             referencedColumns: ["id"]
           },
           {
@@ -1329,6 +1381,28 @@ export type Database = {
     }
     Functions: {
       approve_payout: { Args: { _payout_id: string }; Returns: undefined }
+      create_guest_ride_request: {
+        Args: {
+          _dest_address: string
+          _dest_lat: number
+          _dest_lng: number
+          _distance_km: number
+          _estimated_min: number
+          _full_name: string
+          _offered_price: number
+          _origin_address: string
+          _origin_affiliate_id?: string
+          _origin_driver_id?: string
+          _origin_lat: number
+          _origin_lng: number
+          _origin_type: Database["public"]["Enums"]["ride_origin_type"]
+          _payment_method: Database["public"]["Enums"]["payment_method"]
+          _suggested_price: number
+          _tenant_id: string
+          _whatsapp: string
+        }
+        Returns: Json
+      }
       create_tenant_with_owner: {
         Args: { _name: string; _plan_id?: string; _slug: string }
         Returns: string

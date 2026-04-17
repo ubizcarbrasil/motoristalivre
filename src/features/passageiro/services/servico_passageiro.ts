@@ -163,6 +163,71 @@ export async function buscarEnderecosNominatim(query: string): Promise<Array<{ e
   }));
 }
 
+export async function reverseGeocodingNominatim(lat: number, lng: number): Promise<string | null> {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lng),
+    format: "json",
+    addressdetails: "1",
+    zoom: "18",
+  });
+
+  try {
+    const res = await fetch(`${NOMINATIM_URL}/reverse?${params}`, {
+      headers: { "Accept-Language": "pt-BR" },
+    });
+    if (!res.ok) return null;
+    const dados = await res.json();
+    return (dados?.display_name as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export interface CriarCorridaGuestParams {
+  tenantId: string;
+  fullName: string;
+  whatsapp: string;
+  origem: { lat: number; lng: number; endereco: string };
+  destino: { lat: number; lng: number; endereco: string };
+  distanciaKm: number;
+  duracaoMin: number;
+  valorOferta: number;
+  formaPagamento: "dinheiro" | "pix" | "cartao" | "saldo";
+  origemTipo: "driver_link" | "affiliate_link" | "group_link";
+  origemDriverId?: string | null;
+  origemAfiliadoId?: string | null;
+}
+
+export async function criarCorridaGuest(
+  params: CriarCorridaGuestParams
+): Promise<{ guest_passenger_id: string; ride_request_id: string }> {
+  const { supabase } = await import("@/integrations/supabase/client");
+
+  const { data, error } = await supabase.rpc("create_guest_ride_request", {
+    _tenant_id: params.tenantId,
+    _full_name: params.fullName,
+    _whatsapp: params.whatsapp,
+    _origin_lat: params.origem.lat,
+    _origin_lng: params.origem.lng,
+    _origin_address: params.origem.endereco,
+    _dest_lat: params.destino.lat,
+    _dest_lng: params.destino.lng,
+    _dest_address: params.destino.endereco,
+    _distance_km: params.distanciaKm,
+    _estimated_min: params.duracaoMin,
+    _offered_price: params.valorOferta,
+    _suggested_price: params.valorOferta,
+    _payment_method: params.formaPagamento,
+    _origin_type: params.origemTipo,
+    _origin_driver_id: params.origemDriverId ?? null,
+    _origin_affiliate_id: params.origemAfiliadoId ?? null,
+  });
+
+  if (error) throw error;
+  return data as { guest_passenger_id: string; ride_request_id: string };
+}
+
 export async function buscarRota(origem: Coordenada, destino: Coordenada): Promise<DadosRota | null> {
   const url = `https://router.project-osrm.org/route/v1/driving/${origem.lng},${origem.lat};${destino.lng},${destino.lat}?overview=full&geometries=geojson`;
 

@@ -54,3 +54,15 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+}

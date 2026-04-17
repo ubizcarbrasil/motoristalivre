@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
@@ -10,7 +9,9 @@ import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
-import { BannerLoginNecessario } from "../components/banner_login_necessario";
+import { DialogoDadosPassageiro } from "../components/dialogo_dados_passageiro";
+import { SeletorLocalMapa } from "../components/seletor_local_mapa";
+import { BotaoInstalarPwa } from "../components/botao_instalar_pwa";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -19,14 +20,13 @@ import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favorit
 import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_recentes";
 import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/components/dialogo_editar_favorito";
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
+import type { EnderecoCompleto } from "../types/tipos_passageiro";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
 import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const {
     tipoOrigem,
     motorista,
@@ -51,10 +51,14 @@ export default function PaginaPassageiro() {
     formaPagamento,
     setFormaPagamento,
     confirmarCorrida,
+    confirmarCorridaGuest,
+    precisaDadosGuest,
+    fecharDadosGuest,
     voltarParaEnderecos,
     confirmando,
     grupoNome,
     rideRequestId,
+    guestPassengerId,
     passengerId,
     resetarSolicitacao,
   } = useSolicitacao();
@@ -63,10 +67,14 @@ export default function PaginaPassageiro() {
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
   const recentesCtx = useDestinosRecentes({ passengerId });
 
-  const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
+  const corridaAceita = useCorridaAceita(passengerId, rideRequestId, guestPassengerId);
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
   const [mostraPerfil, setMostraPerfil] = useState(false);
+  const [seletorMapa, setSeletorMapa] = useState<{ aberto: boolean; alvo: "origem" | "destino" }>({
+    aberto: false,
+    alvo: "origem",
+  });
   const [favoritoDialogo, setFavoritoDialogo] = useState<{
     aberto: boolean;
     tipoSugerido?: TipoFavorito;
@@ -85,33 +93,37 @@ export default function PaginaPassageiro() {
     origem?.coordenada ?? null
   );
 
-  // Quando a corrida é aceita, transiciona para o Estado 3
   useEffect(() => {
     if (corridaAceita && (etapa === "buscando" || etapa === "aceita")) {
       setEtapa("aceita");
     }
   }, [corridaAceita, etapa, setEtapa]);
 
-  // Quando corrida termina: mostrar avaliação ou cancelar
   useEffect(() => {
     if (!corridaAceita) return;
     if (corridaAceita.status === "completed" && corridaAceita.ride_id && passengerId) {
       setMostraRastreamento(false);
       setMostraChat(false);
       const rideId = corridaAceita.ride_id;
-      const motorista = corridaAceita.motorista;
+      const motoristaCorrida = corridaAceita.motorista;
       existeAvaliacao(rideId, passengerId).then((jaAvaliou) => {
         if (jaAvaliou) {
           resetarSolicitacao();
         } else {
           setAvaliacaoPendente({
             ride_id: rideId,
-            driver_id: motorista.id,
-            nome: motorista.nome,
-            avatar: motorista.avatar_url,
+            driver_id: motoristaCorrida.id,
+            nome: motoristaCorrida.nome,
+            avatar: motoristaCorrida.avatar_url,
           });
         }
       });
+    } else if (corridaAceita.status === "completed" && !passengerId) {
+      // Guest: corrida concluída → reseta sem avaliação
+      setMostraRastreamento(false);
+      setMostraChat(false);
+      toast.success("Corrida concluída! Obrigado por usar o TriboCar.");
+      resetarSolicitacao();
     } else if (corridaAceita.status === "cancelled" || corridaAceita.status === "expired") {
       setMostraRastreamento(false);
       setMostraChat(false);
@@ -153,7 +165,6 @@ export default function PaginaPassageiro() {
         coordenada: { lat: f.lat, lng: f.lng },
         endereco: f.address,
       };
-      // Preenche origem se vazia, senão preenche destino
       if (!origem) {
         setOrigem(enderecoCompleto);
         toast.success(`${f.label} definido como origem`);
@@ -161,7 +172,6 @@ export default function PaginaPassageiro() {
         setDestino(enderecoCompleto);
         toast.success(`${f.label} definido como destino`);
       } else {
-        // Ambos preenchidos: substitui destino
         setDestino(enderecoCompleto);
         toast.success(`Destino atualizado para ${f.label}`);
       }
@@ -192,6 +202,22 @@ export default function PaginaPassageiro() {
     [favoritosCtx, abrirDialogoFavorito]
   );
 
+  const abrirSeletorMapa = useCallback((alvo: "origem" | "destino") => {
+    setSeletorMapa({ aberto: true, alvo });
+  }, []);
+
+  const confirmarLocalDoMapa = useCallback(
+    (endereco: EnderecoCompleto) => {
+      if (seletorMapa.alvo === "origem") {
+        setOrigem(endereco);
+      } else {
+        setDestino(endereco);
+      }
+      setSeletorMapa({ aberto: false, alvo: seletorMapa.alvo });
+    },
+    [seletorMapa.alvo, setOrigem, setDestino]
+  );
+
   if (carregando) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
@@ -215,8 +241,13 @@ export default function PaginaPassageiro() {
     );
   }
 
+  const centroSeletor =
+    seletorMapa.alvo === "origem"
+      ? origem?.coordenada ?? null
+      : destino?.coordenada ?? origem?.coordenada ?? null;
+
   return (
-    <div className="fixed inset-0 bg-background overflow-hidden">
+    <div className="fixed inset-0 bg-background overflow-hidden min-h-dvh">
       <Mapa
         origem={origem}
         destino={destino}
@@ -224,22 +255,21 @@ export default function PaginaPassageiro() {
         centro={origem?.coordenada ?? undefined}
       />
 
-      {passengerId && etapa !== "buscando" && etapa !== "aceita" && (
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={() => setMostraPerfil(true)}
-            className="h-10 w-10 rounded-full shadow-lg"
-            aria-label="Meu perfil"
-          >
-            <User className="w-5 h-5" />
-          </Button>
+      {etapa !== "buscando" && etapa !== "aceita" && (
+        <div className="absolute top-0 right-0 z-10 flex items-center gap-2 p-4 safe-area-top">
+          <BotaoInstalarPwa />
+          {passengerId && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setMostraPerfil(true)}
+              className="h-10 w-10 rounded-full shadow-lg"
+              aria-label="Meu perfil"
+            >
+              <User className="w-5 h-5" />
+            </Button>
+          )}
         </div>
-      )}
-
-      {!passengerId && etapa !== "buscando" && etapa !== "aceita" && (
-        <BannerLoginNecessario />
       )}
 
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
@@ -274,6 +304,7 @@ export default function PaginaPassageiro() {
           onAdicionarFavoritoTipo={passengerId ? (t) => abrirDialogoFavorito(t) : undefined}
           onFavoritarEndereco={passengerId ? favoritarEndereco : undefined}
           identificarFavorito={passengerId ? favoritosCtx.eFavorito : undefined}
+          onEscolherNoMapa={abrirSeletorMapa}
         />
       )}
 
@@ -345,6 +376,21 @@ export default function PaginaPassageiro() {
           const ok = await favoritosCtx.adicionar(dados);
           return ok;
         }}
+      />
+
+      <DialogoDadosPassageiro
+        aberto={precisaDadosGuest}
+        onFechar={fecharDadosGuest}
+        onConfirmar={confirmarCorridaGuest}
+        enviando={confirmando}
+      />
+
+      <SeletorLocalMapa
+        aberto={seletorMapa.aberto}
+        titulo={seletorMapa.alvo === "origem" ? "Definir origem" : "Definir destino"}
+        centroInicial={centroSeletor}
+        onConfirmar={confirmarLocalDoMapa}
+        onFechar={() => setSeletorMapa((s) => ({ ...s, aberto: false }))}
       />
 
       <SheetInstalacao />
