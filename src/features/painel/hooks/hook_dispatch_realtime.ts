@@ -11,7 +11,10 @@ interface DispatchRow {
   dispatched_at: string;
 }
 
-const INTERVALO_POLLING_MS = 5000;
+const INTERVALO_POLLING_RAPIDO_MS = 5000;
+const INTERVALO_POLLING_LENTO_MS = 15000;
+const TEMPO_ESTAVEL_PARA_LENTO_MS = 30000;
+const DEBOUNCE_OFFLINE_MS = 3000;
 
 async function carregarDispatchCompleto(dispatchId: string): Promise<DispatchAtivo | null> {
   const { data: dispatch } = await supabase
@@ -48,6 +51,7 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
   const [dispatchAtivo, setDispatchAtivo] = useState<DispatchAtivo | null>(dispatchInicial);
   const [realtimeAtivo, setRealtimeAtivo] = useState(false);
   const dispatchIdAtualRef = useRef<string | null>(dispatchInicial?.id ?? null);
+  const sincronizarRef = useRef<() => Promise<void>>(async () => {});
 
   // Sincroniza dispatch inicial vindo do hook pai (após carregamento)
   useEffect(() => {
@@ -68,7 +72,6 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
           setDispatchAtivo(dispatch);
         }
       } else if (dispatchIdAtualRef.current) {
-        // Não há mais pending — limpa
         dispatchIdAtualRef.current = null;
         setDispatchAtivo(null);
       }
@@ -77,16 +80,62 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
     }
   }, [userId]);
 
+  // Mantém ref atualizada pra ser usada dentro do effect sem virar dependência
+  useEffect(() => {
+    sincronizarRef.current = sincronizarComBanco;
+  }, [sincronizarComBanco]);
+
   useEffect(() => {
     if (!userId) return;
 
     let canalAtual: ReturnType<typeof supabase.channel> | null = null;
     let tentativaReconexao = 0;
     let timerReconexao: number | null = null;
+    let timerOffline: number | null = null;
+    let timerPolling: number | null = null;
+    let conectadoDesde: number | null = null;
+    let cancelado = false;
+
+    const log = (...args: unknown[]) => {
+      // eslint-disable-next-line no-console
+      console.log("[realtime-dispatch]", ...args);
+    };
+
+    const marcarOnline = () => {
+      if (timerOffline) {
+        window.clearTimeout(timerOffline);
+        timerOffline = null;
+      }
+      setRealtimeAtivo(true);
+    };
+
+    const marcarOfflineComDebounce = () => {
+      if (timerOffline) return;
+      timerOffline = window.setTimeout(() => {
+        timerOffline = null;
+        if (!cancelado) setRealtimeAtivo(false);
+      }, DEBOUNCE_OFFLINE_MS);
+    };
+
+    const agendarPolling = () => {
+      if (timerPolling) window.clearInterval(timerPolling);
+      const intervalo =
+        conectadoDesde && Date.now() - conectadoDesde > TEMPO_ESTAVEL_PARA_LENTO_MS
+          ? INTERVALO_POLLING_LENTO_MS
+          : INTERVALO_POLLING_RAPIDO_MS;
+      timerPolling = window.setInterval(() => {
+        sincronizarRef.current();
+        // Reagenda pra ajustar intervalo conforme estabilidade
+        agendarPolling();
+      }, intervalo);
+    };
 
     const conectar = () => {
+      if (cancelado) return;
+      log("conectando…");
+
       const canal = supabase
-        .channel(`dispatch-driver-${userId}-${Date.now()}`)
+        .channel(`dispatch-driver-${userId}`)
         .on(
           "postgres_changes",
           {
@@ -97,6 +146,7 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
           },
           async (payload) => {
             const row = payload.new as DispatchRow;
+            log("INSERT recebido", row.id, row.response);
             if (row.response !== "pending") return;
             const completo = await carregarDispatchCompleto(row.id);
             if (completo) {
@@ -115,6 +165,7 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
           },
           (payload) => {
             const row = payload.new as DispatchRow;
+            log("UPDATE recebido", row.id, row.response);
             if (row.id === dispatchIdAtualRef.current && row.response !== "pending") {
               dispatchIdAtualRef.current = null;
               setDispatchAtivo(null);
@@ -122,23 +173,31 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
           }
         )
         .subscribe((status) => {
+          log("status:", status);
+          if (cancelado) return;
+
           if (status === "SUBSCRIBED") {
-            setRealtimeAtivo(true);
             tentativaReconexao = 0;
-            // Ao (re)conectar, força sync com banco para não perder eventos perdidos
-            sincronizarComBanco();
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-            setRealtimeAtivo(false);
-            // Auto-reconexão com backoff (max 10s)
+            conectadoDesde = Date.now();
+            marcarOnline();
+            sincronizarRef.current();
+            agendarPolling();
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            conectadoDesde = null;
+            marcarOfflineComDebounce();
             if (timerReconexao) window.clearTimeout(timerReconexao);
-            const delay = Math.min(1000 * Math.pow(2, tentativaReconexao), 10000);
+            const delay = Math.min(2000 * Math.pow(1.5, tentativaReconexao), 15000);
             tentativaReconexao++;
+            log(`reconectando em ${Math.round(delay)}ms (tentativa ${tentativaReconexao})`);
             timerReconexao = window.setTimeout(() => {
-              if (canalAtual) supabase.removeChannel(canalAtual);
-              canalAtual = null;
+              if (canalAtual) {
+                supabase.removeChannel(canalAtual);
+                canalAtual = null;
+              }
               conectar();
             }, delay);
           }
+          // CLOSED é estado normal — ignoramos
         });
 
       canalAtual = canal;
@@ -146,27 +205,28 @@ export function useDispatchRealtime(userId: string | undefined, dispatchInicial:
 
     conectar();
 
-    // Polling de segurança a cada 5s
-    const polling = window.setInterval(() => {
-      sincronizarComBanco();
-    }, INTERVALO_POLLING_MS);
+    // Polling inicial (rápido) até realtime confirmar
+    agendarPolling();
 
     // Refresh imediato quando volta do background
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        sincronizarComBanco();
+        log("visibility → visible, sincronizando");
+        sincronizarRef.current();
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
+      cancelado = true;
       if (canalAtual) supabase.removeChannel(canalAtual);
       if (timerReconexao) window.clearTimeout(timerReconexao);
-      window.clearInterval(polling);
+      if (timerOffline) window.clearTimeout(timerOffline);
+      if (timerPolling) window.clearInterval(timerPolling);
       document.removeEventListener("visibilitychange", handleVisibility);
-      setRealtimeAtivo(false);
+      // Não setamos realtimeAtivo=false aqui — evita flicker em remontagens (HMR/navegação)
     };
-  }, [userId, sincronizarComBanco]);
+  }, [userId]);
 
   const limparDispatch = () => {
     dispatchIdAtualRef.current = null;
