@@ -59,6 +59,15 @@ export default function PaginaPainel() {
 
   const ehDonoDeAlguma = tribos.some((t) => t.papel === "dono");
   const mostrarAbaTribo = ehDonoDeAlguma || tribos.length > 0;
+  const semPerfilMotorista = !perfil || !tenant;
+  const podeAcessarComoDono = semPerfilMotorista && ehDonoDeAlguma && !!triboAtiva;
+
+  // Se não é motorista mas é dono de tribo, força aba "tribo"
+  useEffect(() => {
+    if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
+      setAba("tribo");
+    }
+  }, [podeAcessarComoDono, aba, setAba]);
 
   const segundosRestantes = useMemo(() => {
     if (!dispatch) return undefined;
