@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import type { PerfilMotorista, ReputacaoMotorista, AvaliacaoRecente } from "../types/tipos_painel";
 import { buscarReputacao, buscarAvaliacoesRecentes } from "../services/servico_painel";
 import { SELOS_MOTORISTA } from "../constants/constantes_painel";
+import { CampoUploadImagem } from "@/features/onboarding/components/campo_upload_imagem";
+import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 
 interface AbaPerfilProps {
   perfil: PerfilMotorista;
@@ -36,6 +38,9 @@ function BarraDistribuicao({ distribuicao, total }: { distribuicao: number[]; to
 }
 
 export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
+  const { usuario } = useAutenticacao();
+  const [avatar, setAvatar] = useState(perfil.avatar_url ?? "");
+  const [cover, setCover] = useState(perfil.cover_url ?? "");
   const [bio, setBio] = useState(perfil.bio ?? "");
   const [modelo, setModelo] = useState(perfil.vehicle_model ?? "");
   const [ano, setAno] = useState(perfil.vehicle_year?.toString() ?? "");
@@ -54,16 +59,27 @@ export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
   const salvar = async () => {
     setSalvando(true);
     try {
-      await supabase.from("drivers").update({
-        bio: bio || null,
-        vehicle_model: modelo || null,
-        vehicle_year: ano ? parseInt(ano) : null,
-        vehicle_color: cor || null,
-        vehicle_plate: placa || null,
-      }).eq("id", perfil.id);
+      await Promise.all([
+        supabase
+          .from("drivers")
+          .update({
+            bio: bio || null,
+            cover_url: cover || null,
+            vehicle_model: modelo || null,
+            vehicle_year: ano ? parseInt(ano) : null,
+            vehicle_color: cor || null,
+            vehicle_plate: placa || null,
+          })
+          .eq("id", perfil.id),
+        usuario?.id
+          ? supabase.from("users").update({ avatar_url: avatar || null }).eq("id", usuario.id)
+          : Promise.resolve(),
+      ]);
 
       onAtualizar({
         ...perfil,
+        avatar_url: avatar,
+        cover_url: cover,
         bio,
         vehicle_model: modelo,
         vehicle_year: ano ? parseInt(ano) : null,
@@ -91,6 +107,20 @@ export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
 
       {/* Formulário */}
       <div className="space-y-4">
+        <CampoUploadImagem
+          label="Foto de perfil"
+          valor={avatar}
+          pasta="avatars"
+          aspecto="square"
+          onChange={setAvatar}
+        />
+        <CampoUploadImagem
+          label="Foto de capa"
+          valor={cover}
+          pasta="covers"
+          aspecto="wide"
+          onChange={setCover}
+        />
         <div className="space-y-2">
           <Label htmlFor="bio">Bio</Label>
           <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Fale sobre você..." rows={3} maxLength={300} />
