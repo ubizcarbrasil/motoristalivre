@@ -262,15 +262,8 @@ export function useSolicitacao() {
     return true;
   }, [tenantId, origem, destino, rota]);
 
-  const confirmarCorrida = useCallback(async () => {
-    if (!validarParaConfirmar()) return;
-
-    // Sem login → abre popup pra coletar nome + WhatsApp
-    if (!usuario) {
-      setPrecisaDadosGuest(true);
-      return;
-    }
-
+  // Cria corrida para usuário autenticado
+  const criarCorridaAutenticado = useCallback(async () => {
     setConfirmando(true);
     try {
       const { error: errPassenger } = await supabase.rpc("ensure_passenger", {
@@ -282,7 +275,7 @@ export function useSolicitacao() {
         .from("ride_requests")
         .insert({
           tenant_id: tenantId!,
-          passenger_id: usuario.id,
+          passenger_id: usuario!.id,
           origin_type: motorista ? "driver_link" : "affiliate_link",
           origin_driver_id: motorista?.id ?? null,
           origin_affiliate_id: afiliado?.id ?? null,
@@ -306,14 +299,33 @@ export function useSolicitacao() {
       setRideRequestId(data.id);
       setEtapa("buscando");
     } catch (e: unknown) {
-      const err = e as { code?: string; message?: string };
-      const msg = err?.message ?? "Erro desconhecido";
-      toast.error(`Erro ao solicitar corrida: ${msg}`);
+      const err = e as { message?: string };
+      toast.error(`Erro ao solicitar corrida: ${err?.message ?? "tente novamente"}`);
       console.error("[solicitar corrida]", e);
     } finally {
       setConfirmando(false);
     }
-  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]);
+  }, [usuario, tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento]);
+
+  const confirmarCorrida = useCallback(async () => {
+    if (!validarParaConfirmar()) return;
+
+    if (usuario) {
+      await criarCorridaAutenticado();
+      return;
+    }
+
+    // Guest: dados já devem estar salvos (foram pedidos antes do seletor de veículo).
+    // Caso contrário (edge), abre o popup.
+    if (!dadosGuest) {
+      setPrecisaDadosGuest(true);
+      return;
+    }
+
+    // Reusa o fluxo guest com os dados salvos
+    await confirmarCorridaGuestRef.current?.(dadosGuest);
+  }, [usuario, dadosGuest, criarCorridaAutenticado, validarParaConfirmar]);
+
 
   const confirmarCorridaGuest = useCallback(
     async (dados: { nome: string; whatsapp: string }) => {
