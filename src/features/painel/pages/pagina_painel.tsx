@@ -48,6 +48,7 @@ export default function PaginaPainel() {
   const { silenciado, alternarSilenciado, tipoSom, setTipoSom } = useAlertaDispatch({
     ativo: !!dispatch,
     segundosRestantes,
+    driverId: userId ?? undefined,
   });
 
   useEffect(() => {
