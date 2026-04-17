@@ -89,3 +89,47 @@ export function SeletorVeiculo({
     </div>
   );
 }
+
+interface CampoOfertaProps {
+  valorOferta: number;
+  onMudarOferta: (v: number) => void;
+  precoBase: number;
+}
+
+function CampoOferta({ valorOferta, onMudarOferta, precoBase }: CampoOfertaProps) {
+  const [texto, setTexto] = useState(valorOferta > 0 ? String(valorOferta) : "");
+
+  useEffect(() => {
+    setTexto(valorOferta > 0 ? String(valorOferta) : "");
+  }, [valorOferta]);
+
+  const handleChange = (raw: string) => {
+    const limpo = raw.replace(/[^\d.,]/g, "").replace(",", ".");
+    setTexto(limpo);
+    const num = parseFloat(limpo);
+    onMudarOferta(isNaN(num) ? 0 : num);
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs text-muted-foreground">Sua oferta</label>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">R$</span>
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={texto}
+          placeholder="0"
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => handleChange(e.target.value)}
+          className="bg-secondary border-0 h-11 text-base font-semibold"
+        />
+      </div>
+      <SugestoesOferta
+        precoBase={precoBase}
+        valorAtual={Math.round(valorOferta)}
+        onSelecionar={onMudarOferta}
+      />
+    </div>
+  );
+}
