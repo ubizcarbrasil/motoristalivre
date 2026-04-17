@@ -50,11 +50,13 @@ export default function PaginaPainel() {
     ativo: !!dispatch,
     segundosRestantes,
     driverId: userId ?? undefined,
+  });
 
   // Publica presença do motorista pra o simulador/admin saber quem está com painel aberto
   usePublicarPresencaMotorista(userId ?? undefined);
 
-
+  useEffect(() => {
+    if (!userId) return;
     supabase
       .from("users")
       .select("role")
