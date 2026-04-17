@@ -23,8 +23,8 @@ export function SheetInstalacao() {
 
   if (!visivel) return null;
 
-  const ios = isIOS();
-  const android = isAndroid();
+  const ios = ehIOS();
+  const android = ehAndroid();
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom duration-300">
