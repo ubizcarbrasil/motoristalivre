@@ -10,6 +10,7 @@ import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
+import { BannerLoginNecessario } from "../components/banner_login_necessario";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
