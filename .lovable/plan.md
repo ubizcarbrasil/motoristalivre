@@ -1,73 +1,71 @@
 
 
-## Plano
+## Plano: Melhorias UX do app do passageiro
 
-### 1. Passageiro sem cadastro (zero fricção)
+### 1. Pedir nome + WhatsApp ANTES de buscar (não só ao confirmar)
 
-**Banco** (migração):
-- Criar tabela `guest_passengers` com `id uuid pk`, `tenant_id`, `full_name`, `whatsapp`, `created_at`. Sem RLS de leitura para o público; INSERT permitido para anônimos via RPC.
-- Adicionar coluna `guest_passenger_id uuid` em `ride_requests` (nullable). Tornar `passenger_id` nullable. Adicionar CHECK `passenger_id IS NOT NULL OR guest_passenger_id IS NOT NULL`.
-- Adicionar coluna `guest_passenger_id` em `rides` (nullable) e relaxar `passenger_id`.
-- Criar RPC `create_guest_ride_request(_tenant_id, _full_name, _whatsapp, _origin_*, _dest_*, _distance, _eta, _offered_price, _payment_method, _origin_driver_id, _origin_affiliate_id)` — `SECURITY DEFINER`, cria guest_passenger + ride_request, retorna `ride_request_id` + `guest_passenger_id`.
-- Atualizar policy de SELECT em `ride_requests` para permitir leitura pelo guest via `guest_passenger_id` salvo em localStorage (rastreio anônimo via filtro por id).
+Hoje só pede dados do guest no clique final "Confirmar". Mover pra antes:
 
-**Frontend**:
-- Remover bloqueio de login em `pagina_passageiro.tsx` (não mostrar mais `BannerLoginNecessario`, não redirecionar em `confirmarCorrida`).
-- Criar `dialogo_dados_passageiro.tsx` (popup) que abre ao clicar "Confirmar" se não houver usuário logado: campos **Nome** e **WhatsApp** (com máscara `(11) 99999-9999`).
-- Em `hook_solicitacao.ts`, novo fluxo `confirmarCorridaGuest()` chama o RPC, salva `{guest_passenger_id, ride_request_id}` em localStorage para retomar status da corrida.
-- Hook `useCorridaAceita` aceita também guest_id e filtra por ele.
-- Remover/esconder o botão "Meu perfil" (User icon) no topo quando guest.
+- Em `hook_solicitacao.ts`: criar estado `dadosGuest: {nome, whatsapp} | null` salvo em `localStorage` (`tribocar_guest_dados`).
+- Adicionar fluxo "garantir dados" antes do `buscarRotaCallback`. Se for guest e ainda não tem dados, abrir o `DialogoDadosPassageiro` ANTES de mostrar o seletor de veículo.
+- Em `confirmarCorridaGuest`, usar os dados já salvos sem reabrir popup.
+- Para usuário logado: nada muda.
 
-### 2. PWA não cortar a tela
+### 2. Campo "Sua oferta" travado em `0` + sugestões de valor
 
-- Em `index.html`, atualizar `<meta name="viewport">` para incluir `viewport-fit=cover` (suporte a safe-area do iOS notch).
-- Em `index.css`, adicionar utilitário `.safe-area-bottom` com `padding-bottom: env(safe-area-inset-bottom)` e aplicar no `BottomSheet` e botões fixos do passageiro.
-- No `BottomSheet`: adicionar `pb-[max(1rem,env(safe-area-inset-bottom))]` no container interno. Header/topo do passageiro: aplicar `pt-[env(safe-area-inset-top)]`.
-- Conferir `min-h-screen` → trocar por `min-h-[100dvh]` nas telas full-screen do passageiro (rastreamento, chat, avaliação).
+Problema: `type="number"` com valor `0` não deixa apagar o zero (vira "020"). 
 
-### 3. Botão instalar PWA visível para o cliente
+Em `seletor_veiculo.tsx`:
+- Trocar `Input type="number"` por `type="text"` com `inputMode="decimal"`, controlando como string interna e parseando para número.
+- Limpar o "0" inicial ao focar (selecionar tudo on focus).
+- Abaixo do campo, mostrar **4 chips de sugestão** baseados no preço do veículo selecionado:
+  - 2 menores: `preco - 2`, `preco - 1`
+  - Preço sugerido (destaque)
+  - 2 maiores: `preco + 2`, `preco + 5`
+- Tap no chip preenche o campo.
 
-- Criar componente `botao_instalar_pwa.tsx` em `src/features/passageiro/components/`:
-  - Captura evento `beforeinstallprompt` (Android/Chrome) e armazena.
-  - Detecta iOS Safari e mostra ícone com tooltip de instruções.
-  - Esconde se `estaInstalado()` true.
-  - Botão flutuante discreto (canto superior direito do passageiro, ao lado do "Meu perfil" quando existir).
-- Reaproveitar a página `/instalar` ao tocar no botão se for iOS (mostra instruções nativas).
+### 3. Tela "Buscando" mais imersiva (mapa + carrinhos + botão cancelar)
 
-### 4. Selecionar destino com pino arrastável no mapa
+Substituir o atual `OverlayBusca` (tela preta com ring) por overlay **transparente sobre o mapa**:
 
-- Criar componente `seletor_local_mapa.tsx`:
-  - Abre tela cheia sobre o mapa atual (modal full-screen).
-  - Pino central fixo na tela (overlay), o usuário move o **mapa**.
-  - Ao parar o movimento (`moveend`), faz reverse-geocoding via Nominatim (`/reverse?lat=&lon=&format=json`) e mostra o endereço resolvido no rodapé.
-  - Botão "Confirmar este local" retorna `EnderecoCompleto`.
-  - Header com "Definir origem" / "Definir destino" e botão fechar.
-- Adicionar serviço `reverseGeocodingNominatim(lat, lng)` em `servico_passageiro.ts`.
-- Adicionar botão "Escolher no mapa 📍" abaixo dos campos de endereço em `bottom_sheet.tsx` (etapa endereço), abre o seletor.
+- Manter o `<Mapa />` visível por baixo (remover early-return atual em `pagina_passageiro.tsx` que esconde tudo durante "buscando").
+- Criar componente novo `overlay_busca_mapa.tsx`:
+  - Marker da origem (já existe), em volta dele renderizar 4–6 ícones de carrinho via `divIcon` em raios diferentes.
+  - Animação de pulso radial: anel verde expandindo a partir do marker (CSS keyframe).
+  - Animação de zoom suave do mapa: `setInterval` chamando `map.setZoom(z±1)` com `flyTo` a cada 3s pra dar sensação de "varrendo".
+  - Card flutuante no topo: "Buscando motoristas em {grupoNome}" + contador de tempo.
+  - Botão **"Cancelar solicitação"** fixo na parte inferior (vermelho destaque).
+- Lógica de cancelamento em `hook_solicitacao.ts`: nova função `cancelarSolicitacao()` que:
+  - Faz `UPDATE ride_requests SET status='cancelled' WHERE id=rideRequestId`
+  - Limpa `localStorage` do guest
+  - Chama `resetarSolicitacao()`
+
+### 4. Performance / carregamento mais ágil
+
+Diagnóstico rápido dos pontos lentos atuais:
+- `pagina_passageiro.tsx` carrega Mapa + Perfil + Avaliação + Chat + Rastreamento todos eagerly mesmo sem usar.
+- Reverse-geocoding (Nominatim) sem cache.
+- Reload completo de tudo após confirmar corrida.
+
+Otimizações:
+- **Code-splitting com `lazy()`** para componentes pesados não-críticos:
+  - `PaginaPerfilPassageiro`, `TelaChat`, `TelaAvaliacao`, `TelaRastreamento`, `SeletorLocalMapa`, `ListaMotoristasTenant` → `React.lazy` + `Suspense` com fallback nulo.
+- **Cache de reverse-geocoding** em `servico_passageiro.ts`: Map em memória + `sessionStorage`, chave = `lat.toFixed(4)_lng.toFixed(4)`.
+- **Skeleton no carregamento inicial** em vez do spinner em tela cheia (mostrar placeholder do mapa + bottom sheet vazio).
+- **Pré-carregar** `configPreco` em paralelo com `motorista`/`afiliado` (já é, mas garantir `Promise.all`).
+- **Reduzir bundle**: confirmar que `leaflet` e `Mapa` ficam num chunk separado via dynamic import quando primeira renderização não exigir mapa imediatamente.
 
 ### Arquivos editados/criados
 
-**Criar**:
-- `supabase/migrations/<ts>_guest_passengers.sql`
-- `src/features/passageiro/components/dialogo_dados_passageiro.tsx`
-- `src/features/passageiro/components/seletor_local_mapa.tsx`
-- `src/features/passageiro/components/botao_instalar_pwa.tsx`
-- `src/features/passageiro/hooks/hook_instalar_pwa.ts`
-- `src/features/passageiro/utils/mascara_whatsapp.ts`
+**Criar:**
+- `src/features/passageiro/components/overlay_busca_mapa.tsx`
+- `src/features/passageiro/components/sugestoes_oferta.tsx`
 
-**Editar**:
-- `src/features/passageiro/hooks/hook_solicitacao.ts` — fluxo guest
-- `src/features/passageiro/services/servico_passageiro.ts` — reverse geocoding + RPC guest
-- `src/features/passageiro/pages/pagina_passageiro.tsx` — remover banner login + integrar novos componentes
-- `src/features/passageiro/components/bottom_sheet.tsx` — botão "escolher no mapa"
-- `src/features/passageiro/types/tipos_passageiro.ts` — tipo `DadosGuest`
-- `src/features/passageiro/hooks/hook_corrida_aceita.ts` — aceitar guest_id
-- `index.html` — `viewport-fit=cover`
-- `src/index.css` — utilitários safe-area
-
-### Como testar
-1. Abrir link de motorista anônimo (sem login) → preencher origem/destino → confirmar → popup pede Nome + WhatsApp → corrida criada
-2. Tocar "Escolher no mapa" → arrastar mapa → endereço aparece embaixo → confirmar
-3. No iPhone Safari, ver botão "Instalar app" no canto → toca → instruções
-4. Conferir que o BottomSheet não fica cortado pelo home indicator do iPhone
-
+**Editar:**
+- `src/features/passageiro/hooks/hook_solicitacao.ts` — pedir dados antes de buscar; `cancelarSolicitacao`; persistir dados guest.
+- `src/features/passageiro/components/seletor_veiculo.tsx` — input controlado como string + chips de sugestão.
+- `src/features/passageiro/components/bottom_sheet.tsx` — disparar dialog de dados guest antes do "Buscar motoristas".
+- `src/features/passageiro/pages/pagina_passageiro.tsx` — substituir `OverlayBusca` pelo novo overlay com mapa visível; lazy imports.
+- `src/features/passageiro/services/servico_passageiro.ts` — cache de reverse-geocoding.
+- `src/features/passageiro/components/mapa.tsx` — expor handle pra animar zoom durante busca (via prop `modoBusca?: boolean`).
+- (Remover uso do) `overlay_busca.tsx` — manter arquivo mas de
