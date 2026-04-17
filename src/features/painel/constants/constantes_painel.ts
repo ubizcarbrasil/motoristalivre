@@ -8,7 +8,7 @@ export const ABAS_PAINEL: { id: AbaPainel; label: string; icone: string }[] = [
   { id: "configuracoes", label: "Configurações", icone: "settings" },
 ];
 
-export const TIMEOUT_DISPATCH_SEG = 28;
+export const TIMEOUT_DISPATCH_SEG = 120;
 
 export const TIPOS_TRANSACAO_LABELS: Record<string, { label: string; entrada: boolean }> = {
   ride_earning: { label: "Corrida", entrada: true },

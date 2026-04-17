@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { NavegacaoInferior } from "../components/navegacao_inferior";
 import { AbaInicio } from "../components/aba_inicio";
@@ -9,6 +9,7 @@ import { AbaConfiguracoes } from "../components/aba_configuracoes";
 import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { usePainel } from "../hooks/hook_painel";
+import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
@@ -36,6 +37,18 @@ export default function PaginaPainel() {
 
   const [mostraChat, setMostraChat] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
+
+  // Calcula segundos restantes do dispatch ativo (para cadência do alerta)
+  const segundosRestantes = useMemo(() => {
+    if (!dispatch) return undefined;
+    const elapsed = Math.floor((Date.now() - new Date(dispatch.dispatched_at).getTime()) / 1000);
+    return Math.max(0, timeoutSec - elapsed);
+  }, [dispatch, timeoutSec]);
+
+  const { silenciado, alternarSilenciado } = useAlertaDispatch({
+    ativo: !!dispatch,
+    segundosRestantes,
+  });
 
   useEffect(() => {
     if (!userId) return;
@@ -87,6 +100,8 @@ export default function PaginaPainel() {
           realtimeAtivo={realtimeAtivo}
           temCorridaAtiva={!!corridaAtiva}
           localizacaoAtiva={localizacao.ativo}
+          silenciado={silenciado}
+          onAlternarSom={alternarSilenciado}
           onToggleLocalizacao={localizacao.toggle}
           onAbrirChat={() => setMostraChat(true)}
           onToggleOnline={toggleOnline}
