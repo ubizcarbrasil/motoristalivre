@@ -10,6 +10,7 @@ import { TelaRastreamento } from "../components/tela_rastreamento";
 import { TelaChat } from "@/compartilhados/components/chat/tela_chat";
 import { TelaAvaliacao } from "../components/tela_avaliacao";
 import { ListaMotoristasTenant } from "../components/lista_motoristas_tenant";
+import { BannerLoginNecessario } from "../components/banner_login_necessario";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
@@ -20,7 +21,7 @@ import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/component
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogIn, User } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PaginaPassageiro() {
@@ -236,19 +237,7 @@ export default function PaginaPassageiro() {
       )}
 
       {!passengerId && etapa !== "buscando" && etapa !== "aceita" && (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            const destinoAposLogin = `${location.pathname}${location.search}`;
-            navigate(`/entrar?redirectTo=${encodeURIComponent(destinoAposLogin)}`);
-          }}
-          className="absolute top-4 right-4 z-10 h-10 rounded-full shadow-lg gap-2 px-4"
-          aria-label="Entrar"
-        >
-          <LogIn className="w-4 h-4" />
-          Entrar
-        </Button>
+        <BannerLoginNecessario />
       )}
 
       {rota && etapa === "veiculo" && <ChipEta rota={rota} />}
