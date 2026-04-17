@@ -22,9 +22,12 @@ import { SecaoRegras } from "@/features/admin/components/secao_regras";
 import { SecaoComissoes } from "@/features/admin/components/secao_comissoes";
 import type { SecaoAdmin } from "@/features/admin/types/tipos_admin";
 import type { TriboMotorista } from "../types/tipos_tribos";
+import { CardAtivarMotorista } from "./card_ativar_motorista";
 
 interface AbaTriboProps {
   tribo: TriboMotorista;
+  semPerfilDriver?: boolean;
+  onAtivarMotorista?: () => void;
 }
 
 const SECOES: Record<SecaoAdmin, () => JSX.Element> = {
@@ -51,7 +54,7 @@ const SUB_ABAS: { id: SecaoAdmin; label: string; icone: LucideIcon }[] = [
   { id: "comissoes", label: "Comissões", icone: Percent },
 ];
 
-export function AbaTribo({ tribo }: AbaTriboProps) {
+export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTriboProps) {
   const [secao, setSecao] = useState<SecaoAdmin>("dashboard");
 
   if (tribo.papel !== "dono") {
@@ -102,7 +105,14 @@ export function AbaTribo({ tribo }: AbaTriboProps) {
         </div>
       </div>
 
-      <div className="p-3">
+      <div className="p-3 space-y-3">
+        {semPerfilDriver && tribo.papel === "dono" && onAtivarMotorista && (
+          <CardAtivarMotorista
+            tenantId={tribo.id}
+            nomeTribo={tribo.nome}
+            onAtivado={onAtivarMotorista}
+          />
+        )}
         <Conteudo />
       </div>
     </div>
