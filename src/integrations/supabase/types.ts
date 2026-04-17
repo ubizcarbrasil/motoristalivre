@@ -291,6 +291,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          alert_sound: string
           bio: string | null
           cashback_pct: number | null
           cover_url: string | null
@@ -312,6 +313,7 @@ export type Database = {
           vehicle_year: number | null
         }
         Insert: {
+          alert_sound?: string
           bio?: string | null
           cashback_pct?: number | null
           cover_url?: string | null
@@ -333,6 +335,7 @@ export type Database = {
           vehicle_year?: number | null
         }
         Update: {
+          alert_sound?: string
           bio?: string | null
           cashback_pct?: number | null
           cover_url?: string | null
