@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -383,11 +383,46 @@ export function useSolicitacao() {
     [tenantId, origem, destino, rota, motorista, afiliado, valorOferta, formaPagamento, validarParaConfirmar]
   );
 
+  // Ref pra evitar dependência circular entre confirmarCorrida e confirmarCorridaGuest
+  const confirmarCorridaGuestRef = useRef(confirmarCorridaGuest);
+  useEffect(() => {
+    confirmarCorridaGuestRef.current = confirmarCorridaGuest;
+  }, [confirmarCorridaGuest]);
+
+  const cancelarSolicitacao = useCallback(async () => {
+    if (!rideRequestId) {
+      // Nada criado ainda — só reseta o estado local
+      setEtapa("endereco");
+      return;
+    }
+    setCancelando(true);
+    try {
+      const { error } = await supabase
+        .from("ride_requests")
+        .update({ status: "cancelled" })
+        .eq("id", rideRequestId);
+      if (error) throw error;
+      toast.success("Solicitação cancelada");
+      // Limpa storage da corrida (mantém dados do guest pra próxima)
+      localStorage.removeItem(STORAGE_KEY_GUEST);
+      setRideRequestId(null);
+      setGuestPassengerId(null);
+      setEtapa("endereco");
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      toast.error(`Erro ao cancelar: ${err?.message ?? "tente novamente"}`);
+      console.error("[cancelar corrida]", e);
+    } finally {
+      setCancelando(false);
+    }
+  }, [rideRequestId]);
+
   const voltarParaEnderecos = useCallback(() => {
     setEtapa("endereco");
     setRota(null);
     setPrecos([]);
   }, []);
+
 
   const irParaCorridaAceita = useCallback(() => {
     setEtapa("aceita");
