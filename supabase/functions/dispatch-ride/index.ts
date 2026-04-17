@@ -202,6 +202,7 @@ async function handleDriverResponse(
         ride_request_id: dispatch.ride_request_id,
         driver_id: dispatch.driver_id,
         passenger_id: request.passenger_id,
+        guest_passenger_id: request.guest_passenger_id,
         tenant_id: dispatch.tenant_id,
         is_transbordo: isTransbordo,
         origin_driver_id: request.origin_driver_id,
