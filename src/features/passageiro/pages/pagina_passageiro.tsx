@@ -21,8 +21,9 @@ import { DialogoEditarFavorito } from "@/features/favoritos_passageiro/component
 import type { TipoFavorito, FavoritoEndereco } from "@/features/favoritos_passageiro/types/tipos_favoritos";
 import PaginaPerfilPassageiro from "@/features/perfil_passageiro/pages/pagina_perfil_passageiro";
 import { Button } from "@/components/ui/button";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
+import { useEhMotorista } from "../hooks/hook_eh_motorista";
 
 export default function PaginaPassageiro() {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ export default function PaginaPassageiro() {
   const recentesCtx = useDestinosRecentes({ passengerId });
 
   const corridaAceita = useCorridaAceita(passengerId, rideRequestId);
+  const { ehMotorista } = useEhMotorista();
   const [mostraRastreamento, setMostraRastreamento] = useState(false);
   const [mostraChat, setMostraChat] = useState(false);
   const [mostraPerfil, setMostraPerfil] = useState(false);
@@ -225,15 +227,29 @@ export default function PaginaPassageiro() {
       />
 
       {passengerId && etapa !== "buscando" && etapa !== "aceita" && (
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => setMostraPerfil(true)}
-          className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full shadow-lg"
-          aria-label="Meu perfil"
-        >
-          <User className="w-5 h-5" />
-        </Button>
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          {ehMotorista && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/painel")}
+              className="h-10 rounded-full shadow-lg gap-1.5 px-3"
+              aria-label="Voltar ao painel"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="text-xs font-medium">Painel</span>
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => setMostraPerfil(true)}
+            className="h-10 w-10 rounded-full shadow-lg"
+            aria-label="Meu perfil"
+          >
+            <User className="w-5 h-5" />
+          </Button>
+        </div>
       )}
 
       {!passengerId && etapa !== "buscando" && etapa !== "aceita" && (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Plus, Users, Bell, Copy, Check } from "lucide-react";
+import { Loader2, Plus, Users, Bell, Copy, Check, Smartphone, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -98,6 +98,32 @@ export function AbaConfiguracoes({
       <Separator />
 
       <SeletorSomChamada valor={tipoSom} onChange={onMudarSom} />
+
+      <Separator />
+
+      <div className="rounded-xl bg-primary/5 border border-primary/30 p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Smartphone className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              Instalar na tela inicial
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Acesso rápido como app, recebe chamadas mesmo com tela bloqueada.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="default"
+          className="w-full h-10 gap-2"
+          onClick={() => navigate("/instalar")}
+        >
+          <Download className="w-4 h-4" />
+          Como instalar
+        </Button>
+      </div>
 
       {onTestarAlerta && (
         <Button
