@@ -51,11 +51,12 @@ export function DialogoDadosPassageiro({
     <Dialog open={aberto} onOpenChange={(o) => !o && !enviando && onFechar()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Quase lá!</DialogTitle>
+          <DialogTitle>{titulo}</DialogTitle>
           <DialogDescription>
-            Para o motorista entrar em contato, deixe seu nome e WhatsApp.
+            {descricao}
           </DialogDescription>
         </DialogHeader>
+
 
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
@@ -91,7 +92,7 @@ export function DialogoDadosPassageiro({
             className="w-full h-12 font-semibold"
           >
             {enviando ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Chamar motorista
+            {textoBotao}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
