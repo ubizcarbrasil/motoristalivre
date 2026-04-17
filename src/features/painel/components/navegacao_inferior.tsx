@@ -1,12 +1,14 @@
-import { Home, Link2, Wallet, User, Settings } from "lucide-react";
+import { Home, Link2, Wallet, User, Settings, Crown } from "lucide-react";
 import type { AbaPainel } from "../types/tipos_painel";
 
 interface NavegacaoInferiorProps {
   abaAtiva: AbaPainel;
   onMudar: (aba: AbaPainel) => void;
+  mostrarTribo?: boolean;
 }
 
-const ITENS: { id: AbaPainel; label: string; icone: typeof Home }[] = [
+const ITEM_TRIBO = { id: "tribo" as AbaPainel, label: "Tribo", icone: Crown };
+const ITENS_BASE: { id: AbaPainel; label: string; icone: typeof Home }[] = [
   { id: "inicio", label: "Início", icone: Home },
   { id: "meus_links", label: "Links", icone: Link2 },
   { id: "carteira", label: "Carteira", icone: Wallet },
