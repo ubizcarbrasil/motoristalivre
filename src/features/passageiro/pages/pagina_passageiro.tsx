@@ -246,7 +246,11 @@ export default function PaginaPassageiro() {
   }
 
   if (tenantSemMotorista) {
-    return <ListaMotoristasTenant tenantSlug={tenantSemMotorista} />;
+    return (
+      <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
+        <ListaMotoristasTenant tenantSlug={tenantSemMotorista} />
+      </Suspense>
+    );
   }
 
   if (erro) {
