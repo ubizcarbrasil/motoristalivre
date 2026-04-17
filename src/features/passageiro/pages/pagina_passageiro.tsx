@@ -327,7 +327,13 @@ export default function PaginaPassageiro() {
         />
       )}
 
-      {etapa === "buscando" && !corridaAceita && <OverlayBusca grupoNome={grupoNome} />}
+      {etapa === "buscando" && !corridaAceita && (
+        <OverlayBuscaMapa
+          grupoNome={grupoNome}
+          onCancelar={cancelarSolicitacao}
+          cancelando={cancelando}
+        />
+      )}
 
       {etapa === "aceita" && corridaAceita && !mostraRastreamento && !mostraChat && (
         <SheetCorridaAceita
@@ -400,8 +406,10 @@ export default function PaginaPassageiro() {
       <DialogoDadosPassageiro
         aberto={precisaDadosGuest}
         onFechar={fecharDadosGuest}
-        onConfirmar={confirmarCorridaGuest}
-        enviando={confirmando}
+        onConfirmar={rotaAtual ? confirmarCorridaGuest : onSalvarDadosGuestEBuscar}
+        enviando={confirmando || carregandoRota}
+        textoBotao={rotaAtual ? "Chamar motorista" : "Continuar"}
+        valorInicial={dadosGuest ? { nome: dadosGuest.nome, whatsapp: dadosGuest.whatsapp } : undefined}
       />
 
       <SeletorLocalMapa
