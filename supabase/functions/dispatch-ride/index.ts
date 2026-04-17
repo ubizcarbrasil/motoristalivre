@@ -110,9 +110,13 @@ async function dispatchRide(rideRequestId: string) {
   }
 
   let motoristasOrdenados: string[] = [];
+  // Mapeamento dos enums reais do banco:
+  //   auto    => owner_priority (tenta dono primeiro, depois sequencial)
+  //   manual  => broadcast (todos online recebem ao mesmo tempo)
+  //   hybrid  => owner_priority (futuramente: timeout curto + broadcast)
+  const mode = settings.dispatch_mode;
 
-  if (settings.dispatch_mode === "owner_priority" && request.origin_driver_id) {
-    // Owner priority: try owner first, then others
+  if ((mode === "auto" || mode === "hybrid") && request.origin_driver_id) {
     const ownerOnline = motoristasOnline.includes(request.origin_driver_id);
     if (ownerOnline) {
       motoristasOrdenados = [
@@ -122,23 +126,22 @@ async function dispatchRide(rideRequestId: string) {
     } else {
       motoristasOrdenados = motoristasOnline;
     }
-  } else if (settings.dispatch_mode === "proximity") {
-    // Proximity mode — for now use all online (geo sorting requires location data)
-    motoristasOrdenados = motoristasOnline;
   } else {
-    // Broadcast: all at once
+    // manual ou auto/hybrid sem origin_driver -> broadcast
     motoristasOrdenados = motoristasOnline;
   }
 
   await atualizarStatusRequest(rideRequestId, "dispatching");
 
-  if (settings.dispatch_mode === "broadcast") {
-    // Broadcast: dispatch to all at once
+  const isBroadcast = mode === "manual" || (!request.origin_driver_id && (mode === "auto" || mode === "hybrid"));
+
+  if (isBroadcast) {
+    // Broadcast: dispatch para todos de uma vez
     for (const driverId of motoristasOrdenados) {
       await criarDispatch(rideRequestId, driverId, request.tenant_id, 1);
     }
   } else {
-    // Sequential: dispatch to first
+    // Sequencial: começa pelo primeiro (dono se online)
     if (motoristasOrdenados.length > 0) {
       await criarDispatch(rideRequestId, motoristasOrdenados[0], request.tenant_id, 1);
     }
