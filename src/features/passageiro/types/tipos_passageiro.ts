@@ -106,3 +106,11 @@ export interface CorridaAceita {
   accepted_at: string;
   avaliacoes: AvaliacaoMotorista[];
 }
+
+export interface DadosGuest {
+  guest_passenger_id: string;
+  ride_request_id: string;
+  full_name: string;
+  whatsapp: string;
+  tenant_id: string;
+}
