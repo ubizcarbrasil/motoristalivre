@@ -36,6 +36,7 @@ export default function PaginaPainel() {
     corridaAtiva,
     localizacao,
     solicitacaoPendente,
+    recarregar,
   } = usePainel();
 
   const [mostraChat, setMostraChat] = useState(false);
@@ -113,7 +114,13 @@ export default function PaginaPainel() {
     if (podeAcessarComoDono && userId && triboAtiva) {
       return (
         <div className="min-h-screen bg-background text-foreground pb-20">
-          {(aba === "tribo" || aba === "inicio") && <AbaTribo tribo={triboAtiva} />}
+          {(aba === "tribo" || aba === "inicio") && (
+            <AbaTribo
+              tribo={triboAtiva}
+              semPerfilDriver={!perfil}
+              onAtivarMotorista={recarregar}
+            />
+          )}
           {aba === "carteira" && <AbaCarteira userId={userId} />}
           {aba === "configuracoes" && (
             <AbaConfiguracoes
@@ -176,7 +183,9 @@ export default function PaginaPainel() {
         />
       )}
 
-      {aba === "tribo" && triboAtiva && <AbaTribo tribo={triboAtiva} />}
+      {aba === "tribo" && triboAtiva && (
+        <AbaTribo tribo={triboAtiva} semPerfilDriver={!perfil} onAtivarMotorista={recarregar} />
+      )}
 
       {aba === "meus_links" && (
         <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
