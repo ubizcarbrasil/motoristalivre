@@ -45,10 +45,8 @@ export default function PaginaCadastro() {
     return <Navigate to="/painel" replace />;
   }
 
-  const precisaSlug =
-    tipoCadastro === "passageiro" ||
-    tipoCadastro === "afiliado" ||
-    tipoCadastro === "motorista";
+  // Passageiro NÃO precisa de slug — ele entra em qualquer tribo via link de motorista
+  const precisaSlug = tipoCadastro === "afiliado" || tipoCadastro === "motorista";
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
