@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
@@ -7,9 +8,12 @@ import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { DialogoDadosPassageiro } from "../components/dialogo_dados_passageiro";
 import { BotaoInstalarPwa } from "../components/botao_instalar_pwa";
+import { AgendamentoServico } from "../components/agendamento_servico";
+import { EscolhaModoAtendimento } from "../components/escolha_modo_atendimento";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
+import { useDadosServicoMotorista } from "../hooks/hook_dados_servico_motorista";
 import { existeAvaliacao } from "../services/servico_avaliacao";
 import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favoritos";
 import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_recentes";
