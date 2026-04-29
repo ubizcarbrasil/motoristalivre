@@ -75,11 +75,29 @@ Deno.serve(async (req) => {
   }
 
   const duration = serviceType.duration_minutes as number;
-  const inicioMin = scheduledAt.getHours() * 60 + scheduledAt.getMinutes();
-  const fimMin = inicioMin + duration;
 
-  // 2) Confere disponibilidade do dia da semana
-  const dow = scheduledAt.getDay();
+  // Extrai hora/minuto/dia-da-semana no fuso LOCAL do cliente a partir do ISO recebido.
+  // O cliente envia ISO derivado de setHours() local + toISOString(); precisamos reverter
+  // para o instante local equivalente, pois professional_availability.start_time é local naive.
+  // Estratégia: o ISO traz o instante absoluto. Calculamos o offset reverso usando o fuso
+  // do tenant — mas como não temos isso configurado, assumimos America/Sao_Paulo (UTC-3).
+  // Para robustez, derivamos hora/min/dow a partir de um Date convertido pra string com
+  // timeZone explícito.
+  const tzFmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const partes = tzFmt.formatToParts(scheduledAt);
+  const horaStr = partes.find((p) => p.type === "hour")?.value ?? "00";
+  const minStr = partes.find((p) => p.type === "minute")?.value ?? "00";
+  const wkStr = partes.find((p) => p.type === "weekday")?.value ?? "Sun";
+  const wkMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const dow = wkMap[wkStr] ?? 0;
+  const inicioMin = parseInt(horaStr, 10) * 60 + parseInt(minStr, 10);
+  const fimMin = inicioMin + duration;
   const { data: blocks } = await supabase
     .from("professional_availability")
     .select("*")
