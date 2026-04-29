@@ -9,10 +9,13 @@ import { InfoVeiculo } from "../components/info_veiculo";
 import { SecaoBio } from "../components/secao_bio";
 import { DistribuicaoNotas } from "../components/distribuicao_notas";
 import { ListaAvaliacoes } from "../components/lista_avaliacoes";
+import { SecaoServicosPublica } from "../components/secao_servicos_publica";
+import { SecaoDisponibilidadePublica } from "../components/secao_disponibilidade_publica";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
-  const { perfil, metricas, distribuicao, avaliacoes, carregando, erro } = usePerfilMotorista();
+  const { perfil, metricas, distribuicao, avaliacoes, servicos, disponibilidade, carregando, erro } =
+    usePerfilMotorista();
 
   if (carregando) {
     return (
@@ -26,18 +29,19 @@ export default function PaginaPerfilMotorista() {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
-          <p className="text-base font-medium text-foreground">Motorista nao encontrado</p>
-          <p className="text-sm text-muted-foreground">Verifique se o endereco esta correto.</p>
+          <p className="text-base font-medium text-foreground">Motorista não encontrado</p>
+          <p className="text-sm text-muted-foreground">Verifique se o endereço está correto.</p>
         </div>
       </div>
     );
   }
 
-  const urlCorrida = `/${perfil.tenant_slug}/${perfil.slug}`;
+  const urlBase = `/${perfil.tenant_slug}/${perfil.slug}`;
+  const ofereceServico = perfil.professional_type === "service_provider" || perfil.professional_type === "both";
+  const ofereceCorrida = perfil.professional_type === "driver" || perfil.professional_type === "both";
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
-      {/* Top bar */}
       <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border">
         <button
           onClick={() => navigate(-1)}
@@ -48,10 +52,10 @@ export default function PaginaPerfilMotorista() {
         <span className="text-sm font-medium text-foreground">Perfil</span>
       </div>
 
-      <div className="space-y-5 pb-28">
+      <div className="space-y-5 pb-32">
         <HeaderPerfil perfil={perfil} />
         <GridMetricas metricas={metricas} />
-        <InfoVeiculo perfil={perfil} />
+        {ofereceCorrida && <InfoVeiculo perfil={perfil} />}
         <SecaoBio bio={perfil.bio} />
         <DistribuicaoNotas
           distribuicao={distribuicao}
@@ -59,6 +63,17 @@ export default function PaginaPerfilMotorista() {
           totalAvaliacoes={metricas.total_avaliacoes}
         />
         <ListaAvaliacoes avaliacoes={avaliacoes} />
+
+        {ofereceServico && (
+          <>
+            <SecaoServicosPublica
+              servicos={servicos}
+              tenantSlug={perfil.tenant_slug}
+              driverSlug={perfil.slug}
+            />
+            <SecaoDisponibilidadePublica blocos={disponibilidade} />
+          </>
+        )}
 
         {/* Grupo */}
         <div className="px-6">
@@ -74,12 +89,37 @@ export default function PaginaPerfilMotorista() {
 
       {/* CTA fixo */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm border-t border-border">
-        <Button
-          className="w-full h-12 text-base font-semibold"
-          onClick={() => navigate(urlCorrida)}
-        >
-          Solicitar corrida
-        </Button>
+        {perfil.professional_type === "both" ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              className="h-12 text-sm font-semibold"
+              onClick={() => navigate(`${urlBase}?modo=ride`)}
+            >
+              Solicitar corrida
+            </Button>
+            <Button
+              className="h-12 text-sm font-semibold"
+              onClick={() => navigate(`${urlBase}?modo=service`)}
+            >
+              Agendar serviço
+            </Button>
+          </div>
+        ) : ofereceServico ? (
+          <Button
+            className="w-full h-12 text-base font-semibold"
+            onClick={() => navigate(urlBase)}
+          >
+            Agendar serviço
+          </Button>
+        ) : (
+          <Button
+            className="w-full h-12 text-base font-semibold"
+            onClick={() => navigate(urlBase)}
+          >
+            Solicitar corrida
+          </Button>
+        )}
       </div>
     </div>
   );
