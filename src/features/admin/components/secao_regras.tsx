@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { TIMEZONES_DISPONIVEIS } from "../constants/constantes_timezones";
 
 export function SecaoRegras() {
   const { usuario } = useAutenticacao();
@@ -17,6 +18,7 @@ export function SecaoRegras() {
   const [tentativas, setTentativas] = useState(3);
   const [permitirPrecos, setPermitirPrecos] = useState(false);
   const [permitirOfertas, setPermitirOfertas] = useState(false);
+  const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function SecaoRegras() {
       setTentativas(data.dispatch_max_attempts);
       setPermitirPrecos(data.allow_driver_pricing);
       setPermitirOfertas(data.allow_offers);
+      setTimezone(data.timezone ?? "America/Sao_Paulo");
     }
   }
 
@@ -51,6 +54,7 @@ export function SecaoRegras() {
         dispatch_max_attempts: tentativas,
         allow_driver_pricing: permitirPrecos,
         allow_offers: permitirOfertas,
+        timezone,
       }).eq("tenant_id", tenantId);
       toast.success("Regras atualizadas");
     } catch {
@@ -72,6 +76,25 @@ export function SecaoRegras() {
             <SelectItem value="auto">Prioridade ao dono do link</SelectItem>
             <SelectItem value="manual">Por proximidade</SelectItem>
             <SelectItem value="hybrid">Para todos</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Fuso horário</Label>
+        <p className="text-[11px] text-muted-foreground">
+          Usado para validar agendamentos de serviços e horários de disponibilidade.
+        </p>
+        <Select value={timezone} onValueChange={setTimezone}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {TIMEZONES_DISPONIVEIS.map((tz) => (
+              <SelectItem key={tz.valor} value={tz.valor}>
+                {tz.rotulo}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
