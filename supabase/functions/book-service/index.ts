@@ -1,11 +1,7 @@
 // Edge Function: book-service
 // Cria agendamentos de serviços com validação de disponibilidade e conflito.
-//
-// DÍVIDA TÉCNICA — TIMEZONE HARDCODED:
-// O fuso horário usado para validar a disponibilidade está fixado em
-// "America/Sao_Paulo". Para o MVP isso é suficiente. Pós-MVP, o ideal é
-// adicionar uma coluna `timezone TEXT` em `tenant_settings` (default
-// 'America/Sao_Paulo') e ler o fuso do tenant aqui antes de validar slots.
+// O fuso horário de validação é lido de tenant_settings.timezone
+// (default 'America/Sao_Paulo' caso não esteja configurado).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders: Record<string, string> = {
@@ -82,20 +78,29 @@ Deno.serve(async (req) => {
 
   const duration = serviceType.duration_minutes as number;
 
-  // Extrai hora/minuto/dia-da-semana no fuso LOCAL do cliente a partir do ISO recebido.
-  // O cliente envia ISO derivado de setHours() local + toISOString(); precisamos reverter
-  // para o instante local equivalente, pois professional_availability.start_time é local naive.
-  // Estratégia: o ISO traz o instante absoluto. Calculamos o offset reverso usando o fuso
-  // do tenant — mas como não temos isso configurado, assumimos America/Sao_Paulo (UTC-3).
-  // Para robustez, derivamos hora/min/dow a partir de um Date convertido pra string com
-  // timeZone explícito.
-  const tzFmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Sao_Paulo",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  // Busca timezone configurado do tenant (default America/Sao_Paulo)
+  const { data: tenantSettings } = await supabase
+    .from("tenant_settings")
+    .select("timezone")
+    .eq("tenant_id", body.tenant_id)
+    .maybeSingle();
+  const timezone = (tenantSettings?.timezone as string | undefined) || "America/Sao_Paulo";
+
+  // Extrai hora/minuto/dia-da-semana no fuso do tenant a partir do ISO recebido.
+  // professional_availability.start_time é um time naive armazenado no fuso local
+  // do tenant, então precisamos comparar usando o mesmo fuso.
+  let tzFmt: Intl.DateTimeFormat;
+  try {
+    tzFmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch {
+    return json({ error: `Timezone inválido configurado no tenant: ${timezone}` }, 500);
+  }
   const partes = tzFmt.formatToParts(scheduledAt);
   const horaStr = partes.find((p) => p.type === "hour")?.value ?? "00";
   const minStr = partes.find((p) => p.type === "minute")?.value ?? "00";
