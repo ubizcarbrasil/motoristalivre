@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { PerfilPublicoMotorista } from "../types/tipos_perfil_motorista";
 
 interface Props {
@@ -30,7 +31,27 @@ export function HeaderPerfil({ perfil }: Props) {
       </div>
 
       <div className="text-center space-y-1">
-        <h1 className="text-xl font-semibold text-foreground">{perfil.nome}</h1>
+        <div className="flex items-center justify-center gap-2">
+          <h1 className="text-xl font-semibold text-foreground">{perfil.nome}</h1>
+          {perfil.credential_verified && perfil.credential_type && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="bg-primary text-primary-foreground gap-1 px-2 py-0.5 cursor-help">
+                    <ShieldCheck className="w-3 h-3" />
+                    Verificado
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs font-medium">
+                    {perfil.credential_type.toUpperCase()}
+                    {perfil.credential_number ? ` ${perfil.credential_number}` : ""}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">{perfil.tenant_nome}</p>
       </div>
 
