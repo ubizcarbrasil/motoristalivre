@@ -7,6 +7,10 @@ import type {
   DistribuicaoNotas,
   AvaliacaoPublica,
 } from "../types/tipos_perfil_motorista";
+import type {
+  TipoServico,
+  DisponibilidadeProfissional,
+} from "@/features/servicos/types/tipos_servicos";
 
 export function usePerfilMotorista() {
   const { slug, driver_slug } = useParams<{ slug: string; driver_slug: string }>();
@@ -19,6 +23,8 @@ export function usePerfilMotorista() {
   });
   const [distribuicao, setDistribuicao] = useState<DistribuicaoNotas[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoPublica[]>([]);
+  const [servicos, setServicos] = useState<TipoServico[]>([]);
+  const [disponibilidade, setDisponibilidade] = useState<DisponibilidadeProfissional[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
 
@@ -32,7 +38,6 @@ export function usePerfilMotorista() {
     async function carregar() {
       setCarregando(true);
       try {
-        // Buscar tenant
         const { data: tenant } = await supabase
           .from("tenants")
           .select("id, name, slug")
@@ -41,7 +46,6 @@ export function usePerfilMotorista() {
 
         if (!tenant) { setErro(true); return; }
 
-        // Buscar motorista
         const { data: driver } = await supabase
           .from("drivers")
           .select("*")
@@ -51,12 +55,13 @@ export function usePerfilMotorista() {
 
         if (!driver) { setErro(true); return; }
 
-        // Buscar usuario
         const { data: user } = await supabase
           .from("users")
           .select("full_name, avatar_url")
           .eq("id", driver.id)
           .single();
+
+        const tipoProfissional = ((driver as any).professional_type as PerfilPublicoMotorista["professional_type"]) ?? "driver";
 
         setPerfil({
           id: driver.id,
@@ -74,6 +79,10 @@ export function usePerfilMotorista() {
           cashback_pct: driver.cashback_pct,
           tenant_slug: tenant.slug,
           tenant_nome: tenant.name,
+          professional_type: tipoProfissional,
+          credential_verified: !!(driver as any).credential_verified,
+          credential_type: ((driver as any).credential_type as string) ?? null,
+          credential_number: ((driver as any).credential_number as string) ?? null,
         });
 
         // Reviews
@@ -87,7 +96,6 @@ export function usePerfilMotorista() {
         const allReviews = reviews ?? [];
         setAvaliacoes(allReviews.slice(0, 10));
 
-        // Distribuicao
         const dist: DistribuicaoNotas[] = [5, 4, 3, 2, 1].map((e) => {
           const qtd = allReviews.filter((r) => r.rating === e).length;
           return {
@@ -103,7 +111,6 @@ export function usePerfilMotorista() {
             ? allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length
             : 0;
 
-        // Dispatches para taxa de aceite
         const { data: dispatches } = await supabase
           .from("ride_dispatches")
           .select("response")
@@ -113,7 +120,6 @@ export function usePerfilMotorista() {
         const aceitos = dispatches?.filter((d) => d.response === "accepted").length ?? 0;
         const taxa = totalDisp > 0 ? (aceitos / totalDisp) * 100 : 100;
 
-        // Meses de atuacao
         const criado = new Date(driver.created_at);
         const agora = new Date();
         const meses = Math.max(
@@ -128,6 +134,27 @@ export function usePerfilMotorista() {
           taxa_aceite: Math.round(taxa),
           meses_atuacao: meses,
         });
+
+        // Carrega serviços e disponibilidade quando o profissional oferece serviços
+        if (tipoProfissional === "service_provider" || tipoProfissional === "both") {
+          const [{ data: servs }, { data: avail }] = await Promise.all([
+            supabase
+              .from("service_types" as any)
+              .select("*")
+              .eq("driver_id", driver.id)
+              .eq("is_active", true)
+              .order("created_at", { ascending: true }),
+            supabase
+              .from("professional_availability" as any)
+              .select("*")
+              .eq("driver_id", driver.id)
+              .eq("is_active", true)
+              .order("day_of_week", { ascending: true })
+              .order("start_time", { ascending: true }),
+          ]);
+          setServicos((servs ?? []) as unknown as TipoServico[]);
+          setDisponibilidade((avail ?? []) as unknown as DisponibilidadeProfissional[]);
+        }
       } catch {
         setErro(true);
       } finally {
@@ -138,5 +165,5 @@ export function usePerfilMotorista() {
     carregar();
   }, [slug, driver_slug]);
 
-  return { perfil, metricas, distribuicao, avaliacoes, carregando, erro };
+  return { perfil, metricas, distribuicao, avaliacoes, servicos, disponibilidade, carregando, erro };
 }

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Mapa } from "../components/mapa";
 import { BottomSheet } from "../components/bottom_sheet";
 import { ChipEta } from "../components/chip_eta";
@@ -7,9 +8,12 @@ import { SheetInstalacao } from "../components/sheet_instalacao";
 import { SheetCorridaAceita } from "../components/sheet_corrida_aceita";
 import { DialogoDadosPassageiro } from "../components/dialogo_dados_passageiro";
 import { BotaoInstalarPwa } from "../components/botao_instalar_pwa";
+import { AgendamentoServico } from "../components/agendamento_servico";
+import { EscolhaModoAtendimento } from "../components/escolha_modo_atendimento";
 import { useSolicitacao } from "../hooks/hook_solicitacao";
 import { useCorridaAceita } from "../hooks/hook_corrida_aceita";
 import { useRastreamento } from "../hooks/hook_rastreamento";
+import { useDadosServicoMotorista } from "../hooks/hook_dados_servico_motorista";
 import { existeAvaliacao } from "../services/servico_avaliacao";
 import { useFavoritos } from "@/features/favoritos_passageiro/hooks/hook_favoritos";
 import { useDestinosRecentes } from "@/features/favoritos_passageiro/hooks/hook_recentes";
@@ -81,6 +85,13 @@ export default function PaginaPassageiro() {
     rota: rotaAtual,
   } = useSolicitacao();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dadosServico = useDadosServicoMotorista(motorista?.id ?? null);
+  const modoQuery = searchParams.get("modo") as "ride" | "service" | null;
+  const servicoIdQuery = searchParams.get("servico");
+  const [modoEscolhido, setModoEscolhido] = useState<"ride" | "service" | null>(
+    modoQuery ?? (servicoIdQuery ? "service" : null),
+  );
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
@@ -262,6 +273,67 @@ export default function PaginaPassageiro() {
         </div>
       </div>
     );
+  }
+
+  // Bifurcação Mobilidade vs Serviços baseado no professional_type do motorista do link
+  if (motorista && tenantId && !dadosServico.carregando) {
+    const tipo = dadosServico.professional_type;
+    const driverInfo = {
+      id: motorista.id,
+      full_name: dadosServico.full_name || motorista.nome,
+      avatar_url: dadosServico.avatar_url ?? motorista.avatar_url,
+      credential_verified: dadosServico.credential_verified,
+      credential_type: dadosServico.credential_type,
+      credential_number: dadosServico.credential_number,
+      tenant_slug: "",
+      slug: motorista.slug,
+    };
+
+    if (tipo === "service_provider") {
+      return (
+        <AgendamentoServico
+          driver={driverInfo}
+          tenantId={tenantId}
+          serviceTypes={dadosServico.serviceTypes}
+          availability={dadosServico.availability}
+          preSelectedServiceId={servicoIdQuery}
+        />
+      );
+    }
+    if (tipo === "both" && modoEscolhido === null) {
+      return (
+        <EscolhaModoAtendimento
+          driverNome={driverInfo.full_name}
+          driverAvatar={driverInfo.avatar_url}
+          credenciado={driverInfo.credential_verified}
+          onEscolher={(m) => {
+            setModoEscolhido(m);
+            const next = new URLSearchParams(searchParams);
+            next.set("modo", m);
+            setSearchParams(next, { replace: true });
+          }}
+        />
+      );
+    }
+    if (tipo === "both" && modoEscolhido === "service") {
+      return (
+        <AgendamentoServico
+          driver={driverInfo}
+          tenantId={tenantId}
+          serviceTypes={dadosServico.serviceTypes}
+          availability={dadosServico.availability}
+          preSelectedServiceId={servicoIdQuery}
+          onVoltar={() => {
+            setModoEscolhido(null);
+            const next = new URLSearchParams(searchParams);
+            next.delete("modo");
+            next.delete("servico");
+            setSearchParams(next, { replace: true });
+          }}
+        />
+      );
+    }
+    // tipo === "driver" ou both com modo "ride" → fluxo de corrida normal segue abaixo
   }
 
   const centroSeletor =

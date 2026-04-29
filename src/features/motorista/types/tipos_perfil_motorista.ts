@@ -14,6 +14,10 @@ export interface PerfilPublicoMotorista {
   cashback_pct: number | null;
   tenant_slug: string;
   tenant_nome: string;
+  professional_type: "driver" | "service_provider" | "both";
+  credential_verified: boolean;
+  credential_type: string | null;
+  credential_number: string | null;
 }
 
 export interface MetricasMotorista {
