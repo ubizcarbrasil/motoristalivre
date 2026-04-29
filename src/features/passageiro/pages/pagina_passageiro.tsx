@@ -85,6 +85,13 @@ export default function PaginaPassageiro() {
     rota: rotaAtual,
   } = useSolicitacao();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dadosServico = useDadosServicoMotorista(motorista?.id ?? null);
+  const modoQuery = searchParams.get("modo") as "ride" | "service" | null;
+  const servicoIdQuery = searchParams.get("servico");
+  const [modoEscolhido, setModoEscolhido] = useState<"ride" | "service" | null>(
+    modoQuery ?? (servicoIdQuery ? "service" : null),
+  );
 
   const tenantId = motorista?.tenant_id ?? afiliado?.tenant_id ?? null;
   const favoritosCtx = useFavoritos({ passengerId, tenantId });
