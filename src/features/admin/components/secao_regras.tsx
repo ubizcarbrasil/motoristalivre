@@ -39,6 +39,7 @@ export function SecaoRegras() {
       setTentativas(data.dispatch_max_attempts);
       setPermitirPrecos(data.allow_driver_pricing);
       setPermitirOfertas(data.allow_offers);
+      setTimezone(data.timezone ?? "America/Sao_Paulo");
     }
   }
 
@@ -53,6 +54,7 @@ export function SecaoRegras() {
         dispatch_max_attempts: tentativas,
         allow_driver_pricing: permitirPrecos,
         allow_offers: permitirOfertas,
+        timezone,
       }).eq("tenant_id", tenantId);
       toast.success("Regras atualizadas");
     } catch {
