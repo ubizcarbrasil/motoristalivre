@@ -2,10 +2,26 @@ import type { PlanoOpcao, DadosIdentidade, DadosConfiguracao } from "../types/ti
 
 export const ETAPAS = [
   "Identidade",
+  "Módulos",
   "Plano",
   "Pagamento",
   "Configuração",
   "Convites",
+] as const;
+
+export const MODULOS_DISPONIVEIS = [
+  {
+    id: "mobility" as const,
+    titulo: "Mobilidade",
+    descricao: "Corridas e transporte — motoristas com link próprio e despacho automático",
+    icone: "car",
+  },
+  {
+    id: "services" as const,
+    titulo: "Serviços",
+    descricao: "Agendamentos e chamadas — profissionais liberais com agenda digital",
+    icone: "calendar",
+  },
 ] as const;
 
 export const PLANOS: PlanoOpcao[] = [

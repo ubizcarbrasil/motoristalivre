@@ -27,11 +27,14 @@ export interface DadosConfiguracao {
   cashbackPadrao: number;
 }
 
+export type ModuloPlataforma = "mobility" | "services";
+
 export interface DadosOnboarding {
   identidade: DadosIdentidade;
+  modulos: ModuloPlataforma[];
   planoSelecionado: string;
   pagamentoConfirmado: boolean;
   configuracao: DadosConfiguracao;
 }
 
-export type EtapaOnboarding = 0 | 1 | 2 | 3 | 4;
+export type EtapaOnboarding = 0 | 1 | 2 | 3 | 4 | 5;

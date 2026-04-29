@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { LayoutBase } from "@/compartilhados/components/layout_base";
 import { IndicadorProgresso } from "../components/indicador_progresso";
 import { EtapaIdentidade } from "../components/etapa_identidade";
+import { EtapaModulos } from "../components/etapa_modulos";
 import { EtapaPlano } from "../components/etapa_plano";
 import { EtapaPagamento } from "../components/etapa_pagamento";
 import { EtapaConfiguracao } from "../components/etapa_configuracao";
@@ -16,6 +17,8 @@ export default function PaginaOnboarding() {
     etapaAtual,
     identidade,
     setIdentidade,
+    modulosSelecionados,
+    setModulosSelecionados,
     planoSelecionado,
     setPlanoSelecionado,
     configuracao,
@@ -32,11 +35,11 @@ export default function PaginaOnboarding() {
     try {
       await criarGrupo({
         identidade,
+        modulos: modulosSelecionados,
         planoId: planoSelecionado,
         configuracao,
       });
       toast.success("Grupo criado com sucesso");
-      // Forcar reload para atualizar estado de tenant
       window.location.href = "/admin";
     } catch (erro) {
       console.error(erro);
@@ -65,6 +68,15 @@ export default function PaginaOnboarding() {
           )}
 
           {etapaAtual === 1 && (
+            <EtapaModulos
+              selecionados={modulosSelecionados}
+              onChange={setModulosSelecionados}
+              onAvancar={avancar}
+              onVoltar={voltar}
+            />
+          )}
+
+          {etapaAtual === 2 && (
             <EtapaPlano
               planoSelecionado={planoSelecionado}
               onSelecionar={setPlanoSelecionado}
@@ -73,7 +85,7 @@ export default function PaginaOnboarding() {
             />
           )}
 
-          {etapaAtual === 2 && (
+          {etapaAtual === 3 && (
             <EtapaPagamento
               planoSelecionado={planoSelecionado}
               onConfirmar={() => {
@@ -84,7 +96,7 @@ export default function PaginaOnboarding() {
             />
           )}
 
-          {etapaAtual === 3 && (
+          {etapaAtual === 4 && (
             <EtapaConfiguracao
               dados={configuracao}
               onChange={setConfiguracao}
@@ -93,7 +105,7 @@ export default function PaginaOnboarding() {
             />
           )}
 
-          {etapaAtual === 4 && (
+          {etapaAtual === 5 && (
             <EtapaConvites
               subdominio={identidade.subdominio}
               onFinalizar={finalizar}

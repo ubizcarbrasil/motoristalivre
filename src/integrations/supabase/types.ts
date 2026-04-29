@@ -174,6 +174,7 @@ export type Database = {
       commissions: {
         Row: {
           amount: number
+          commission_context: string
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at: string
           from_wallet_id: string | null
@@ -186,6 +187,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          commission_context?: string
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           from_wallet_id?: string | null
@@ -198,6 +200,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          commission_context?: string
           commission_type?: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           from_wallet_id?: string | null
@@ -296,6 +299,9 @@ export type Database = {
           cashback_pct: number | null
           cover_url: string | null
           created_at: string
+          credential_number: string | null
+          credential_type: string | null
+          credential_verified: boolean
           custom_base_fare: number | null
           custom_price_per_km: number | null
           custom_price_per_min: number | null
@@ -303,7 +309,9 @@ export type Database = {
           id: string
           is_online: boolean
           is_verified: boolean
+          professional_type: string
           referral_code: string | null
+          service_categories: string[]
           slug: string
           tenant_id: string
           updated_at: string
@@ -318,6 +326,9 @@ export type Database = {
           cashback_pct?: number | null
           cover_url?: string | null
           created_at?: string
+          credential_number?: string | null
+          credential_type?: string | null
+          credential_verified?: boolean
           custom_base_fare?: number | null
           custom_price_per_km?: number | null
           custom_price_per_min?: number | null
@@ -325,7 +336,9 @@ export type Database = {
           id: string
           is_online?: boolean
           is_verified?: boolean
+          professional_type?: string
           referral_code?: string | null
+          service_categories?: string[]
           slug: string
           tenant_id: string
           updated_at?: string
@@ -340,6 +353,9 @@ export type Database = {
           cashback_pct?: number | null
           cover_url?: string | null
           created_at?: string
+          credential_number?: string | null
+          credential_type?: string | null
+          credential_verified?: boolean
           custom_base_fare?: number | null
           custom_price_per_km?: number | null
           custom_price_per_min?: number | null
@@ -347,7 +363,9 @@ export type Database = {
           id?: string
           is_online?: boolean
           is_verified?: boolean
+          professional_type?: string
           referral_code?: string | null
+          service_categories?: string[]
           slug?: string
           tenant_id?: string
           updated_at?: string
@@ -623,6 +641,114 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_availability: {
+        Row: {
+          buffer_minutes: number
+          created_at: string
+          day_of_week: number
+          driver_id: string
+          end_time: string
+          id: string
+          is_active: boolean
+          slot_duration_minutes: number
+          start_time: string
+          tenant_id: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          created_at?: string
+          day_of_week: number
+          driver_id: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          slot_duration_minutes?: number
+          start_time: string
+          tenant_id: string
+        }
+        Update: {
+          buffer_minutes?: number
+          created_at?: string
+          day_of_week?: number
+          driver_id?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          slot_duration_minutes?: number
+          start_time?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_availability_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_availability_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_credentials: {
+        Row: {
+          created_at: string
+          credential_number: string
+          credential_type: string
+          driver_id: string
+          id: string
+          issuing_body: string | null
+          status: string
+          uf: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          credential_number: string
+          credential_type: string
+          driver_id: string
+          id?: string
+          issuing_body?: string | null
+          status?: string
+          uf?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          credential_number?: string
+          credential_type?: string
+          driver_id?: string
+          id?: string
+          issuing_body?: string | null
+          status?: string
+          uf?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_credentials_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_credentials_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           created_at: string
@@ -690,6 +816,7 @@ export type Database = {
           created_at: string
           driver_id: string
           id: string
+          module: string
           passenger_id: string
           rating: number
           ride_id: string
@@ -700,6 +827,7 @@ export type Database = {
           created_at?: string
           driver_id: string
           id?: string
+          module?: string
           passenger_id: string
           rating: number
           ride_id: string
@@ -710,6 +838,7 @@ export type Database = {
           created_at?: string
           driver_id?: string
           id?: string
+          module?: string
           passenger_id?: string
           rating?: number
           ride_id?: string
@@ -1022,6 +1151,237 @@ export type Database = {
           },
         ]
       }
+      service_bookings: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          driver_id: string
+          duration_minutes: number
+          guest_passenger_id: string | null
+          id: string
+          notes: string | null
+          origin_affiliate_id: string | null
+          origin_driver_id: string | null
+          payment_method: string
+          price_agreed: number
+          reminder_sent_1h: boolean
+          reminder_sent_24h: boolean
+          return_reminder_date: string | null
+          scheduled_at: string
+          service_type_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          driver_id: string
+          duration_minutes: number
+          guest_passenger_id?: string | null
+          id?: string
+          notes?: string | null
+          origin_affiliate_id?: string | null
+          origin_driver_id?: string | null
+          payment_method?: string
+          price_agreed: number
+          reminder_sent_1h?: boolean
+          reminder_sent_24h?: boolean
+          return_reminder_date?: string | null
+          scheduled_at: string
+          service_type_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          driver_id?: string
+          duration_minutes?: number
+          guest_passenger_id?: string | null
+          id?: string
+          notes?: string | null
+          origin_affiliate_id?: string | null
+          origin_driver_id?: string | null
+          payment_method?: string
+          price_agreed?: number
+          reminder_sent_1h?: boolean
+          reminder_sent_24h?: boolean
+          return_reminder_date?: string | null
+          scheduled_at?: string
+          service_type_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "passengers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_guest_passenger_id_fkey"
+            columns: ["guest_passenger_id"]
+            isOneToOne: false
+            referencedRelation: "guest_passengers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_origin_affiliate_id_fkey"
+            columns: ["origin_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_origin_driver_id_fkey"
+            columns: ["origin_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_service_type_id_fkey"
+            columns: ["service_type_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bookings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_reminders: {
+        Row: {
+          booking_id: string | null
+          client_id: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          message: string | null
+          remind_at: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          message?: string | null
+          remind_at: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          message?: string | null
+          remind_at?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reminders_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reminders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "passengers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reminders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          driver_id: string
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          is_immediate: boolean
+          name: string
+          price: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          driver_id: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_immediate?: boolean
+          name: string
+          price: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          driver_id?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_immediate?: boolean
+          name?: string
+          price?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_types_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -1184,6 +1544,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          active_modules: string[]
           created_at: string
           id: string
           name: string
@@ -1194,6 +1555,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_modules?: string[]
           created_at?: string
           id?: string
           name: string
@@ -1204,6 +1566,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_modules?: string[]
           created_at?: string
           id?: string
           name?: string
@@ -1284,6 +1647,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          module: string
           reference_id: string | null
           tenant_id: string
           type: Database["public"]["Enums"]["wallet_transaction_type"]
@@ -1295,6 +1659,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          module?: string
           reference_id?: string | null
           tenant_id: string
           type: Database["public"]["Enums"]["wallet_transaction_type"]
@@ -1306,6 +1671,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          module?: string
           reference_id?: string | null
           tenant_id?: string
           type?: Database["public"]["Enums"]["wallet_transaction_type"]

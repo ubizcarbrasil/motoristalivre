@@ -4,6 +4,8 @@ import { GridStats } from "../components/grid_stats";
 import { ListaCorridas } from "../components/lista_corridas";
 import { AcessoRapido } from "../components/acesso_rapido";
 import { ToggleLocalizacao } from "../components/toggle_localizacao";
+import { SecaoAgendaHoje } from "./secao_agenda_hoje";
+import { useHookPerfilServico } from "@/features/servicos/hooks/hook_perfil_servico";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import type { PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo, AbaPainel } from "../types/tipos_painel";
@@ -58,6 +60,10 @@ export function AbaInicio({
   triboAtivaId,
   onSelecionarTribo,
 }: AbaInicioProps) {
+  const servico = useHookPerfilServico(perfil.id);
+  const ehProfissional =
+    servico.professionalType === "service_provider" || servico.professionalType === "both";
+
   return (
     <div className="pb-20 space-y-4">
       <HeaderPainel
@@ -80,6 +86,8 @@ export function AbaInicio({
           </Button>
         </div>
       )}
+
+      {ehProfissional && <SecaoAgendaHoje agendamentos={servico.agendaHoje} />}
 
       {dispatch && (
         <CardDispatch
