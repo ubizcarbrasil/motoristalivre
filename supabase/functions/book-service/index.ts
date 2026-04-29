@@ -1,11 +1,7 @@
 // Edge Function: book-service
 // Cria agendamentos de serviços com validação de disponibilidade e conflito.
-//
-// DÍVIDA TÉCNICA — TIMEZONE HARDCODED:
-// O fuso horário usado para validar a disponibilidade está fixado em
-// "America/Sao_Paulo". Para o MVP isso é suficiente. Pós-MVP, o ideal é
-// adicionar uma coluna `timezone TEXT` em `tenant_settings` (default
-// 'America/Sao_Paulo') e ler o fuso do tenant aqui antes de validar slots.
+// O fuso horário de validação é lido de tenant_settings.timezone
+// (default 'America/Sao_Paulo' caso não esteja configurado).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders: Record<string, string> = {
