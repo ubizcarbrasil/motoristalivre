@@ -186,11 +186,17 @@ export function AgendamentoServico({
       if (mensagem.includes("409") || mensagem.toLowerCase().includes("reservado") || mensagem.includes("SLOT_TAKEN")) {
         toast.error("Horário já reservado — escolha outro");
         setSlotSelecionado(null);
-        // recarrega agenda
+        // recarrega agenda dentro da mesma janela de 14 dias usada na carga inicial
+        const inicio = new Date();
+        inicio.setHours(0, 0, 0, 0);
+        const fim = new Date(inicio);
+        fim.setDate(fim.getDate() + 16);
         const { data } = await supabase
           .from("service_bookings" as any)
           .select("scheduled_at, duration_minutes, status")
           .eq("driver_id", driver.id)
+          .gte("scheduled_at", inicio.toISOString())
+          .lt("scheduled_at", fim.toISOString())
           .in("status", ["pending", "confirmed", "in_progress"]);
         setAgendamentos((data ?? []) as any);
       } else {
