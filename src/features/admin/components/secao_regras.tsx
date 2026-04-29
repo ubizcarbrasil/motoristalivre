@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { TIMEZONES_DISPONIVEIS } from "../constants/constantes_timezones";
 
 export function SecaoRegras() {
   const { usuario } = useAutenticacao();
@@ -17,6 +18,7 @@ export function SecaoRegras() {
   const [tentativas, setTentativas] = useState(3);
   const [permitirPrecos, setPermitirPrecos] = useState(false);
   const [permitirOfertas, setPermitirOfertas] = useState(false);
+  const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
