@@ -1,13 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DadosIdentidade, DadosConfiguracao } from "../types/tipos_onboarding";
+import type {
+  DadosIdentidade,
+  DadosConfiguracao,
+  ModuloPlataforma,
+} from "../types/tipos_onboarding";
 
 interface CriarGrupoParams {
   identidade: DadosIdentidade;
+  modulos: ModuloPlataforma[];
   planoId: string;
   configuracao: DadosConfiguracao;
 }
 
-export async function criarGrupo({ identidade, planoId, configuracao }: CriarGrupoParams) {
+export async function criarGrupo({ identidade, modulos, planoId, configuracao }: CriarGrupoParams) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuario nao autenticado");
 
@@ -22,6 +27,13 @@ export async function criarGrupo({ identidade, planoId, configuracao }: CriarGru
   );
 
   if (erroTenant || !tenantId) throw erroTenant || new Error("Erro ao criar grupo");
+
+  // Atualizar módulos ativos
+  const modulosFinais = modulos.length > 0 ? modulos : (["mobility"] as ModuloPlataforma[]);
+  await supabase
+    .from("tenants")
+    .update({ active_modules: modulosFinais } as any)
+    .eq("id", tenantId);
 
   // Criar branding
   await supabase.from("tenant_branding").insert({

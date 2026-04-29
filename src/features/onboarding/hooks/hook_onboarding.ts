@@ -1,17 +1,25 @@
 import { useState, useCallback } from "react";
-import type { DadosIdentidade, DadosConfiguracao, EtapaOnboarding } from "../types/tipos_onboarding";
+import type {
+  DadosIdentidade,
+  DadosConfiguracao,
+  EtapaOnboarding,
+  ModuloPlataforma,
+} from "../types/tipos_onboarding";
 import { IDENTIDADE_INICIAL, CONFIGURACAO_INICIAL } from "../constants/constantes_onboarding";
+
+const ETAPA_FINAL: EtapaOnboarding = 5;
 
 export function useOnboarding() {
   const [etapaAtual, setEtapaAtual] = useState<EtapaOnboarding>(0);
   const [identidade, setIdentidade] = useState<DadosIdentidade>(IDENTIDADE_INICIAL);
+  const [modulosSelecionados, setModulosSelecionados] = useState<ModuloPlataforma[]>(["mobility"]);
   const [planoSelecionado, setPlanoSelecionado] = useState("");
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
   const [configuracao, setConfiguracao] = useState<DadosConfiguracao>(CONFIGURACAO_INICIAL);
   const [enviando, setEnviando] = useState(false);
 
   const avancar = useCallback(() => {
-    setEtapaAtual((prev) => Math.min(prev + 1, 4) as EtapaOnboarding);
+    setEtapaAtual((prev) => Math.min(prev + 1, ETAPA_FINAL) as EtapaOnboarding);
   }, []);
 
   const voltar = useCallback(() => {
@@ -26,6 +34,8 @@ export function useOnboarding() {
     etapaAtual,
     identidade,
     setIdentidade,
+    modulosSelecionados,
+    setModulosSelecionados,
     planoSelecionado,
     setPlanoSelecionado,
     pagamentoConfirmado,
