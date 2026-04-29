@@ -81,6 +81,25 @@ export function SecaoRegras() {
       </div>
 
       <div className="space-y-2">
+        <Label>Fuso horário</Label>
+        <p className="text-[11px] text-muted-foreground">
+          Usado para validar agendamentos de serviços e horários de disponibilidade.
+        </p>
+        <Select value={timezone} onValueChange={setTimezone}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {TIMEZONES_DISPONIVEIS.map((tz) => (
+              <SelectItem key={tz.valor} value={tz.valor}>
+                {tz.rotulo}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label>Raio de despacho: {raio} km</Label>
         <Slider value={[raio]} onValueChange={([v]) => setRaio(v)} min={1} max={50} step={1} />
       </div>
