@@ -1493,6 +1493,7 @@ export type Database = {
           price_per_km: number
           price_per_min: number
           tenant_id: string
+          timezone: string
           transbordo_commission: number
           updated_at: string
         }
@@ -1511,6 +1512,7 @@ export type Database = {
           price_per_km?: number
           price_per_min?: number
           tenant_id: string
+          timezone?: string
           transbordo_commission?: number
           updated_at?: string
         }
@@ -1529,6 +1531,7 @@ export type Database = {
           price_per_km?: number
           price_per_min?: number
           tenant_id?: string
+          timezone?: string
           transbordo_commission?: number
           updated_at?: string
         }
