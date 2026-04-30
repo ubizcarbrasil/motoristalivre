@@ -49,7 +49,7 @@ export function SecaoCategoriasPortfolio({ servicos, portfolio, categoriasFiltra
         <Images className="w-4 h-4 text-primary" />
         <h2 className="text-sm font-semibold text-foreground">Categorias e portfólio</h2>
         <span className="ml-auto text-[11px] text-muted-foreground">
-          {portfolio.length} {portfolio.length === 1 ? "trabalho" : "trabalhos"}
+          {portfolioBase.length} {portfolioBase.length === 1 ? "trabalho" : "trabalhos"}
         </span>
       </div>
 
@@ -60,10 +60,10 @@ export function SecaoCategoriasPortfolio({ servicos, portfolio, categoriasFiltra
             onClick={() => setFiltro(CHAVE_TODAS)}
             icone={<LayoutGrid className="w-3 h-3" />}
             label="Todos"
-            quantidade={portfolio.length}
+            quantidade={portfolioBase.length}
           />
           {categorias.map((s) => {
-            const qtd = portfolio.filter((p) => p.service_type_id === s.id).length;
+            const qtd = portfolioBase.filter((p) => p.service_type_id === s.id).length;
             return (
               <ChipFiltro
                 key={s.id}
