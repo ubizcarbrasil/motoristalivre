@@ -115,6 +115,66 @@ export async function listarProfissionaisVitrine(
     .sort((a, b) => Number(b.is_verified) - Number(a.is_verified));
 }
 
+export interface ItemPreviewPortfolioTenant {
+  id: string;
+  image_url: string;
+  caption: string | null;
+  driver_id: string;
+  driver_slug: string;
+  driver_nome: string;
+}
+
+export async function listarPreviewPortfolioTenant(
+  tenantId: string,
+  limite = 6,
+): Promise<ItemPreviewPortfolioTenant[]> {
+  const { data: itens } = await supabase
+    .from("service_portfolio_items" as any)
+    .select("id, image_url, caption, driver_id, ordem, created_at")
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: false })
+    .limit(limite * 3);
+
+  const lista = ((itens ?? []) as any[]) as Array<{
+    id: string;
+    image_url: string;
+    caption: string | null;
+    driver_id: string;
+  }>;
+
+  if (lista.length === 0) return [];
+
+  const driverIds = Array.from(new Set(lista.map((i) => i.driver_id)));
+  const [{ data: drivers }, { data: users }] = await Promise.all([
+    supabase.from("drivers").select("id, slug").in("id", driverIds),
+    supabase.from("users").select("id, full_name").in("id", driverIds),
+  ]);
+
+  const mapaDriver = new Map((drivers ?? []).map((d) => [d.id, d.slug]));
+  const mapaNome = new Map((users ?? []).map((u) => [u.id, u.full_name]));
+
+  // Diversifica: no máximo 2 itens por profissional
+  const contagem = new Map<string, number>();
+  const resultado: ItemPreviewPortfolioTenant[] = [];
+  for (const it of lista) {
+    const usados = contagem.get(it.driver_id) ?? 0;
+    if (usados >= 2) continue;
+    const slug = mapaDriver.get(it.driver_id);
+    if (!slug) continue;
+    resultado.push({
+      id: it.id,
+      image_url: it.image_url,
+      caption: it.caption,
+      driver_id: it.driver_id,
+      driver_slug: slug,
+      driver_nome: mapaNome.get(it.driver_id) ?? "Profissional",
+    });
+    contagem.set(it.driver_id, usados + 1);
+    if (resultado.length >= limite) break;
+  }
+  return resultado;
+}
+
 export async function listarPortfolioProfissional(
   driverId: string,
 ): Promise<ItemPortfolio[]> {
