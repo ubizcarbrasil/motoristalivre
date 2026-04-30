@@ -1,4 +1,10 @@
-import type { PlanoOpcao, DadosIdentidade, DadosConfiguracao } from "../types/tipos_onboarding";
+import type {
+  PlanoOpcao,
+  DadosIdentidade,
+  DadosConfiguracao,
+  DadosServico,
+  ModoCobranca,
+} from "../types/tipos_onboarding";
 
 export const ETAPAS = [
   "Identidade",
@@ -109,3 +115,21 @@ export const MODOS_DESPACHO = [
 ];
 
 export const CHAVE_PIX_SIMULADA = "tribocar@pagamentos.com.br";
+
+export const MODOS_COBRANCA: { valor: ModoCobranca; titulo: string; rotuloPreco: string; rotuloDuracao: string; unidadeDuracao: string }[] = [
+  { valor: "fixed", titulo: "Valor fixo", rotuloPreco: "Valor (R$)", rotuloDuracao: "Duração estimada (min)", unidadeDuracao: "min" },
+  { valor: "hourly", titulo: "Por hora", rotuloPreco: "Valor por hora (R$)", rotuloDuracao: "Duração estimada (h)", unidadeDuracao: "h" },
+  { valor: "daily", titulo: "Por diária", rotuloPreco: "Valor da diária (R$)", rotuloDuracao: "Duração (dias)", unidadeDuracao: "dias" },
+];
+
+export const SERVICO_INICIAL: Omit<DadosServico, "id"> = {
+  nome: "",
+  descricao: "",
+  modoCobranca: "fixed",
+  preco: 0,
+  duracao: 60,
+  depositoAtivo: false,
+  depositoTipo: "percent",
+  depositoPct: 30,
+  depositoValor: 0,
+};
