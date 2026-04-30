@@ -8,6 +8,7 @@ import { useHookOnboardingProfissional } from "../hooks/hook_onboarding_profissi
 import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
+import { AbaMeusLinksDono } from "../components/aba_meus_links_dono";
 import { AbaConfiguracoes } from "../components/aba_configuracoes";
 import { AbaTribo } from "../components/aba_tribo";
 import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
@@ -70,7 +71,14 @@ export default function PaginaPainel() {
 
   // Se não é motorista mas é dono de tribo, força aba "tribo"
   useEffect(() => {
-    if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
+    if (
+      podeAcessarComoDono &&
+      aba !== "tribo" &&
+      aba !== "meus_links" &&
+      aba !== "carteira" &&
+      aba !== "perfil" &&
+      aba !== "configuracoes"
+    ) {
       setAba("tribo");
     }
   }, [podeAcessarComoDono, aba, setAba]);
@@ -143,6 +151,9 @@ export default function PaginaPainel() {
               semPerfilDriver={!perfil}
               onAtivarMotorista={recarregar}
             />
+          )}
+          {aba === "meus_links" && (
+            <AbaMeusLinksDono tribo={triboAtiva} modulosAtivos={triboAtiva.modulosAtivos} />
           )}
           {aba === "carteira" && <AbaCarteira userId={userId} />}
           {aba === "configuracoes" && (
@@ -221,7 +232,11 @@ export default function PaginaPainel() {
       )}
 
       {aba === "meus_links" && (
-        <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
+        <AbaMeusLinks
+          perfil={perfil}
+          tenant={triboAtiva ? { id: triboAtiva.id, name: triboAtiva.nome, slug: triboAtiva.slug } : tenant}
+          ehAdminGrupo={ehAdmin || (triboAtiva?.papel === "dono")}
+        />
       )}
 
       {aba === "carteira" && <AbaCarteira userId={userId} />}

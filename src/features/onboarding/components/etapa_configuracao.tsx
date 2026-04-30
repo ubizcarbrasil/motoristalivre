@@ -82,7 +82,11 @@ export function EtapaConfiguracao({
       <SecaoComissaoCashback dados={dados} onChange={onChange} />
 
       {mostrarResumo && identidade && (
-        <ResumoConfirmacao identidade={identidade} modulos={modulos} />
+        <ResumoConfirmacao
+          identidade={identidade}
+          modulos={modulos}
+          corPrimaria={identidade.corPrimaria}
+        />
       )}
 
       <div className="flex gap-3">
