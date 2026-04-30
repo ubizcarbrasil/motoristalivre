@@ -58,7 +58,7 @@ export function useHookOnboardingProfissional(
       const [{ data: driver }, { data: user }, { data: branding }] = await Promise.all([
         supabase
           .from("drivers")
-          .select("avatar_url:cover_url, bio, cover_url, professional_type, service_categories")
+          .select("bio, cover_url, professional_type, service_categories")
           .eq("id", driverId)
           .maybeSingle(),
         supabase
