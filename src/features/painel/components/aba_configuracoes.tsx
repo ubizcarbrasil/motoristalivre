@@ -63,6 +63,7 @@ export function AbaConfiguracoes({
   const [carregando, setCarregando] = useState(true);
   const [idCopiado, setIdCopiado] = useState(false);
   const [salvandoTipo, setSalvandoTipo] = useState(false);
+  const [onboardingAberto, setOnboardingAberto] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -71,6 +72,13 @@ export function AbaConfiguracoes({
     disponibilidade,
     recarregar: recarregarServico,
   } = useHookPerfilServico(driverId);
+
+  const {
+    dados: dadosOnboarding,
+    camposFaltantes,
+    precisaOnboarding,
+    recarregar: recarregarOnboarding,
+  } = useHookOnboardingProfissional(driverId, tenantId);
 
   const idCurto = driverId.slice(0, 8);
 
