@@ -160,6 +160,8 @@ export default function PaginaOnboarding() {
             onVoltar={voltarFluxo}
             rotuloAvancar={fluxoSolo && naUltima ? "Concluir" : undefined}
             enviando={enviando}
+            identidade={identidade}
+            mostrarResumo={fluxoSolo && naUltima}
           />
         )}
 
