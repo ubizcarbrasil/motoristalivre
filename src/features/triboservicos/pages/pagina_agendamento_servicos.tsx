@@ -5,6 +5,7 @@ import { TemaServicos } from "../components/tema_servicos";
 import { AgendamentoServico } from "@/features/passageiro/components/agendamento_servico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
 import { resolverDriverVitrine } from "../services/servico_vitrine_publica";
+import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 
 export default function PaginaAgendamentoServicos() {
   const { slug, driver_slug } = useParams<{ slug: string; driver_slug: string }>();
