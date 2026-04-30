@@ -12,6 +12,7 @@ import { ListaAvaliacoes } from "../components/lista_avaliacoes";
 import { SecaoServicosPublica } from "../components/secao_servicos_publica";
 import { SecaoDisponibilidadePublica } from "../components/secao_disponibilidade_publica";
 import { SecaoEquipePublica } from "../components/secao_equipe_publica";
+import { SecaoCategoriasPortfolio } from "../components/secao_categorias_portfolio";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ export default function PaginaPerfilMotorista() {
 
         {ofereceServico && (
           <>
+            <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
             <SecaoServicosPublica
               servicos={servicos}
               portfolio={portfolio}
