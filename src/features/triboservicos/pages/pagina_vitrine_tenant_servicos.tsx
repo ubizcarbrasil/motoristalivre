@@ -81,10 +81,7 @@ export default function PaginaVitrineTenantServicos() {
     );
   }
 
-  const titulo = `${tenant.name} — Profissionais e agendamento | TriboServiços`;
-  const descricao =
-    tenant.branding?.description ??
-    `Conheça os profissionais de ${tenant.name} e agende seu serviço online.`;
+
 
   return (
     <TemaServicos>
