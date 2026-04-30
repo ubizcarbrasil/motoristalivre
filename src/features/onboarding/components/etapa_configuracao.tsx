@@ -3,8 +3,10 @@ import { toast } from "sonner";
 import { SecaoConfiguracaoMobilidade } from "./secao_configuracao_mobilidade";
 import { SecaoConfiguracaoServicos } from "./secao_configuracao_servicos";
 import { SecaoComissaoCashback } from "./secao_comissao_cashback";
+import { ResumoConfirmacao } from "./resumo_confirmacao";
 import type {
   DadosConfiguracao,
+  DadosIdentidade,
   DadosServico,
   ModuloPlataforma,
 } from "../types/tipos_onboarding";
@@ -19,6 +21,8 @@ interface EtapaConfiguracaoProps {
   onVoltar: () => void;
   rotuloAvancar?: string;
   enviando?: boolean;
+  identidade?: DadosIdentidade;
+  mostrarResumo?: boolean;
 }
 
 export function EtapaConfiguracao({
