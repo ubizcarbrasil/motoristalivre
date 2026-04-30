@@ -3,8 +3,10 @@ import { toast } from "sonner";
 import { SecaoConfiguracaoMobilidade } from "./secao_configuracao_mobilidade";
 import { SecaoConfiguracaoServicos } from "./secao_configuracao_servicos";
 import { SecaoComissaoCashback } from "./secao_comissao_cashback";
+import { ResumoConfirmacao } from "./resumo_confirmacao";
 import type {
   DadosConfiguracao,
+  DadosIdentidade,
   DadosServico,
   ModuloPlataforma,
 } from "../types/tipos_onboarding";
@@ -19,6 +21,8 @@ interface EtapaConfiguracaoProps {
   onVoltar: () => void;
   rotuloAvancar?: string;
   enviando?: boolean;
+  identidade?: DadosIdentidade;
+  mostrarResumo?: boolean;
 }
 
 export function EtapaConfiguracao({
@@ -31,6 +35,8 @@ export function EtapaConfiguracao({
   onVoltar,
   rotuloAvancar,
   enviando,
+  identidade,
+  mostrarResumo,
 }: EtapaConfiguracaoProps) {
   const temMobilidade = modulos.includes("mobility");
   const temServicos = modulos.includes("services");
@@ -74,6 +80,10 @@ export function EtapaConfiguracao({
       )}
 
       <SecaoComissaoCashback dados={dados} onChange={onChange} />
+
+      {mostrarResumo && identidade && (
+        <ResumoConfirmacao identidade={identidade} modulos={modulos} />
+      )}
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onVoltar} className="flex-1" disabled={enviando}>
