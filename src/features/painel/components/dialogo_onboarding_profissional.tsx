@@ -207,7 +207,12 @@ export function DialogoOnboardingProfissional({
           </DialogDescription>
         </DialogHeader>
 
-        <BarraProgresso passoAtual={passo} total={TOTAL_PASSOS} />
+        <div className="flex items-center justify-between gap-2">
+          <BarraProgresso passoAtual={passo} total={TOTAL_PASSOS} />
+        </div>
+        <div className="flex justify-end -mt-1">
+          <IndicadorAutoSave status={statusAutoSave} />
+        </div>
 
         <div className="py-2">
           {passo === 0 && (
