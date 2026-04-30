@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Ban } from "lucide-react";
 import type { DisponibilidadeProfissional } from "@/features/servicos/types/tipos_servicos";
 
 interface Props {
@@ -23,6 +23,7 @@ function formatarHora(hora: string): string {
 interface LinhaDisponibilidade {
   dia: number;
   intervalos: string[];
+  fechado: boolean;
 }
 
 export function BlocosDisponibilidade({ blocos }: Props) {
@@ -35,12 +36,21 @@ export function BlocosDisponibilidade({ blocos }: Props) {
       lista.push(intervalo);
       agrupado.set(b.day_of_week, lista);
     }
-    return Array.from(agrupado.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([dia, intervalos]) => ({ dia, intervalos: intervalos.sort() }));
+    // Sempre lista os 7 dias, começando na segunda
+    const ordem = [1, 2, 3, 4, 5, 6, 0];
+    return ordem.map((dia) => {
+      const intervalos = agrupado.get(dia);
+      return {
+        dia,
+        intervalos: intervalos ? intervalos.sort() : [],
+        fechado: !intervalos || intervalos.length === 0,
+      };
+    });
   }, [blocos]);
 
-  if (linhas.length === 0) {
+  const todosFechados = linhas.every((l) => l.fechado);
+
+  if (todosFechados) {
     return (
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-foreground">Disponibilidade</h2>
@@ -60,13 +70,24 @@ export function BlocosDisponibilidade({ blocos }: Props) {
             key={linha.dia}
             className="flex items-center justify-between px-3 py-2"
           >
-            <span className="text-sm font-medium text-foreground">
+            <span
+              className={`text-sm font-medium ${
+                linha.fechado ? "text-muted-foreground/60" : "text-foreground"
+              }`}
+            >
               {DIAS_NOMES[linha.dia]}
             </span>
-            <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span>{linha.intervalos.join(" · ")}</span>
-            </div>
+            {linha.fechado ? (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+                <Ban className="w-3 h-3" />
+                <span>Fechado</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{linha.intervalos.join(" · ")}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
