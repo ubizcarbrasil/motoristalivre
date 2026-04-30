@@ -1,62 +1,43 @@
-
 ## Problema
+Upload de logo/capa no onboarding falha com **"new row violates row-level security policy"**.
 
-Hoje a tela `/cadastrar` oferece apenas 4 opções: **Criar grupo, Motorista, Passageiro, Afiliado**. Não existe entrada para o **profissional de serviço** (barbeiro, manicure, estética, etc.), apesar do backend já suportar via `drivers.professional_type` e `service_categories`.
+**Causa raiz:** as RLS policies do bucket `branding` no Storage só permitem upload por `tenant_admin` em pasta com tenant_id válido. Durante o onboarding o usuário ainda **não tem `tenant_id`** em `public.users` (a tribo está sendo criada agora), então nenhuma policy `WITH CHECK` aprova o INSERT.
 
-Resultado: o profissional autônomo não tem caminho claro de cadastro — precisaria criar um grupo manualmente e depois mudar o tipo dentro do painel.
+## Solução
+Reescrever as policies do bucket `branding` para aceitar uploads em uma pasta cujo primeiro segmento seja **`auth.uid()`** (staging do onboarding) **OU** o `tenant_id` do usuário (uso normal pós-criação).
 
-## Solução proposta
+O componente `campo_upload_imagem.tsx` já usa `tenant_id ?? userId` como pasta, então só falta liberar isso no Storage.
 
-Adicionar a opção **"Profissional"** no seletor de tipo de cadastro, criando uma conta + tribo própria automaticamente (como acontece em "Criar grupo"), mas já marcando o usuário como profissional autônomo. O fluxo termina caindo no onboarding de profissional já existente em `/painel`, que coleta os dados completos (categorias, bio, capa, etc.).
+## Migration
 
-### Mudanças na tela de cadastro (`pagina_cadastro.tsx`)
+```sql
+-- Remove policies antigas conflitantes
+DROP POLICY IF EXISTS "Authenticated users can upload branding files" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can update branding files" ON storage.objects;
+DROP POLICY IF EXISTS "Tenant admins can upload branding" ON storage.objects;
+DROP POLICY IF EXISTS "Tenant admins can update branding" ON storage.objects;
+DROP POLICY IF EXISTS "Tenant admins can delete branding" ON storage.objects;
 
-1. Expandir o tipo `TipoCadastro` para incluir `"profissional"`.
-2. Adicionar a 5ª opção no grid de seleção, com label **"Profissional"** e descrição curta tipo: *"Para barbeiros, manicures, estetistas e outros autônomos."*
-3. O profissional **não** precisa de slug (cria a própria tribo, igual a "Criar grupo").
-4. No `signUp`, enviar `metadata.role = "tenant_admin"` e um flag `metadata.intent = "professional"` para diferenciar do dono de grupo de mobilidade.
-5. Após signup (e-mail/senha ou Google), redirecionar para `/onboarding` com query `?modo=profissional` — a página de onboarding cria a tribo e pré-popula `drivers.professional_type`.
+-- SELECT público (bucket já é public)
+CREATE POLICY "Branding publicly readable"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'branding');
 
-### Mudanças no onboarding de tribo (`/onboarding`)
+-- INSERT/UPDATE/DELETE: pasta = auth.uid() OU pasta = tenant_id do usuário
+CREATE POLICY "Branding upload own folder"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'branding' AND (
+      (storage.foldername(name))[1] = auth.uid()::text
+      OR (storage.foldername(name))[1] = public.get_user_tenant_id(auth.uid())::text
+    )
+  );
 
-1. Ler `?modo=profissional` na URL.
-2. Quando for profissional: chamar `create_tenant_with_owner` (mesmo RPC já usado), depois `ensure_driver_profile` e atualizar `drivers.professional_type` para algo diferente de `"driver"` (por exemplo `"service"` — confirmar valor padrão lendo dados existentes).
-3. Redirecionar direto para `/painel`, onde o **banner de onboarding profissional** (já implementado) vai pedir os campos restantes (avatar, bio, categorias, capa, cidade, telefone).
+-- (mesma regra para UPDATE e DELETE)
+```
 
-### Rotas amigáveis
-
-Adicionar aliases em `src/App.tsx`:
-- `/profissional/cadastro` → `/cadastrar?tipo=profissional`
-- `/profissional/criar-conta` → `/cadastrar?tipo=profissional`
-
-Isso espelha o que já existe para `/profissional/login`.
-
-### Texto e UX
-
-- Subtítulo dinâmico quando `tipoCadastro === "profissional"`: *"Crie sua agenda e portfólio em poucos passos."*
-- Ao escolher "Profissional", esconder campo de slug (não é necessário).
-- Tela de "verifique seu email" mostra mensagem específica: *"Após confirmar, vamos criar seu espaço e pedir alguns dados rápidos."*
-
-## Detalhes técnicos
-
-**Arquivos editados:**
-- `src/features/autenticacao/pages/pagina_cadastro.tsx` — adicionar opção "profissional", lógica de metadata e redirect
-- `src/features/onboarding/pages/pagina_onboarding.tsx` (ou equivalente) — ler `?modo=profissional` e setar `professional_type` ao criar tribo
-- `src/App.tsx` — adicionar rotas alias
-
-**Sem mudanças de banco:** as colunas `drivers.professional_type` e `drivers.service_categories` já existem. O fluxo apenas as utiliza.
-
-**Encadeamento com onboarding existente:** o wizard de 4 passos no `/painel` (já implementado) é a fonte da verdade para coletar dados completos do profissional. Esta mudança apenas garante que ele chegue lá com a tribo e o registro `drivers` já criados.
-
-## Fora do escopo
-
-- Não vou alterar o wizard de onboarding profissional (já existe e funciona).
-- Não vou criar páginas de marketing/landing específicas para profissionais.
-- Não vou mexer em RLS ou triggers.
-
-## Próximo passo
-
-Antes de implementar, preciso confirmar 2 pontos rápidos com você:
-
-1. **Valor de `professional_type`**: hoje o default é `"driver"`. Para o profissional autônomo, qual valor devo usar? Sugestão: `"service"` (genérico, e o tipo específico — barber, nails, etc. — entra como categoria).
-2. **Onboarding de tribo**: o profissional deve passar pela tela `/onboarding` (escolher nome/slug da tribo) ou eu gero automaticamente a partir do nome dele e mando direto pro `/painel`?
+## Resultado
+- Onboarding: usuário sobe imagem em `{userId}/logo/...` ✅
+- Pós-criação: usuário sobe em `{tenantId}/logo/...` ✅
+- Outros tenants continuam isolados (não conseguem mexer em pastas alheias).
+- Bucket continua público para leitura (URLs funcionam normalmente).
