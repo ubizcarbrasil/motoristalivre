@@ -1,20 +1,27 @@
 import { useState } from "react";
-import { Car, Share2, Users, Copy, QrCode, Send } from "lucide-react";
+import { Car, Share2, Users, Copy, QrCode, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ModalQrCode } from "./modal_qr_code";
 import type { CanalLink } from "../types/tipos_meus_links";
 
-const ICONES = { motorista: Car, afiliado: Share2, grupo: Users } as const;
+const ICONES = {
+  motorista: Car,
+  afiliado: Share2,
+  grupo: Users,
+  servicos: Sparkles,
+} as const;
 const CORES_HANDLE = {
   roxo: "text-purple-400",
   azul: "text-blue-400",
   verde: "text-primary",
+  dourado: "text-amber-400",
 } as const;
 const CORES_BORDA = {
   roxo: "border-purple-500/30",
   azul: "border-blue-500/30",
   verde: "border-primary/30",
+  dourado: "border-amber-500/40",
 } as const;
 
 interface CardLinkCanalProps {
