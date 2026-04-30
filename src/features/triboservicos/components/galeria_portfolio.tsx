@@ -4,9 +4,10 @@ import type { ItemPortfolio } from "../services/servico_vitrine_publica";
 
 interface Props {
   itens: ItemPortfolio[];
+  mensagemVazio?: string;
 }
 
-export function GaleriaPortfolio({ itens }: Props) {
+export function GaleriaPortfolio({ itens, mensagemVazio }: Props) {
   const [aberto, setAberto] = useState<ItemPortfolio | null>(null);
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export function GaleriaPortfolio({ itens }: Props) {
     return (
       <div className="rounded-xl border border-dashed border-border p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Este profissional ainda não publicou trabalhos no portfólio.
+          {mensagemVazio ??
+            "Este profissional ainda não publicou trabalhos no portfólio."}
         </p>
       </div>
     );
