@@ -63,6 +63,24 @@ export function usePainel() {
         localStorage.removeItem("tribocar_pending_driver_join");
       }
 
+      // Processa intenção pendente de profissional autônomo (vinda do /cadastro?tipo=profissional)
+      const profissionalPendente = localStorage.getItem("tribocar_pending_professional_setup");
+      if (profissionalPendente) {
+        try {
+          const { criarTriboProfissional } = await import(
+            "@/features/autenticacao/services/servico_criar_tribo_profissional"
+          );
+          const nomePref =
+            profissionalPendente !== "1"
+              ? profissionalPendente
+              : usuario?.user_metadata?.full_name || usuario?.user_metadata?.name || usuario?.email || "Profissional";
+          await criarTriboProfissional(nomePref);
+        } catch {
+          // silencioso — banner de onboarding cobre o caso
+        }
+        localStorage.removeItem("tribocar_pending_professional_setup");
+      }
+
       const [p, s, c, d, t, ride] = await Promise.all([
         buscarPerfilMotorista(userId),
         buscarEstatisticasHoje(userId),
