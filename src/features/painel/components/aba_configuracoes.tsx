@@ -388,6 +388,22 @@ export function AbaConfiguracoes({
           Criar meu próprio grupo
         </Button>
       </div>
+
+      <DialogoOnboardingProfissional
+        aberto={onboardingAberto}
+        driverId={driverId}
+        tenantId={tenantId}
+        dadosIniciais={dadosOnboarding}
+        onConcluido={async () => {
+          await recarregarOnboarding();
+          await recarregarServico();
+          setOnboardingAberto(false);
+        }}
+        onFechar={() => {
+          // Se ainda falta algo, mantemos o banner; o usuário pode fechar e voltar depois.
+          setOnboardingAberto(false);
+        }}
+      />
     </div>
   );
 }
