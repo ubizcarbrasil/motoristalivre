@@ -28,6 +28,9 @@ import PaginaLandingServicos from "@/features/triboservicos/pages/pagina_landing
 import PaginaEntrarServicos from "@/features/triboservicos/pages/pagina_entrar_servicos";
 import PaginaCadastroTribo from "@/features/triboservicos/pages/pagina_cadastro_tribo";
 import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_cadastro_profissional";
+import PaginaVitrineTenantServicos from "@/features/triboservicos/pages/pagina_vitrine_tenant_servicos";
+import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pagina_perfil_profissional_servicos";
+import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +63,11 @@ const App = () => (
             <Route path="/s/entrar" element={<PaginaEntrarServicos />} />
             <Route path="/s/cadastro/tribo" element={<PaginaCadastroTribo />} />
             <Route path="/s/cadastro/profissional" element={<PaginaCadastroProfissional />} />
+
+            {/* TriboServiços — vitrine pública e perfil do profissional */}
+            <Route path="/s/:slug" element={<PaginaVitrineTenantServicos />} />
+            <Route path="/s/:slug/:driver_slug" element={<PaginaPerfilProfissionalServicos />} />
+            <Route path="/s/:slug/:driver_slug/agendar" element={<PaginaAgendamentoServicos />} />
 
             {/* Rotas protegidas */}
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />
