@@ -65,7 +65,10 @@ async function statsServicos(driverId: string): Promise<StatsCanalMes> {
     .eq("driver_id", driverId)
     .gte("created_at", desde);
 
-  const lista = (bookings ?? []) as Array<{ price_agreed: number | null; status: string }>;
+  const lista = ((bookings ?? []) as unknown) as Array<{
+    price_agreed: number | null;
+    status: string;
+  }>;
   const concluidos = lista.filter((b) => b.status === "completed");
   const corridas = concluidos.length;
   const ganhos = concluidos.reduce((a, b) => a + Number(b.price_agreed ?? 0), 0);
