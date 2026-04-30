@@ -92,7 +92,7 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                   </span>
                 </div>
 
-                <div className="bg-background">
+                <MemoryRouter><div className="bg-background">
                   {/* Cabeçalho */}
                   <div className="px-5 py-5 space-y-3">
                     <div className="flex items-center gap-3">
@@ -198,7 +198,7 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                       )}
                     </>
                   )}
-                </div>
+                </div></MemoryRouter>
               </div>
             </div>
           </div>
