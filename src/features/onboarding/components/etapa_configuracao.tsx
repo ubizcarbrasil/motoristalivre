@@ -35,6 +35,8 @@ export function EtapaConfiguracao({
   onVoltar,
   rotuloAvancar,
   enviando,
+  identidade,
+  mostrarResumo,
 }: EtapaConfiguracaoProps) {
   const temMobilidade = modulos.includes("mobility");
   const temServicos = modulos.includes("services");
