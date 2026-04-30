@@ -216,15 +216,37 @@ export function AbaConfiguracoes({
             onAtualizar={recarregarServico}
           />
 
-          <SecaoCategoriasAdmin driverId={driverId} />
+          {precisaOnboarding ? (
+            <div className="space-y-3">
+              <BloqueioOnboarding
+                titulo="Categorias visíveis"
+                descricao="Conclua seu cadastro profissional para gerenciar as categorias da vitrine."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+              <BloqueioOnboarding
+                titulo="Portfólio de serviços"
+                descricao="Conclua seu cadastro para enviar fotos e organizar seu portfólio."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+              <BloqueioOnboarding
+                titulo="Equipe"
+                descricao="Conclua seu cadastro para adicionar membros à sua equipe pública."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+            </div>
+          ) : (
+            <>
+              <SecaoCategoriasAdmin driverId={driverId} />
 
-          <SecaoPortfolioAdmin
-            driverId={driverId}
-            tenantId={tenantId}
-            servicos={servicos}
-          />
+              <SecaoPortfolioAdmin
+                driverId={driverId}
+                tenantId={tenantId}
+                servicos={servicos}
+              />
 
-          <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+              <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+            </>
+          )}
 
           <BotaoPreviewVitrine driverId={driverId} />
         </>
