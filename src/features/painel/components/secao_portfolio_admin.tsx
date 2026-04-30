@@ -147,6 +147,24 @@ export function SecaoPortfolioAdmin({ driverId, tenantId, servicos }: Props) {
     }
   };
 
+  const reordenarGrupo = async (
+    serviceTypeId: string,
+    novaOrdem: ItemPortfolio[],
+  ) => {
+    const anteriores = itens;
+    const outros = itens.filter((i) => i.service_type_id !== serviceTypeId);
+    setItens([...outros, ...novaOrdem]);
+
+    try {
+      await reordenarItensPortfolio(
+        novaOrdem.map((it, idx) => ({ id: it.id, ordem: idx })),
+      );
+    } catch {
+      setItens(anteriores);
+      toast.error("Não foi possível salvar a nova ordem");
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
