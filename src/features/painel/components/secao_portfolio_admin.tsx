@@ -228,17 +228,16 @@ export function SecaoPortfolioAdmin({ driverId, tenantId, servicos }: Props) {
                       + Adicionar
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {grupo.itens.map((item) => (
-                      <CardItemPortfolio
-                        key={item.id}
-                        item={item}
-                        servico={grupo.servico}
-                        onEditar={() => setModoDialogo({ tipo: "editar", item })}
-                        onRemover={() => setItemRemover(item)}
-                      />
-                    ))}
-                  </div>
+                  <GradePortfolioArrastavel
+                    itens={grupo.itens}
+                    servico={grupo.servico}
+                    onEditar={(item) => setModoDialogo({ tipo: "editar", item })}
+                    onRemover={(item) => setItemRemover(item)}
+                    onReordenar={(novaOrdem) => reordenarGrupo(grupo.id, novaOrdem)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Arraste pelo ícone <span className="text-foreground">⋮⋮</span> para reordenar.
+                  </p>
                 </div>
               ))}
             </div>
