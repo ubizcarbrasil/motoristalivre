@@ -197,6 +197,11 @@ export default function PaginaCadastro() {
               Após confirmar, sua solicitação para entrar no grupo será enviada e ficará aguardando aprovação do dono.
             </p>
           )}
+          {tipoCadastro === "profissional" && (
+            <p className="text-xs text-muted-foreground">
+              Após confirmar, vamos preparar seu espaço e pedir alguns dados rápidos para sua vitrine.
+            </p>
+          )}
           <Button variant="outline" className="w-full" onClick={() => navigate("/entrar")}>
             Voltar para login
           </Button>
@@ -207,6 +212,7 @@ export default function PaginaCadastro() {
 
   const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
     { valor: "grupo", label: "Criar grupo" },
+    { valor: "profissional", label: "Profissional" },
     { valor: "motorista", label: "Motorista" },
     { valor: "passageiro", label: "Passageiro" },
     { valor: "afiliado", label: "Afiliado" },
