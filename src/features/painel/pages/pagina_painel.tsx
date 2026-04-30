@@ -71,7 +71,14 @@ export default function PaginaPainel() {
 
   // Se não é motorista mas é dono de tribo, força aba "tribo"
   useEffect(() => {
-    if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
+    if (
+      podeAcessarComoDono &&
+      aba !== "tribo" &&
+      aba !== "meus_links" &&
+      aba !== "carteira" &&
+      aba !== "perfil" &&
+      aba !== "configuracoes"
+    ) {
       setAba("tribo");
     }
   }, [podeAcessarComoDono, aba, setAba]);
