@@ -1,10 +1,12 @@
+import { MemoryRouter } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { BadgeCheck, ShieldCheck, Eye, Loader2, RefreshCw, ExternalLink, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useHookPreviewVitrine } from "../hooks/hook_preview_vitrine";
 import { SecaoCategoriasPortfolio } from "@/features/motorista/components/secao_categorias_portfolio";
+import { ChipsCategorias } from "@/features/motorista/components/chips_categorias";
+import { SecaoEquipePublica } from "@/features/motorista/components/secao_equipe_publica";
 
 interface Props {
   aberto: boolean;
