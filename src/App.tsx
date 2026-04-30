@@ -82,8 +82,11 @@ const App = () => (
             <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
             <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
             <Route path="/:slug/perfil/:driver_slug" element={<PaginaPerfilMotorista />} />
-            <Route path="/:slug/servicos" element={<ProvedorTenant><PaginaServicosTenant /></ProvedorTenant>} />
-            <Route path="/:slug/servicos/:driver_slug" element={<ProvedorTenant><PaginaServicosMotorista /></ProvedorTenant>} />
+            <Route path="/:slug/servicos" element={<Navigate to="/s/:slug" replace />} />
+            <Route
+              path="/:slug/servicos/:driver_slug"
+              element={<RedirectVitrineServicosLegado />}
+            />
             <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
 
             <Route path="*" element={<NotFound />} />
