@@ -8,6 +8,7 @@ import { useHookOnboardingProfissional } from "../hooks/hook_onboarding_profissi
 import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
+import { AbaMeusLinksDono } from "../components/aba_meus_links_dono";
 import { AbaConfiguracoes } from "../components/aba_configuracoes";
 import { AbaTribo } from "../components/aba_tribo";
 import { TelaAguardandoAprovacao } from "../components/tela_aguardando_aprovacao";
