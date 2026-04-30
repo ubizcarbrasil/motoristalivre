@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
+import { criarTriboProfissional } from "../services/servico_criar_tribo_profissional";
 
-type TipoCadastro = "grupo" | "motorista" | "passageiro" | "afiliado";
+type TipoCadastro = "grupo" | "motorista" | "passageiro" | "afiliado" | "profissional";
 
 function resolverTipoInicial(valor: string | null): TipoCadastro {
   if (valor === "motorista") return "motorista";
   if (valor === "passageiro") return "passageiro";
   if (valor === "afiliado") return "afiliado";
+  if (valor === "profissional") return "profissional";
   return "grupo";
 }
 
