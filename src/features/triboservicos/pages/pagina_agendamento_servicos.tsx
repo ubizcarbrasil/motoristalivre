@@ -41,6 +41,18 @@ export default function PaginaAgendamentoServicos() {
 
   const dados = useDadosServicoMotorista(resolucao?.driverId ?? null);
 
+  const tituloSeo = dados.full_name
+    ? `Agendar com ${dados.full_name} — TriboServiços`
+    : "Agendar serviço — TriboServiços";
+  const descricaoSeo = dados.full_name
+    ? `Escolha data e horário para agendar um serviço com ${dados.full_name}.`
+    : undefined;
+  const canonicalSeo =
+    slug && driver_slug
+      ? `${window.location.origin}/s/${slug}/${driver_slug}/agendar`
+      : undefined;
+  useSeoBasico({ titulo: tituloSeo, descricao: descricaoSeo, canonical: canonicalSeo });
+
   if (carregando || (resolucao && dados.carregando)) {
     return (
       <TemaServicos>
