@@ -38,6 +38,20 @@ export const LINKS_ACESSO: LinkAcesso[] = [
     categoria: "motorista",
   },
   {
+    id: "servicos_lista_tenant",
+    titulo: "Lista de profissionais (demo)",
+    descricao: "Página /demo/servicos com todos os profissionais que oferecem serviços",
+    caminho: "/demo/servicos",
+    categoria: "servicos",
+  },
+  {
+    id: "servicos_agendar_dedicado",
+    titulo: "Agendar serviço — rota dedicada",
+    descricao: "Página /demo/servicos/motorista-demo (fluxo direto de agendamento)",
+    caminho: "/demo/servicos/motorista-demo",
+    categoria: "servicos",
+  },
+  {
     id: "servicos_perfil_publico",
     titulo: "Perfil público do profissional (demo)",
     descricao: "Página pública com serviços, disponibilidade e agendamento",
