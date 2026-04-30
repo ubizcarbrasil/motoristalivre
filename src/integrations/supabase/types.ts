@@ -749,6 +749,39 @@ export type Database = {
           },
         ]
       }
+      professional_team_members: {
+        Row: {
+          created_at: string
+          headline: string | null
+          id: string
+          member_driver_id: string
+          ordem: number
+          owner_driver_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          headline?: string | null
+          id?: string
+          member_driver_id: string
+          ordem?: number
+          owner_driver_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          headline?: string | null
+          id?: string
+          member_driver_id?: string
+          ordem?: number
+          owner_driver_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -1267,6 +1300,87 @@ export type Database = {
           },
         ]
       }
+      service_payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          client_id: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          paid_at: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          client_id?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          client_id?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_portfolio_items: {
+        Row: {
+          caption: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          image_url: string
+          ordem: number
+          service_type_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          image_url: string
+          ordem?: number
+          service_type_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          image_url?: string
+          ordem?: number
+          service_type_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_reminders: {
         Row: {
           booking_id: string | null
@@ -1328,6 +1442,9 @@ export type Database = {
       service_types: {
         Row: {
           created_at: string
+          deposit_amount: number | null
+          deposit_enabled: boolean
+          deposit_percent: number | null
           description: string | null
           driver_id: string
           duration_minutes: number
@@ -1341,6 +1458,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deposit_amount?: number | null
+          deposit_enabled?: boolean
+          deposit_percent?: number | null
           description?: string | null
           driver_id: string
           duration_minutes?: number
@@ -1354,6 +1474,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deposit_amount?: number | null
+          deposit_enabled?: boolean
+          deposit_percent?: number | null
           description?: string | null
           driver_id?: string
           duration_minutes?: number

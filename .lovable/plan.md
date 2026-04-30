@@ -1,136 +1,123 @@
-## Plano: finalizar módulo Serviços (TriboServ)
 
-Três frentes, sem mexer em nada do fluxo de Mobilidade existente.
+# Experiência aprimorada de contratação
 
----
+Objetivo: transformar o link do profissional em uma vitrine completa antes de agendar (categorias, portfólio, equipe/afiliados) e tornar o fluxo de horário/preço inequívoco, com cobrança de sinal para confirmar.
 
-### PARTE 1 — `aba_configuracoes.tsx`: integrar seções de Serviços
+## 1. Perfil público enriquecido
 
-**Arquivo:** `src/features/painel/components/aba_configuracoes.tsx`
+### 1.1 Portfólio de trabalhos por serviço
+Novo recurso para o profissional anexar imagens de exemplo a cada `service_type`.
 
-Mudanças:
-- Importar `useHookPerfilServico`, `SecaoMeusServicos`, `SecaoMinhaDisponibilidade`.
-- Importar `Select` do shadcn e adicionar bloco "Tipo de profissional" com 3 opções: `driver`, `service_provider`, `both`. Ao mudar, executa `UPDATE drivers SET professional_type = ? WHERE id = driverId` e chama `recarregar()` do hook.
-- Logo abaixo do select, se `professionalType` for `service_provider` ou `both`:
-  - `<Separator />` com label "Módulo Serviços"
-  - `<SecaoMeusServicos driverId tenantId servicos={servicos} onAtualizar={recarregar} />`
-  - `<SecaoMinhaDisponibilidade driverId tenantId blocos={disponibilidade} onAtualizar={recarregar} />`
-- Posicionamento: após o bloco de "Som de chamada" / antes da seção "Grupos e rede".
+- Tabela nova `service_portfolio_items` (driver_id, service_type_id, image_url, caption, ordem).
+- Bucket `branding` reaproveitado (já existe e é público).
+- Painel do profissional → aba Configurações → editor por serviço com upload (até 6 imagens por serviço).
+- No perfil público, cada card de serviço ganha um carrossel horizontal com as miniaturas. Clique abre lightbox.
 
----
+### 1.2 Categorias de serviço claras
+- Já existe `drivers.service_categories text[]`. Hoje não é exibido.
+- Mostrar como chips logo abaixo do nome no `HeaderPerfil` (ex.: “Estética”, “Manicure”, “Limpeza”).
+- No painel, formulário com lista controlada (constantes_categorias_servico) + free-text complementar.
 
-### PARTE 2 — Perfil público do profissional
+### 1.3 Equipe / afiliados do profissional
+Modelo: outros profissionais do mesmo tenant que o cliente também pode contratar a partir do mesmo link (afiliação cruzada de áreas diferentes).
 
-**`src/features/motorista/types/tipos_perfil_motorista.ts`**
-- Adicionar ao `PerfilPublicoMotorista`: `professional_type`, `credential_verified`, `credential_type`, `credential_number`.
+- Nova tabela `professional_team_members` (owner_driver_id, member_driver_id, headline, ordem). RLS: `owner_driver_id = auth.uid()` para escrita; SELECT público.
+- Painel: aba “Minha equipe” — busca outros drivers do mesmo tenant e adiciona à vitrine pessoal com headline curto.
+- Perfil público: nova seção `SecaoEquipePublica` com avatares + categoria + botão “Ver perfil”, levando para `/[slug]/perfil/[driver_slug]` do membro. Mantém o cliente sempre dentro do tenant.
 
-**`src/features/motorista/hooks/hook_perfil_motorista.ts`**
-- Estender o `select` do driver para incluir os 4 campos novos.
-- Após carregar driver, em paralelo:
-  - `service_types` WHERE `driver_id = id` AND `is_active = true`
-  - `professional_availability` WHERE `driver_id = id` AND `is_active = true`
-- Retornar `servicos`, `disponibilidade` no hook.
+### 1.4 Reorganização da página de perfil
+Ordem nova em `pagina_perfil_motorista.tsx`:
+1. HeaderPerfil (com chips de categorias)
+2. GridMetricas
+3. SecaoBio
+4. **SecaoServicosPublica** (com portfólio embutido) ← antes
+5. **SecaoEquipePublica** ← novo
+6. SecaoDisponibilidadePublica (resumo)
+7. DistribuicaoNotas + ListaAvaliacoes
+8. Grupo
+9. CTA fixo
 
-**`src/features/motorista/pages/pagina_perfil_motorista.tsx`**
-- No `<HeaderPerfil>` (ou inline ao lado do nome), se `credential_verified=true`: badge verde "Verificado" com Tooltip mostrando `${credential_type.toUpperCase()} ${credential_number}`. Se o componente `HeaderPerfil` não suportar, passar como prop ou renderizar logo abaixo.
-- Se `professional_type` ∈ {`service_provider`, `both`}, abaixo de `<ListaAvaliacoes>` renderizar dois novos componentes:
+## 2. Agendamento mais claro
 
-**Novos componentes:**
-- `src/features/motorista/components/secao_servicos_publica.tsx`
-  - Lista cards: nome, duração formatada (`Xh Ymin`), preço `R$ x,xx`, badge "Imediato" se `is_immediate`, botão "Agendar" → `navigate(`/${tenant_slug}/${driver_slug}?servico=${id}`)`.
-- `src/features/motorista/components/secao_disponibilidade_publica.tsx`
-  - Grid 7 dias (Dom–Sáb), cada um com chips `HH:MM–HH:MM` ou traço `—`.
+Em `agendamento_servico.tsx`:
 
-**CTA do botão fixo inferior:**
-- Se `professional_type === "service_provider"`: texto vira "Agendar serviço".
-- Se `both`: dois botões: "Solicitar corrida" e "Agendar serviço".
-- Se `driver`: comportamento atual.
-- Todos navegam para `/${tenant_slug}/${driver_slug}` (a bifurcação real ocorre na PARTE 3).
+### 2.1 Resumo de preço/duração sempre visível
+Sticky abaixo do header da página de agendamento mostrando: serviço selecionado, duração formatada, preço total, valor do sinal, troco para pagamento presencial.
 
----
+### 2.2 Calendário e slots mais legíveis
+- Grid de 14 dias hoje fica apertado em 4 colunas no mobile. Mudar para scroll horizontal com cards maiores (data + “X horários”).
+- Slots: agrupar visualmente por período (Manhã / Tarde / Noite) com separadores.
+- Indicar claramente serviços que não “cabem” no fim do bloco (mensagem inline em vez de slot oculto: “Último horário 17:00 — serviço de 60min”).
 
-### PARTE 3 — Tela de agendamento + bifurcação
+### 2.3 Card de serviço com mais info
+Cards na seleção mostram, além de duração e preço:
+- ícone de portfólio (n imagens)
+- tag de categoria
+- texto “Sinal R$ X para confirmar” quando ativo
 
-**Novo: `src/features/passageiro/components/agendamento_servico.tsx`**
+## 3. Pagamento de sinal para confirmar
 
-Props:
-```ts
-{
-  driver: { id, full_name, avatar_url, credential_verified, credential_type, tenant_slug, slug },
-  tenantId: string,
-  serviceTypes: TipoServico[],
-  availability: DisponibilidadeProfissional[],
-  preSelectedServiceId?: string | null,
-}
+Lovable Cloud Payments (Stripe seamless) para sinal.
+
+### 3.1 Configuração por profissional
+- Novas colunas em `service_types`: `deposit_enabled boolean default false`, `deposit_amount numeric` (valor fixo) ou `deposit_percent numeric`.
+- Painel: switch “Cobrar sinal para confirmar” + valor.
+
+### 3.2 Fluxo do cliente
+- Se serviço tem sinal:
+  1. Cliente escolhe slot → preenche dados.
+  2. Em vez de criar booking direto, edge function `book-service` cria booking com `status = 'awaiting_deposit'` e devolve `checkout_url` Stripe.
+  3. Redireciona para Stripe Checkout (modo `payment`).
+  4. Webhook Stripe → marca booking `confirmed` e libera o slot definitivamente.
+  5. Se cliente abandona em 15min, job/edge libera o slot (`cancelled`).
+- Se serviço não tem sinal: fluxo atual (`pending`).
+
+### 3.3 Backend
+- Migration: adicionar colunas em `service_types`, novo status `awaiting_deposit` no enum (texto, já é text), nova tabela `service_payments` (booking_id, stripe_session_id, amount, status, paid_at).
+- Edge function nova `confirm-deposit` (webhook Stripe).
+- Edge function `book-service` ajustada para criar Checkout Session quando aplicável.
+- Configuração Stripe via tool `enable_stripe_payments` antes de implementar (recomendação após `recommend_payment_provider`).
+
+## 4. Estrutura de arquivos (feature-based)
+
+```text
+src/features/motorista/
+  components/
+    chips_categorias.tsx          (novo)
+    secao_equipe_publica.tsx      (novo)
+    carrossel_portfolio.tsx       (novo)
+  hooks/
+    hook_perfil_motorista.ts      (estende — carrega portfolio + equipe)
+  services/
+    servico_perfil_motorista.ts   (novo — queries de equipe/portfolio)
+
+src/features/painel/components/configuracoes/
+  editor_portfolio_servico.tsx    (novo)
+  editor_equipe.tsx               (novo)
+  campo_sinal_servico.tsx         (novo)
+
+src/features/passageiro/components/
+  agendamento_servico.tsx         (refatorado — sticky resumo, slots por período)
+  resumo_servico_sticky.tsx       (novo)
+  grade_slots_periodo.tsx         (novo)
+
+supabase/functions/
+  book-service/index.ts           (estende — cria Checkout Session)
+  confirm-deposit/index.ts        (novo — webhook Stripe)
 ```
 
-Estrutura interna (componentes locais ou inline):
-1. **Header** — avatar, nome, badge Verificado se aplicável, nota média (opcional, vinda de prop futura).
-2. **Seleção de serviço** — cards clicáveis; pré-seleciona via `preSelectedServiceId`.
-3. **Calendário 14 dias** — gera array de 14 datas a partir de hoje.
-   - Para cada data: pega blocos de `availability` com `day_of_week === date.getDay()`.
-   - Gera slots `start_time`→`end_time` em passos de `slot_duration_minutes` (+ buffer entre slots).
-   - Filtra slots passados (se for hoje).
-   - Subtrai conflitos consultando `service_bookings` do driver entre 00:00 e 23:59 do dia, status ∈ {pending, confirmed, in_progress}, considerando duração.
-   - Dia sem slots → desabilitado.
-4. **Slots do dia selecionado** — botões `HH:MM`.
-5. **Identificação cliente (guest)** — inputs Nome e WhatsApp (formato +55…), validação simples. Reusa storage `tribocar_guest_dados` se já existir.
-6. **Observações** — `Textarea` opcional.
-7. **Forma de pagamento** — `RadioGroup`: `cash` (padrão), `pix`, `card`.
-8. **Botão "Confirmar agendamento"** — chama `chamarBookService` com:
-   ```ts
-   {
-     tenant_id, driver_id, service_type_id,
-     scheduled_at: ISO, payment_method, notes,
-     guest: { full_name, whatsapp }
-   }
-   ```
-   - Erro `409` → `toast.error("Horário já reservado — escolha outro")` e remove slot do estado.
-   - Sucesso → tela de confirmação com data/hora/profissional/serviço/valor + botão "Adicionar ao calendário" (`baixarIcs` de `gerador_ics.ts`).
+## 5. Ordem de implementação
 
-**Lógica de cálculo de slots** — extraída para utilitário:
-- `src/features/passageiro/utils/calcular_slots_disponiveis.ts`
-  - `gerarSlotsDoDia(date, blocosDoDia, agendamentosDoDia): { hora: string; iso: string }[]`
+1. Migrations (portfólio, equipe, sinal em service_types, status awaiting_deposit, service_payments).
+2. Painel: editor de categorias + portfólio + equipe + sinal.
+3. Perfil público: chips, portfólio, seção equipe, reorganização.
+4. Agendamento: resumo sticky, slots agrupados, calendário rolável.
+5. Pagamento: enable_stripe_payments + integração no book-service + webhook.
+6. QA do fluxo completo end-to-end com `prestador-demo`.
 
-**Bifurcação em `pagina_passageiro.tsx`**
+## 6. Notas
 
-Hoje a página depende de `useSolicitacao()` que já carrega o motorista. Estratégia: novo hook leve só para descobrir o `professional_type` e dados de serviço sem disparar todo o fluxo de corrida.
-
-- Adicionar carregamento auxiliar (no próprio `useSolicitacao` ou um hook paralelo `useDadosServicoMotorista(driverId)`):
-  - Busca `professional_type` do driver atual.
-  - Se inclui `service_provider`: carrega `service_types` ativos e `professional_availability` ativos.
-- Estado local `modoEscolhido: "ride" | "service" | null` (para `both`).
-- Renderização (após `carregando`/`erro`/`tenantSemMotorista`):
-  - `professional_type === "service_provider"` → renderiza `<AgendamentoServico .../>` em substituição ao mapa/BottomSheet.
-  - `professional_type === "both"`:
-    - Se `modoEscolhido === null`: tela inicial leve com botões "Solicitar corrida" / "Agendar serviço" (preserva `?servico=` query — se presente, abre service direto).
-    - Se `"ride"`: fluxo atual intacto.
-    - Se `"service"`: `<AgendamentoServico />`.
-  - `professional_type === "driver"` (default): zero alteração — fluxo atual.
-- Ler `useSearchParams` para extrair `?servico=` e passar como `preSelectedServiceId`.
-
----
-
-### Arquivos a criar
-- `src/features/motorista/components/secao_servicos_publica.tsx`
-- `src/features/motorista/components/secao_disponibilidade_publica.tsx`
-- `src/features/passageiro/components/agendamento_servico.tsx`
-- `src/features/passageiro/components/escolha_modo_atendimento.tsx` (botões para `both`)
-- `src/features/passageiro/utils/calcular_slots_disponiveis.ts`
-
-### Arquivos a editar
-- `src/features/painel/components/aba_configuracoes.tsx`
-- `src/features/motorista/types/tipos_perfil_motorista.ts`
-- `src/features/motorista/hooks/hook_perfil_motorista.ts`
-- `src/features/motorista/pages/pagina_perfil_motorista.tsx`
-- `src/features/motorista/components/header_perfil.tsx` (adicionar prop opcional para badge verificado)
-- `src/features/passageiro/pages/pagina_passageiro.tsx`
-
-### Não alterar
-`dispatch-ride`, `card_dispatch.tsx`, `hook_solicitacao.ts` (apenas leitura de campos extras se necessário, sem mudar fluxo de corrida), `overlay_busca_mapa.tsx`, RLS de Mobilidade, edge `book-service` (já implementada).
-
-### Observações técnicas
-- Todos os textos em pt-BR, snake_case nos arquivos, PascalCase nos componentes.
-- Reutilizar componentes shadcn existentes (`Card`, `Button`, `Badge`, `Select`, `RadioGroup`, `Tooltip`, `Separator`, `Input`, `Textarea`).
-- Dark mode default já garantido pelo design system.
-- Usar `supabase.from("service_bookings" as any)` — tipos serão regenerados.
+- Tudo dark mode `#000` / texto `#fff` / accent `#1db865`, IBM Plex Sans, snake_case pt-BR — fiel ao design system.
+- Sem quebra para perfis sem portfólio/equipe: seções somem se vazias.
+- Categorias e portfólio são opcionais; sinal é opcional por serviço.
+- Confirmação de Stripe é obrigatória antes do passo 5 — vou rodar `recommend_payment_provider` e pedir sua aprovação para `enable_stripe_payments` quando chegarmos lá.
