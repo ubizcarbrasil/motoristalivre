@@ -42,6 +42,9 @@ const App = () => (
             <Route path="/profissional/login" element={<Navigate to="/entrar?modo=profissional" replace />} />
             <Route path="/profissional/entrar" element={<Navigate to="/entrar?modo=profissional" replace />} />
             <Route path="/cadastro" element={<PaginaCadastro />} />
+            <Route path="/cadastrar" element={<PaginaCadastro />} />
+            <Route path="/profissional/cadastro" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
+            <Route path="/profissional/criar-conta" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
             <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
             <Route path="/dev/personas" element={<PaginaPersonas />} />
             <Route path="/instalar" element={<PaginaInstalar />} />
