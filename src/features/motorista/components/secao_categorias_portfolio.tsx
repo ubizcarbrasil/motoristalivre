@@ -7,11 +7,12 @@ import type { ItemPortfolio } from "../types/tipos_vitrine";
 interface Props {
   servicos: TipoServico[];
   portfolio: ItemPortfolio[];
+  categoriasFiltradas?: string[];
 }
 
 const CHAVE_TODAS = "__todas__";
 
-export function SecaoCategoriasPortfolio({ servicos, portfolio }: Props) {
+export function SecaoCategoriasPortfolio({ servicos, portfolio, categoriasFiltradas }: Props) {
   const [filtro, setFiltro] = useState<string>(CHAVE_TODAS);
   const [aberto, setAberto] = useState<ItemPortfolio | null>(null);
 
@@ -20,17 +21,27 @@ export function SecaoCategoriasPortfolio({ servicos, portfolio }: Props) {
     [servicos],
   );
 
+  // Aplica filtro externo (categorias do header) primeiro
+  const portfolioBase = useMemo(() => {
+    if (!categoriasFiltradas || categoriasFiltradas.length === 0) return portfolio;
+    const nomesPermitidos = new Set(categoriasFiltradas);
+    return portfolio.filter((p) => {
+      const servico = mapaServicos.get(p.service_type_id);
+      return servico ? nomesPermitidos.has(servico.name) : false;
+    });
+  }, [portfolio, categoriasFiltradas, mapaServicos]);
+
   const categorias = useMemo(() => {
-    const idsComItens = new Set(portfolio.map((p) => p.service_type_id));
+    const idsComItens = new Set(portfolioBase.map((p) => p.service_type_id));
     return servicos.filter((s) => idsComItens.has(s.id));
-  }, [servicos, portfolio]);
+  }, [servicos, portfolioBase]);
 
   const itensFiltrados = useMemo(() => {
-    if (filtro === CHAVE_TODAS) return portfolio;
-    return portfolio.filter((p) => p.service_type_id === filtro);
-  }, [portfolio, filtro]);
+    if (filtro === CHAVE_TODAS) return portfolioBase;
+    return portfolioBase.filter((p) => p.service_type_id === filtro);
+  }, [portfolioBase, filtro]);
 
-  if (portfolio.length === 0) return null;
+  if (portfolioBase.length === 0) return null;
 
   return (
     <div className="px-6 space-y-3">
