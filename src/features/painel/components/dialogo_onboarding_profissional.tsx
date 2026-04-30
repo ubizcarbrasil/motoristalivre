@@ -72,6 +72,13 @@ export function DialogoOnboardingProfissional({
     }
   }, [aberto, dadosIniciais]);
 
+  const { status: statusAutoSave } = useHookAutoSaveOnboarding({
+    driverId,
+    tenantId,
+    dados: form,
+    ativo: aberto,
+  });
+
   const atualizar = <K extends keyof FormState>(campo: K, valor: FormState[K]) =>
     setForm((prev) => ({ ...prev, [campo]: valor }));
 
