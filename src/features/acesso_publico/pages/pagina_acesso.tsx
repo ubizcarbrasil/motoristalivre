@@ -5,6 +5,7 @@ import { LINKS_ACESSO } from "../constants/constantes_acesso";
 const SECOES = [
   { id: "passageiro" as const, titulo: "App do passageiro" },
   { id: "motorista" as const, titulo: "App do motorista" },
+  { id: "servicos" as const, titulo: "Módulo Serviços" },
   { id: "dev" as const, titulo: "Ferramentas de teste" },
 ];
 
