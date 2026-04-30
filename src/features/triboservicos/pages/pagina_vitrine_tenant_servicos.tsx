@@ -75,14 +75,6 @@ export default function PaginaVitrineTenantServicos() {
 
   return (
     <TemaServicos>
-      <Helmet>
-        <title>{titulo.slice(0, 60)}</title>
-        <meta name="description" content={descricao.slice(0, 160)} />
-        <link
-          rel="canonical"
-          href={`${window.location.origin}/s/${tenant.slug}`}
-        />
-      </Helmet>
 
       <main className="min-h-screen bg-background pb-16">
         <CabecalhoVitrineTenant tenant={tenant} />

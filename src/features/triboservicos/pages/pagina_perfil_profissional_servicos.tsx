@@ -108,14 +108,6 @@ export default function PaginaPerfilProfissionalServicos() {
 
   return (
     <TemaServicos>
-      <Helmet>
-        <title>{titulo.slice(0, 60)}</title>
-        <meta name="description" content={descricao.slice(0, 160)} />
-        <link
-          rel="canonical"
-          href={`${window.location.origin}/s/${tenant.slug}/${driver_slug}`}
-        />
-      </Helmet>
 
       <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 h-12 bg-background/85 backdrop-blur border-b border-border">
         <button
