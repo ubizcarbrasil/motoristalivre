@@ -22,7 +22,7 @@ import {
   uploadImagemPortfolio,
   reordenarItensPortfolio,
 } from "../services/servico_vitrine_admin";
-import { CardItemPortfolio } from "./card_item_portfolio";
+import { DialogoPortfolio, type ModoDialogoPortfolio } from "./dialogo_portfolio";
 import { DialogoPortfolio, type ModoDialogoPortfolio } from "./dialogo_portfolio";
 import { GradePortfolioArrastavel } from "./grade_portfolio_arrastavel";
 
