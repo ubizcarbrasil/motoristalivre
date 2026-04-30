@@ -206,6 +206,8 @@ export function AbaConfiguracoes({
           />
 
           <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+
+          <BotaoPreviewVitrine driverId={driverId} />
         </>
       )}
 
