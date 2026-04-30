@@ -26,6 +26,8 @@ import { schemaOnboardingProfissional } from "../schemas/schema_onboarding_profi
 import type { DadosOnboarding } from "../schemas/schema_onboarding_profissional";
 import { salvarOnboardingProfissional } from "../services/servico_onboarding_profissional";
 import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
+import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
+import { IndicadorAutoSave } from "./indicador_autosave";
 
 interface DialogoOnboardingProfissionalProps {
   aberto: boolean;
@@ -69,6 +71,13 @@ export function DialogoOnboardingProfissional({
       setNovaCategoria("");
     }
   }, [aberto, dadosIniciais]);
+
+  const { status: statusAutoSave } = useHookAutoSaveOnboarding({
+    driverId,
+    tenantId,
+    dados: form,
+    ativo: aberto,
+  });
 
   const atualizar = <K extends keyof FormState>(campo: K, valor: FormState[K]) =>
     setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -199,6 +208,9 @@ export function DialogoOnboardingProfissional({
         </DialogHeader>
 
         <BarraProgresso passoAtual={passo} total={TOTAL_PASSOS} />
+        <div className="flex justify-end">
+          <IndicadorAutoSave status={statusAutoSave} />
+        </div>
 
         <div className="py-2">
           {passo === 0 && (
