@@ -24,6 +24,10 @@ import PaginaAcesso from "@/features/acesso_publico/pages/pagina_acesso";
 import PaginaSimuladorDispatch from "@/features/dev_simulador/pages/pagina_simulador_dispatch";
 import PaginaServicosTenant from "@/features/servicos/pages/pagina_servicos_tenant";
 import PaginaServicosMotorista from "@/features/servicos/pages/pagina_servicos_motorista";
+import PaginaLandingServicos from "@/features/triboservicos/pages/pagina_landing_servicos";
+import PaginaEntrarServicos from "@/features/triboservicos/pages/pagina_entrar_servicos";
+import PaginaCadastroTribo from "@/features/triboservicos/pages/pagina_cadastro_tribo";
+import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_cadastro_profissional";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +54,12 @@ const App = () => (
             <Route path="/instalar" element={<PaginaInstalar />} />
             <Route path="/acesso" element={<PaginaAcesso />} />
             <Route path="/dev/simular-dispatch" element={<RotaProtegida><PaginaSimuladorDispatch /></RotaProtegida>} />
+
+            {/* TriboServiços — landing, cadastro dual e login */}
+            <Route path="/s" element={<PaginaLandingServicos />} />
+            <Route path="/s/entrar" element={<PaginaEntrarServicos />} />
+            <Route path="/s/cadastro/tribo" element={<PaginaCadastroTribo />} />
+            <Route path="/s/cadastro/profissional" element={<PaginaCadastroProfissional />} />
 
             {/* Rotas protegidas */}
             <Route path="/onboarding" element={<RotaProtegida><PaginaOnboarding /></RotaProtegida>} />

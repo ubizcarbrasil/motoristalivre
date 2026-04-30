@@ -43,6 +43,40 @@
     --sidebar-border: 0 0% 15%;
     --sidebar-ring: 152 78% 42%;
   }
+
+  /* TriboServiços — tema dourado/champanhe, isolado nas rotas /s/* */
+  .tema-servicos {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 30 10% 7%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 30 10% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 33 47% 65%;
+    --primary-foreground: 24 35% 10%;
+
+    --secondary: 30 8% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 30 8% 14%;
+    --muted-foreground: 33 12% 65%;
+
+    --accent: 33 47% 65%;
+    --accent-foreground: 24 35% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 33 12% 18%;
+    --input: 33 12% 18%;
+    --ring: 33 47% 65%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(33 47% 65%), hsl(33 60% 55%));
+    --shadow-elegant: 0 10px 30px -10px hsl(33 47% 65% / 0.35);
+  }
 }
 
 @layer base {
