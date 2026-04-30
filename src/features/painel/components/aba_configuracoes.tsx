@@ -18,6 +18,9 @@ import { BuscaGrupo } from "./busca_grupo";
 import { SeletorSomChamada } from "./seletor_som_chamada";
 import { SecaoMeusServicos } from "./secao_meus_servicos";
 import { SecaoMinhaDisponibilidade } from "./secao_minha_disponibilidade";
+import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
+import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
+import { SecaoEquipeAdmin } from "./secao_equipe_admin";
 import {
   buscarMeusGrupos,
   buscarConvitesPendentes,
@@ -192,6 +195,16 @@ export function AbaConfiguracoes({
             blocos={disponibilidade}
             onAtualizar={recarregarServico}
           />
+
+          <SecaoCategoriasAdmin driverId={driverId} />
+
+          <SecaoPortfolioAdmin
+            driverId={driverId}
+            tenantId={tenantId}
+            servicos={servicos}
+          />
+
+          <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
         </>
       )}
 
