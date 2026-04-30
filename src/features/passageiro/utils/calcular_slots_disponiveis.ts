@@ -34,10 +34,14 @@ export function gerarSlotsDoDia(params: {
     data.getDate() === agora.getDate();
 
   const slots: SlotDisponivel[] = [];
+  // UI força passo fixo de 30min, ignorando slot_duration_minutes do driver.
+  // O buffer configurado pelo driver continua respeitado.
+  const PASSO_FIXO_MIN = 30;
+
   for (const bloco of blocosDoDia) {
     const [sh, sm] = bloco.start_time.split(":").map(Number);
     const [eh, em] = bloco.end_time.split(":").map(Number);
-    const passo = bloco.slot_duration_minutes + (bloco.buffer_minutes ?? 0);
+    const passo = PASSO_FIXO_MIN + (bloco.buffer_minutes ?? 0);
 
     let cursor = new Date(data);
     cursor.setHours(sh, sm, 0, 0);
