@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeCheck, ShieldCheck, Eye, Loader2, RefreshCw, ExternalLink, Smartphone } from "lucide-react";
@@ -20,6 +21,26 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
 
   const ofereceServico =
     dados?.professional_type === "service_provider" || dados?.professional_type === "both";
+
+  // Estado de seleção de categorias do header (vazio = todas)
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const categoriasDisponiveis = useMemo(
+    () => dados?.service_categories ?? [],
+    [dados?.service_categories],
+  );
+
+  // Reset seleção quando categorias disponíveis mudam (ex: realtime)
+  useEffect(() => {
+    setSelecionadas((atual) => atual.filter((c) => categoriasDisponiveis.includes(c)));
+  }, [categoriasDisponiveis]);
+
+  const alternarCategoria = (categoria: string) => {
+    setSelecionadas((atual) =>
+      atual.includes(categoria)
+        ? atual.filter((c) => c !== categoria)
+        : [...atual, categoria],
+    );
+  };
 
   const urlPublica = dados ? `/${dados.tenant_slug}/${dados.slug}/perfil` : "#";
 
@@ -124,10 +145,14 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                       </p>
                     )}
 
-                    {/* Categorias visíveis (mesmo componente do perfil público) */}
-                    {ofereceServico && dados.service_categories.length > 0 && (
+                    {/* Categorias visíveis (interativas no preview) */}
+                    {ofereceServico && categoriasDisponiveis.length > 0 && (
                       <div className="-mx-5">
-                        <ChipsCategorias categorias={dados.service_categories} />
+                        <ChipsCategorias
+                          categorias={categoriasDisponiveis}
+                          selecionadas={selecionadas}
+                          onToggle={alternarCategoria}
+                        />
                       </div>
                     )}
                   </div>
@@ -140,6 +165,7 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                           <SecaoCategoriasPortfolio
                             servicos={servicos}
                             portfolio={portfolio}
+                            categoriasFiltradas={selecionadas}
                           />
                         </div>
                       ) : (
