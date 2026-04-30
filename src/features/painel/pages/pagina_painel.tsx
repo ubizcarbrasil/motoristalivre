@@ -253,6 +253,18 @@ export default function PaginaPainel() {
           onVoltar={() => setMostraChat(false)}
         />
       )}
+
+      <DialogoOnboardingProfissional
+        aberto={dialogoOnboardingAberto}
+        driverId={userId}
+        tenantId={tenant.id}
+        dadosIniciais={dadosOnboarding}
+        onConcluido={() => {
+          setDialogoOnboardingAberto(false);
+          recarregarOnboarding();
+        }}
+        onFechar={() => setDialogoOnboardingAberto(false)}
+      />
     </div>
   );
 }
