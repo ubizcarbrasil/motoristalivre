@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { NavegacaoInferior } from "../components/navegacao_inferior";
 import { AbaInicio } from "../components/aba_inicio";
+import { BannerOnboardingProfissional } from "../components/banner_onboarding_profissional";
+import { DialogoOnboardingProfissional } from "../components/dialogo_onboarding_profissional";
+import { useHookOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
 import { AbaPerfil } from "../components/aba_perfil";
 import { AbaCarteira } from "../components/aba_carteira";
 import { AbaMeusLinks } from "../components/aba_meus_links";
@@ -42,6 +45,8 @@ export default function PaginaPainel() {
   const [mostraChat, setMostraChat] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
   const [triboAtivaId, setTriboAtivaId] = useState<string | null>(null);
+  const [dialogoOnboardingAberto, setDialogoOnboardingAberto] = useState(false);
+  const [onboardingJaAbriu, setOnboardingJaAbriu] = useState(false);
 
   const { tribos } = useTribosMotorista(userId);
 
@@ -96,6 +101,24 @@ export default function PaginaPainel() {
         setEhAdmin(role === "tenant_admin" || role === "manager" || role === "root_admin");
       });
   }, [userId]);
+
+  // Onboarding profissional: detecta campos faltantes e abre auto após criação da tribo
+  const onboardingDriverId = userId ?? "";
+  const onboardingTenantId = tenant?.id ?? "";
+  const {
+    dados: dadosOnboarding,
+    camposFaltantes,
+    precisaOnboarding,
+    recarregar: recarregarOnboarding,
+  } = useHookOnboardingProfissional(onboardingDriverId, onboardingTenantId);
+
+  useEffect(() => {
+    if (!userId || !tenant?.id) return;
+    if (precisaOnboarding && !onboardingJaAbriu && !dialogoOnboardingAberto) {
+      setDialogoOnboardingAberto(true);
+      setOnboardingJaAbriu(true);
+    }
+  }, [userId, tenant?.id, precisaOnboarding, onboardingJaAbriu, dialogoOnboardingAberto]);
 
   if (carregando) {
     return (
@@ -157,30 +180,40 @@ export default function PaginaPainel() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {aba === "inicio" && (
-        <AbaInicio
-          perfil={perfil}
-          tenantSlug={triboAtiva?.slug ?? tenant.slug}
-          stats={stats}
-          corridas={corridasRecentes}
-          dispatch={dispatch}
-          timeoutSec={timeoutSec}
-          realtimeAtivo={realtimeAtivo}
-          audioDestravado={audioDestravado}
-          temCorridaAtiva={!!corridaAtiva}
-          localizacaoAtiva={localizacao.ativo}
-          silenciado={silenciado}
-          onAlternarSom={alternarSilenciado}
-          onToggleLocalizacao={localizacao.toggle}
-          onAbrirChat={() => setMostraChat(true)}
-          onToggleOnline={toggleOnline}
-          onAceitarDispatch={aceitarDispatch}
-          onRecusarDispatch={recusarDispatch}
-          onTimeoutDispatch={timeoutDispatch}
-          onNavegar={setAba}
-          tribos={tribos}
-          triboAtivaId={triboAtivaId}
-          onSelecionarTribo={setTriboAtivaId}
-        />
+        <>
+          {precisaOnboarding && (
+            <div className="px-4 pt-4">
+              <BannerOnboardingProfissional
+                camposFaltantes={camposFaltantes}
+                onAbrir={() => setDialogoOnboardingAberto(true)}
+              />
+            </div>
+          )}
+          <AbaInicio
+            perfil={perfil}
+            tenantSlug={triboAtiva?.slug ?? tenant.slug}
+            stats={stats}
+            corridas={corridasRecentes}
+            dispatch={dispatch}
+            timeoutSec={timeoutSec}
+            realtimeAtivo={realtimeAtivo}
+            audioDestravado={audioDestravado}
+            temCorridaAtiva={!!corridaAtiva}
+            localizacaoAtiva={localizacao.ativo}
+            silenciado={silenciado}
+            onAlternarSom={alternarSilenciado}
+            onToggleLocalizacao={localizacao.toggle}
+            onAbrirChat={() => setMostraChat(true)}
+            onToggleOnline={toggleOnline}
+            onAceitarDispatch={aceitarDispatch}
+            onRecusarDispatch={recusarDispatch}
+            onTimeoutDispatch={timeoutDispatch}
+            onNavegar={setAba}
+            tribos={tribos}
+            triboAtivaId={triboAtivaId}
+            onSelecionarTribo={setTriboAtivaId}
+          />
+        </>
       )}
 
       {aba === "tribo" && triboAtiva && (
@@ -220,6 +253,18 @@ export default function PaginaPainel() {
           onVoltar={() => setMostraChat(false)}
         />
       )}
+
+      <DialogoOnboardingProfissional
+        aberto={dialogoOnboardingAberto}
+        driverId={userId}
+        tenantId={tenant.id}
+        dadosIniciais={dadosOnboarding}
+        onConcluido={() => {
+          setDialogoOnboardingAberto(false);
+          recarregarOnboarding();
+        }}
+        onFechar={() => setDialogoOnboardingAberto(false)}
+      />
     </div>
   );
 }
