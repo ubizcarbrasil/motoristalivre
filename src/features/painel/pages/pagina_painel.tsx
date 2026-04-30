@@ -180,30 +180,40 @@ export default function PaginaPainel() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {aba === "inicio" && (
-        <AbaInicio
-          perfil={perfil}
-          tenantSlug={triboAtiva?.slug ?? tenant.slug}
-          stats={stats}
-          corridas={corridasRecentes}
-          dispatch={dispatch}
-          timeoutSec={timeoutSec}
-          realtimeAtivo={realtimeAtivo}
-          audioDestravado={audioDestravado}
-          temCorridaAtiva={!!corridaAtiva}
-          localizacaoAtiva={localizacao.ativo}
-          silenciado={silenciado}
-          onAlternarSom={alternarSilenciado}
-          onToggleLocalizacao={localizacao.toggle}
-          onAbrirChat={() => setMostraChat(true)}
-          onToggleOnline={toggleOnline}
-          onAceitarDispatch={aceitarDispatch}
-          onRecusarDispatch={recusarDispatch}
-          onTimeoutDispatch={timeoutDispatch}
-          onNavegar={setAba}
-          tribos={tribos}
-          triboAtivaId={triboAtivaId}
-          onSelecionarTribo={setTriboAtivaId}
-        />
+        <>
+          {precisaOnboarding && (
+            <div className="px-4 pt-4">
+              <BannerOnboardingProfissional
+                camposFaltantes={camposFaltantes}
+                onAbrir={() => setDialogoOnboardingAberto(true)}
+              />
+            </div>
+          )}
+          <AbaInicio
+            perfil={perfil}
+            tenantSlug={triboAtiva?.slug ?? tenant.slug}
+            stats={stats}
+            corridas={corridasRecentes}
+            dispatch={dispatch}
+            timeoutSec={timeoutSec}
+            realtimeAtivo={realtimeAtivo}
+            audioDestravado={audioDestravado}
+            temCorridaAtiva={!!corridaAtiva}
+            localizacaoAtiva={localizacao.ativo}
+            silenciado={silenciado}
+            onAlternarSom={alternarSilenciado}
+            onToggleLocalizacao={localizacao.toggle}
+            onAbrirChat={() => setMostraChat(true)}
+            onToggleOnline={toggleOnline}
+            onAceitarDispatch={aceitarDispatch}
+            onRecusarDispatch={recusarDispatch}
+            onTimeoutDispatch={timeoutDispatch}
+            onNavegar={setAba}
+            tribos={tribos}
+            triboAtivaId={triboAtivaId}
+            onSelecionarTribo={setTriboAtivaId}
+          />
+        </>
       )}
 
       {aba === "tribo" && triboAtiva && (
