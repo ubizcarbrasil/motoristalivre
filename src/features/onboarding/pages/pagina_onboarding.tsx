@@ -23,6 +23,8 @@ export default function PaginaOnboarding() {
     setPlanoSelecionado,
     configuracao,
     setConfiguracao,
+    servicos,
+    setServicos,
     enviando,
     setEnviando,
     avancar,
@@ -38,6 +40,7 @@ export default function PaginaOnboarding() {
         modulos: modulosSelecionados,
         planoId: planoSelecionado,
         configuracao,
+        servicos,
       });
       toast.success("Grupo criado com sucesso");
       window.location.href = "/admin";
@@ -98,8 +101,11 @@ export default function PaginaOnboarding() {
 
           {etapaAtual === 4 && (
             <EtapaConfiguracao
+              modulos={modulosSelecionados}
               dados={configuracao}
               onChange={setConfiguracao}
+              servicos={servicos}
+              onChangeServicos={setServicos}
               onAvancar={avancar}
               onVoltar={voltar}
             />
