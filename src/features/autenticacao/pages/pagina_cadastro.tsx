@@ -223,7 +223,11 @@ export default function PaginaCadastro() {
       <div className="w-full max-w-sm space-y-6 py-10">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Criar conta</h1>
-          <p className="text-sm text-muted-foreground">Preencha os dados para comecar</p>
+          <p className="text-sm text-muted-foreground">
+            {tipoCadastro === "profissional"
+              ? "Crie sua agenda e portfólio em poucos passos"
+              : "Preencha os dados para comecar"}
+          </p>
         </div>
 
         {/* Tipo de cadastro */}
@@ -247,6 +251,12 @@ export default function PaginaCadastro() {
         {tipoCadastro === "passageiro" && (
           <p className="text-xs text-muted-foreground text-center -mt-2">
             Crie sua conta uma vez. Você pode pedir corrida em qualquer tribo abrindo o link do motorista.
+          </p>
+        )}
+
+        {tipoCadastro === "profissional" && (
+          <p className="text-xs text-muted-foreground text-center -mt-2">
+            Para barbeiros, manicures, estetistas e outros autônomos. Você terá sua vitrine e agenda próprias.
           </p>
         )}
 
