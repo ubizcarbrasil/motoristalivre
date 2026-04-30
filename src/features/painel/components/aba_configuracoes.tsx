@@ -22,6 +22,10 @@ import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
 import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
 import { SecaoEquipeAdmin } from "./secao_equipe_admin";
 import { BotaoPreviewVitrine } from "./botao_preview_vitrine";
+import { BannerOnboardingProfissional } from "./banner_onboarding_profissional";
+import { BloqueioOnboarding } from "./bloqueio_onboarding";
+import { DialogoOnboardingProfissional } from "./dialogo_onboarding_profissional";
+import { useHookOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
 import {
   buscarMeusGrupos,
   buscarConvitesPendentes,
