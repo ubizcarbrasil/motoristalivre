@@ -44,6 +44,18 @@ export default function PaginaVitrineTenantServicos() {
     };
   }, [slug]);
 
+  const titulo = tenant
+    ? `${tenant.name} — Profissionais e agendamento | TriboServiços`
+    : "TriboServiços";
+  const descricao = tenant
+    ? tenant.branding?.description ??
+      `Conheça os profissionais de ${tenant.name} e agende seu serviço online.`
+    : undefined;
+  const canonical = tenant
+    ? `${window.location.origin}/s/${tenant.slug}`
+    : undefined;
+  useSeoBasico({ titulo, descricao, canonical });
+
   if (carregando) {
     return (
       <TemaServicos>
