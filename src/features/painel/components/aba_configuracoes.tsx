@@ -21,6 +21,7 @@ import { SecaoMinhaDisponibilidade } from "./secao_minha_disponibilidade";
 import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
 import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
 import { SecaoEquipeAdmin } from "./secao_equipe_admin";
+import { BotaoPreviewVitrine } from "./botao_preview_vitrine";
 import {
   buscarMeusGrupos,
   buscarConvitesPendentes,
@@ -205,6 +206,8 @@ export function AbaConfiguracoes({
           />
 
           <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+
+          <BotaoPreviewVitrine driverId={driverId} />
         </>
       )}
 
