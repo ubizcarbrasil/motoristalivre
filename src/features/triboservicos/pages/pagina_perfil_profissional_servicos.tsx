@@ -61,6 +61,8 @@ export default function PaginaPerfilProfissionalServicos() {
 
   const dados = useDadosServicoMotorista(driverId);
 
+  const filtroPortfolio = useFiltroPortfolio(portfolio);
+
   const tituloSeo = dados.full_name
     ? `${dados.full_name} — Serviços e agendamento`
     : "TriboServiços";
