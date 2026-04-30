@@ -124,18 +124,10 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                       </p>
                     )}
 
-                    {/* Categorias visíveis */}
+                    {/* Categorias visíveis (mesmo componente do perfil público) */}
                     {ofereceServico && dados.service_categories.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {dados.service_categories.map((cat) => (
-                          <Badge
-                            key={cat}
-                            variant="outline"
-                            className="text-[10px] border-primary/40 text-foreground"
-                          >
-                            {cat}
-                          </Badge>
-                        ))}
+                      <div className="-mx-5">
+                        <ChipsCategorias categorias={dados.service_categories} />
                       </div>
                     )}
                   </div>
@@ -190,49 +182,20 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                         )}
                       </div>
 
-                      {/* Equipe */}
-                      <div className="px-5 py-4 border-t border-border space-y-2">
-                        <h4 className="text-xs font-semibold text-foreground">
-                          Equipe ({equipe.length})
-                        </h4>
-                        {equipe.length === 0 ? (
-                          <p className="text-[11px] text-muted-foreground">
-                            Nenhum profissional na equipe.
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            {equipe.map((m) => {
-                              const ini = m.nome
-                                .split(" ")
-                                .map((p) => p[0])
-                                .slice(0, 2)
-                                .join("")
-                                .toUpperCase();
-                              return (
-                                <div
-                                  key={m.id}
-                                  className="flex items-center gap-2 rounded-lg bg-card border border-border p-2"
-                                >
-                                  <Avatar className="w-9 h-9">
-                                    <AvatarImage src={m.avatar_url ?? undefined} />
-                                    <AvatarFallback className="text-[10px]">{ini}</AvatarFallback>
-                                  </Avatar>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-foreground truncate">
-                                      {m.nome}
-                                    </p>
-                                    {m.headline && (
-                                      <p className="text-[10px] text-muted-foreground truncate">
-                                        {m.headline}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
+                      {/* Equipe (mesmo componente do perfil público) */}
+                      {equipe.length > 0 ? (
+                        <div className="pt-4 border-t border-border -mx-5">
+                          <SecaoEquipePublica
+                            membros={equipe}
+                            tenantSlug={dados.tenant_slug}
+                          />
+                        </div>
+                      ) : (
+                        <BlocoVazio
+                          titulo="Equipe"
+                          mensagem="Nenhum profissional na equipe."
+                        />
+                      )}
                     </>
                   )}
                 </div>
