@@ -85,6 +85,7 @@ export const IDENTIDADE_INICIAL: DadosIdentidade = {
   whatsapp: "",
   logoUrl: "",
   capaUrl: "",
+  corPrimaria: "#1db865",
 };
 
 export const CONFIGURACAO_INICIAL: DadosConfiguracao = {
