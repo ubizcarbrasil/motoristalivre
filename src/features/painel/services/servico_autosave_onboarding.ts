@@ -35,7 +35,10 @@ export async function salvarRascunhoOnboarding(
   if (valorPreenchido(dados.avatar_url)) patchUsers.avatar_url = dados.avatar_url;
 
   if (Object.keys(patchUsers).length > 0) {
-    const { error } = await supabase.from("users").update(patchUsers).eq("id", driverId);
+    const { error } = await supabase
+      .from("users")
+      .update(patchUsers as never)
+      .eq("id", driverId);
     if (error) throw error;
   }
 
