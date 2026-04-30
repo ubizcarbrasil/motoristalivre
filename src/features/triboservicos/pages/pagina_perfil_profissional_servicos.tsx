@@ -167,8 +167,40 @@ export default function PaginaPerfilProfissionalServicos() {
         ) : (
           <>
             <section className="max-w-3xl mx-auto px-4 mt-8 space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">Portfólio</h2>
-              <GaleriaPortfolio itens={portfolio} />
+              <div className="flex items-end justify-between gap-3">
+                <h2 className="text-lg font-semibold text-foreground">Portfólio</h2>
+                {portfolio.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {filtroPortfolio.totalFiltrado}{" "}
+                    {filtroPortfolio.totalFiltrado === 1 ? "trabalho" : "trabalhos"}
+                  </span>
+                )}
+              </div>
+
+              {portfolio.length > 0 && (
+                <FiltrosPortfolio
+                  servicos={dados.serviceTypes}
+                  servicoSelecionado={filtroPortfolio.servicoSelecionado}
+                  onSelecionarServico={filtroPortfolio.setServicoSelecionado}
+                  busca={filtroPortfolio.busca}
+                  onBuscar={filtroPortfolio.setBusca}
+                />
+              )}
+
+              <GaleriaPortfolio
+                itens={filtroPortfolio.itensPagina}
+                mensagemVazio={
+                  portfolio.length === 0
+                    ? undefined
+                    : "Nenhum trabalho encontrado com esses filtros."
+                }
+              />
+
+              <PaginacaoPortfolio
+                paginaAtual={filtroPortfolio.paginaAtual}
+                totalPaginas={filtroPortfolio.totalPaginas}
+                onMudarPagina={filtroPortfolio.setPaginaAtual}
+              />
             </section>
 
             <section className="max-w-3xl mx-auto px-4 mt-8 space-y-3">
