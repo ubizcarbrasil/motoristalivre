@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeCheck, ShieldCheck, Eye, Loader2, RefreshCw, ExternalLink, Smartphone } from "lucide-react";
