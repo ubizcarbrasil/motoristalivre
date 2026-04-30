@@ -389,6 +389,9 @@ export function AgendamentoServico({
           )}
         </div>
 
+        {/* Blocos de disponibilidade */}
+        {servicoAtual && <BlocosDisponibilidade blocos={availability} />}
+
         {/* Calendário 14 dias */}
         {servicoAtual && (
           <div className="space-y-2">
