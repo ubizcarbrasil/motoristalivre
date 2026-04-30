@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       );
 
       // Dados específicos por role
-      if (persona.role === "driver") {
+      if (persona.role === "driver" && persona.email === "motorista@tribocar.test") {
         await supabase.from("drivers").upsert(
           {
             id: userId,
@@ -134,9 +134,81 @@ Deno.serve(async (req) => {
             vehicle_year: 2022,
             vehicle_plate: "DEM0A01",
             bio: "Motorista de demonstração",
+            professional_type: "driver",
           },
           { onConflict: "id" }
         );
+      }
+
+      if (persona.role === "driver" && persona.email === "prestador@tribocar.test") {
+        await supabase.from("drivers").upsert(
+          {
+            id: userId,
+            tenant_id: tenantId,
+            slug: "prestador-demo",
+            is_verified: true,
+            is_online: true,
+            bio: "Prestador de serviços de demonstração",
+            professional_type: "service_provider",
+            credential_verified: true,
+            credential_type: "CRM",
+            credential_number: "DEMO-1234",
+          },
+          { onConflict: "id" }
+        );
+
+        // Cria 2 tipos de serviço (idempotente: só insere se ainda não existir nenhum)
+        const { data: servsExist } = await supabase
+          .from("service_types")
+          .select("id")
+          .eq("driver_id", userId)
+          .limit(1);
+        if (!servsExist || servsExist.length === 0) {
+          await supabase.from("service_types").insert([
+            {
+              tenant_id: tenantId,
+              driver_id: userId,
+              name: "Consulta padrão",
+              description: "Atendimento agendado de 60 minutos",
+              duration_minutes: 60,
+              price: 150,
+              is_active: true,
+              is_immediate: false,
+            },
+            {
+              tenant_id: tenantId,
+              driver_id: userId,
+              name: "Atendimento expresso",
+              description: "Atendimento rápido de 30 minutos, sob demanda",
+              duration_minutes: 30,
+              price: 80,
+              is_active: true,
+              is_immediate: true,
+            },
+          ]);
+        }
+
+        // Disponibilidade segunda-sexta 9h-18h (idempotente)
+        const { data: availExist } = await supabase
+          .from("professional_availability")
+          .select("id")
+          .eq("driver_id", userId)
+          .limit(1);
+        if (!availExist || availExist.length === 0) {
+          const dias = [1, 2, 3, 4, 5];
+          await supabase.from("professional_availability").insert(
+            dias.map((d) => ({
+              tenant_id: tenantId,
+              driver_id: userId,
+              day_of_week: d,
+              start_time: "09:00",
+              end_time: "18:00",
+              slot_duration_minutes: 30,
+              buffer_minutes: 0,
+              is_active: true,
+            }))
+          );
+        }
       }
 
       if (persona.role === "affiliate") {
