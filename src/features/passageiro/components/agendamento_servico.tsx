@@ -25,6 +25,7 @@ import {
   type SlotDisponivel,
 } from "../utils/calcular_slots_disponiveis";
 import { baixarIcs } from "../utils/gerador_ics";
+import { BlocosDisponibilidade } from "./blocos_disponibilidade";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
@@ -387,6 +388,9 @@ export function AgendamentoServico({
             </div>
           )}
         </div>
+
+        {/* Blocos de disponibilidade */}
+        {servicoAtual && <BlocosDisponibilidade blocos={availability} />}
 
         {/* Calendário 14 dias */}
         {servicoAtual && (
