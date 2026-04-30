@@ -17,6 +17,8 @@ interface EtapaConfiguracaoProps {
   onChangeServicos: (servicos: DadosServico[]) => void;
   onAvancar: () => void;
   onVoltar: () => void;
+  rotuloAvancar?: string;
+  enviando?: boolean;
 }
 
 export function EtapaConfiguracao({
@@ -27,6 +29,8 @@ export function EtapaConfiguracao({
   onChangeServicos,
   onAvancar,
   onVoltar,
+  rotuloAvancar,
+  enviando,
 }: EtapaConfiguracaoProps) {
   const temMobilidade = modulos.includes("mobility");
   const temServicos = modulos.includes("services");
@@ -72,11 +76,11 @@ export function EtapaConfiguracao({
       <SecaoComissaoCashback dados={dados} onChange={onChange} />
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={onVoltar} className="flex-1">
+        <Button variant="outline" onClick={onVoltar} className="flex-1" disabled={enviando}>
           Voltar
         </Button>
-        <Button onClick={tentarAvancar} className="flex-1">
-          Continuar
+        <Button onClick={tentarAvancar} className="flex-1" disabled={enviando}>
+          {rotuloAvancar ?? "Continuar"}
         </Button>
       </div>
     </div>
