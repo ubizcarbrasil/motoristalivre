@@ -46,6 +46,22 @@ export async function atualizarItemPortfolio(
   if (error) throw error;
 }
 
+export async function reordenarItensPortfolio(
+  itens: Array<{ id: string; ordem: number }>,
+) {
+  if (itens.length === 0) return;
+  const resultados = await Promise.all(
+    itens.map((it) =>
+      supabase
+        .from("service_portfolio_items" as any)
+        .update({ ordem: it.ordem })
+        .eq("id", it.id),
+    ),
+  );
+  const erro = resultados.find((r) => r.error);
+  if (erro?.error) throw erro.error;
+}
+
 export async function removerItemPortfolio(id: string, imageUrl: string) {
   const { error } = await supabase
     .from("service_portfolio_items" as any)
