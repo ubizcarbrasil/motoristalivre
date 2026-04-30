@@ -5,7 +5,7 @@ export interface LinkAcesso {
   titulo: string;
   descricao: string;
   caminho: string;
-  categoria: "passageiro" | "motorista" | "dev";
+  categoria: "passageiro" | "motorista" | "servicos" | "dev";
 }
 
 export const LINKS_ACESSO: LinkAcesso[] = [
@@ -36,6 +36,27 @@ export const LINKS_ACESSO: LinkAcesso[] = [
     descricao: "Acesso direto ao painel (precisa estar logado)",
     caminho: "/painel",
     categoria: "motorista",
+  },
+  {
+    id: "servicos_perfil_publico",
+    titulo: "Perfil público do profissional (demo)",
+    descricao: "Página pública com serviços, disponibilidade e agendamento",
+    caminho: "/demo/perfil/motorista-demo",
+    categoria: "servicos",
+  },
+  {
+    id: "servicos_agendar_direto",
+    titulo: "Agendar serviço direto (demo)",
+    descricao: "Fluxo de escolha entre corrida e serviço no app do passageiro",
+    caminho: "/demo/motorista-demo",
+    categoria: "servicos",
+  },
+  {
+    id: "servicos_painel_motorista",
+    titulo: "Painel do profissional — aba Configurações",
+    descricao: "Gerenciar serviços, disponibilidade e tipo de profissional",
+    caminho: "/painel?aba=configuracoes",
+    categoria: "servicos",
   },
   {
     id: "dev_personas",
