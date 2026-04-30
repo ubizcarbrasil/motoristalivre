@@ -26,6 +26,8 @@ import { schemaOnboardingProfissional } from "../schemas/schema_onboarding_profi
 import type { DadosOnboarding } from "../schemas/schema_onboarding_profissional";
 import { salvarOnboardingProfissional } from "../services/servico_onboarding_profissional";
 import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
+import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
+import { IndicadorAutoSave } from "./indicador_autosave";
 
 interface DialogoOnboardingProfissionalProps {
   aberto: boolean;
