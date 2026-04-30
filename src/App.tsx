@@ -39,6 +39,8 @@ const App = () => (
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
+            <Route path="/profissional/login" element={<Navigate to="/entrar?modo=profissional" replace />} />
+            <Route path="/profissional/entrar" element={<Navigate to="/entrar?modo=profissional" replace />} />
             <Route path="/cadastro" element={<PaginaCadastro />} />
             <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
             <Route path="/dev/personas" element={<PaginaPersonas />} />

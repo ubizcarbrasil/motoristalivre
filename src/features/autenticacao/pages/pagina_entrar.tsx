@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Briefcase } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
 import { useRedirecionamento } from "../hooks/hook_redirecionamento";
 
@@ -17,6 +17,8 @@ export default function PaginaEntrar() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
+  const modoProfissional = searchParams.get("modo") === "profissional";
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [slugGrupo, setSlugGrupo] = useState("");
@@ -55,11 +57,15 @@ export default function PaginaEntrar() {
   }
 
   async function handleGoogle() {
-    if (!slugGrupo.trim()) {
+    // Slug é obrigatório apenas para passageiros novos.
+    // Profissionais já cadastrados dispensam o slug — o redirecionamento usa o tenant_id do perfil.
+    if (!modoProfissional && !slugGrupo.trim()) {
       toast({ title: "Informe o slug do grupo antes de continuar", variant: "destructive" });
       return;
     }
-    localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
+    if (slugGrupo.trim()) {
+      localStorage.setItem("tribocar_tenant_slug", slugGrupo.trim());
+    }
     setCarregandoGoogle(true);
     const redirectParam = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : "";
     const result = await lovable.auth.signInWithOAuth("google", {
@@ -72,11 +78,23 @@ export default function PaginaEntrar() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
+    <div className="fixed inset-0 bg-background flex items-center justify-center px-6 overflow-y-auto py-10">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Entrar</h1>
-          <p className="text-sm text-muted-foreground">Acesse sua conta para continuar</p>
+        <div className="text-center space-y-3">
+          {modoProfissional && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+              <Briefcase className="w-3 h-3" />
+              Acesso do profissional
+            </div>
+          )}
+          <h1 className="text-2xl font-bold text-foreground">
+            {modoProfissional ? "Entrar no painel" : "Entrar"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {modoProfissional
+              ? "Acesse o painel para gerenciar seu portfólio, equipe e categorias"
+              : "Acesse sua conta para continuar"}
+          </p>
         </div>
 
         <form onSubmit={handleEntrar} className="space-y-4">
@@ -122,16 +140,20 @@ export default function PaginaEntrar() {
         </div>
 
         <div className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="slugGrupoLogin" className="text-foreground">Slug do grupo</Label>
-            <Input
-              id="slugGrupoLogin"
-              type="text"
-              placeholder="ex: meu-grupo"
-              value={slugGrupo}
-              onChange={(e) => setSlugGrupo(e.target.value)}
-            />
-          </div>
+          {!modoProfissional && (
+            <div className="space-y-2">
+              <Label htmlFor="slugGrupoLogin" className="text-foreground">
+                Slug do grupo <span className="text-muted-foreground font-normal">(passageiros)</span>
+              </Label>
+              <Input
+                id="slugGrupoLogin"
+                type="text"
+                placeholder="ex: meu-grupo"
+                value={slugGrupo}
+                onChange={(e) => setSlugGrupo(e.target.value)}
+              />
+            </div>
+          )}
 
           <Button
             variant="outline"
@@ -155,15 +177,31 @@ export default function PaginaEntrar() {
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Nao tem conta?{" "}
-          <Link
-            to={redirectTo ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}` : "/cadastro"}
-            className="text-primary hover:underline font-medium"
-          >
-            Criar conta
-          </Link>
-        </p>
+        <div className="space-y-3 text-center text-sm">
+          <p className="text-muted-foreground">
+            Não tem conta?{" "}
+            <Link
+              to={redirectTo ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}` : "/cadastro"}
+              className="text-primary hover:underline font-medium"
+            >
+              Criar conta
+            </Link>
+          </p>
+
+          {modoProfissional ? (
+            <Link to="/entrar" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Sou passageiro
+            </Link>
+          ) : (
+            <Link
+              to="/entrar?modo=profissional"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Briefcase className="w-3 h-3" />
+              Sou profissional
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );
