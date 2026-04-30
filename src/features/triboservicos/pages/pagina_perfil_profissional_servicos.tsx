@@ -117,8 +117,6 @@ export default function PaginaPerfilProfissionalServicos() {
 
   const tipo = dados.professional_type;
   const ofereceServicos = tipo === "service_provider" || tipo === "both";
-  const titulo = `${dados.full_name} — Serviços e agendamento`;
-  const descricao = `Veja portfólio, serviços e agende um horário com ${dados.full_name} em ${tenant.name}.`;
 
   return (
     <TemaServicos>
