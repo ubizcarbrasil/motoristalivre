@@ -45,6 +45,8 @@ export default function PaginaPainel() {
   const [mostraChat, setMostraChat] = useState(false);
   const [ehAdmin, setEhAdmin] = useState(false);
   const [triboAtivaId, setTriboAtivaId] = useState<string | null>(null);
+  const [dialogoOnboardingAberto, setDialogoOnboardingAberto] = useState(false);
+  const [onboardingJaAbriu, setOnboardingJaAbriu] = useState(false);
 
   const { tribos } = useTribosMotorista(userId);
 
