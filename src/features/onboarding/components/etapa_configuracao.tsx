@@ -81,6 +81,10 @@ export function EtapaConfiguracao({
 
       <SecaoComissaoCashback dados={dados} onChange={onChange} />
 
+      {mostrarResumo && identidade && (
+        <ResumoConfirmacao identidade={identidade} modulos={modulos} />
+      )}
+
       <div className="flex gap-3">
         <Button variant="outline" onClick={onVoltar} className="flex-1" disabled={enviando}>
           Voltar
