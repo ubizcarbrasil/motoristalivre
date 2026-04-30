@@ -20,9 +20,10 @@ import {
   atualizarItemPortfolio,
   removerItemPortfolio,
   uploadImagemPortfolio,
+  reordenarItensPortfolio,
 } from "../services/servico_vitrine_admin";
-import { CardItemPortfolio } from "./card_item_portfolio";
 import { DialogoPortfolio, type ModoDialogoPortfolio } from "./dialogo_portfolio";
+import { GradePortfolioArrastavel } from "./grade_portfolio_arrastavel";
 
 interface Props {
   driverId: string;
@@ -145,6 +146,24 @@ export function SecaoPortfolioAdmin({ driverId, tenantId, servicos }: Props) {
     }
   };
 
+  const reordenarGrupo = async (
+    serviceTypeId: string,
+    novaOrdem: ItemPortfolio[],
+  ) => {
+    const anteriores = itens;
+    const outros = itens.filter((i) => i.service_type_id !== serviceTypeId);
+    setItens([...outros, ...novaOrdem]);
+
+    try {
+      await reordenarItensPortfolio(
+        novaOrdem.map((it, idx) => ({ id: it.id, ordem: idx })),
+      );
+    } catch {
+      setItens(anteriores);
+      toast.error("Não foi possível salvar a nova ordem");
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -208,17 +227,16 @@ export function SecaoPortfolioAdmin({ driverId, tenantId, servicos }: Props) {
                       + Adicionar
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {grupo.itens.map((item) => (
-                      <CardItemPortfolio
-                        key={item.id}
-                        item={item}
-                        servico={grupo.servico}
-                        onEditar={() => setModoDialogo({ tipo: "editar", item })}
-                        onRemover={() => setItemRemover(item)}
-                      />
-                    ))}
-                  </div>
+                  <GradePortfolioArrastavel
+                    itens={grupo.itens}
+                    servico={grupo.servico}
+                    onEditar={(item) => setModoDialogo({ tipo: "editar", item })}
+                    onRemover={(item) => setItemRemover(item)}
+                    onReordenar={(novaOrdem) => reordenarGrupo(grupo.id, novaOrdem)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Arraste pelo ícone <span className="text-foreground">⋮⋮</span> para reordenar.
+                  </p>
                 </div>
               ))}
             </div>
