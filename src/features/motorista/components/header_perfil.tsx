@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { PerfilPublicoMotorista } from "../types/tipos_perfil_motorista";
+import { ChipsCategorias } from "./chips_categorias";
 
 interface Props {
   perfil: PerfilPublicoMotorista;
@@ -68,6 +69,8 @@ export function HeaderPerfil({ perfil }: Props) {
           </Badge>
         )}
       </div>
+
+      <ChipsCategorias categorias={perfil.service_categories} />
     </div>
   );
 }

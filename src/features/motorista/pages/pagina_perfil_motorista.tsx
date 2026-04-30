@@ -11,11 +11,22 @@ import { DistribuicaoNotas } from "../components/distribuicao_notas";
 import { ListaAvaliacoes } from "../components/lista_avaliacoes";
 import { SecaoServicosPublica } from "../components/secao_servicos_publica";
 import { SecaoDisponibilidadePublica } from "../components/secao_disponibilidade_publica";
+import { SecaoEquipePublica } from "../components/secao_equipe_publica";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
-  const { perfil, metricas, distribuicao, avaliacoes, servicos, disponibilidade, carregando, erro } =
-    usePerfilMotorista();
+  const {
+    perfil,
+    metricas,
+    distribuicao,
+    avaliacoes,
+    servicos,
+    disponibilidade,
+    portfolio,
+    equipe,
+    carregando,
+    erro,
+  } = usePerfilMotorista();
 
   if (carregando) {
     return (
@@ -29,7 +40,7 @@ export default function PaginaPerfilMotorista() {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
-          <p className="text-base font-medium text-foreground">Motorista não encontrado</p>
+          <p className="text-base font-medium text-foreground">Profissional não encontrado</p>
           <p className="text-sm text-muted-foreground">Verifique se o endereço está correto.</p>
         </div>
       </div>
@@ -37,8 +48,10 @@ export default function PaginaPerfilMotorista() {
   }
 
   const urlBase = `/${perfil.tenant_slug}/${perfil.slug}`;
-  const ofereceServico = perfil.professional_type === "service_provider" || perfil.professional_type === "both";
-  const ofereceCorrida = perfil.professional_type === "driver" || perfil.professional_type === "both";
+  const ofereceServico =
+    perfil.professional_type === "service_provider" || perfil.professional_type === "both";
+  const ofereceCorrida =
+    perfil.professional_type === "driver" || perfil.professional_type === "both";
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
@@ -46,6 +59,7 @@ export default function PaginaPerfilMotorista() {
         <button
           onClick={() => navigate(-1)}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground"
+          aria-label="Voltar"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -55,8 +69,23 @@ export default function PaginaPerfilMotorista() {
       <div className="space-y-5 pb-32">
         <HeaderPerfil perfil={perfil} />
         <GridMetricas metricas={metricas} />
-        {ofereceCorrida && <InfoVeiculo perfil={perfil} />}
         <SecaoBio bio={perfil.bio} />
+
+        {ofereceServico && (
+          <>
+            <SecaoServicosPublica
+              servicos={servicos}
+              portfolio={portfolio}
+              tenantSlug={perfil.tenant_slug}
+              driverSlug={perfil.slug}
+            />
+            <SecaoEquipePublica membros={equipe} tenantSlug={perfil.tenant_slug} />
+            <SecaoDisponibilidadePublica blocos={disponibilidade} />
+          </>
+        )}
+
+        {ofereceCorrida && <InfoVeiculo perfil={perfil} />}
+
         <DistribuicaoNotas
           distribuicao={distribuicao}
           notaMedia={metricas.nota_media}
@@ -64,18 +93,6 @@ export default function PaginaPerfilMotorista() {
         />
         <ListaAvaliacoes avaliacoes={avaliacoes} />
 
-        {ofereceServico && (
-          <>
-            <SecaoServicosPublica
-              servicos={servicos}
-              tenantSlug={perfil.tenant_slug}
-              driverSlug={perfil.slug}
-            />
-            <SecaoDisponibilidadePublica blocos={disponibilidade} />
-          </>
-        )}
-
-        {/* Grupo */}
         <div className="px-6">
           <h2 className="text-sm font-semibold text-foreground mb-2">Grupo</h2>
           <div className="flex items-center gap-2 rounded-xl bg-card border border-border p-3">
@@ -87,7 +104,6 @@ export default function PaginaPerfilMotorista() {
         </div>
       </div>
 
-      {/* CTA fixo */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm border-t border-border">
         {perfil.professional_type === "both" ? (
           <div className="grid grid-cols-2 gap-2">
@@ -100,7 +116,7 @@ export default function PaginaPerfilMotorista() {
             </Button>
             <Button
               className="h-12 text-sm font-semibold"
-              onClick={() => navigate(`${urlBase}?modo=service`)}
+              onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
             >
               Agendar serviço
             </Button>
@@ -108,7 +124,7 @@ export default function PaginaPerfilMotorista() {
         ) : ofereceServico ? (
           <Button
             className="w-full h-12 text-base font-semibold"
-            onClick={() => navigate(urlBase)}
+            onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
           >
             Agendar serviço
           </Button>
