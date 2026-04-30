@@ -86,10 +86,11 @@ export default function PaginaVitrineTenantServicos() {
     return (
       <TemaServicos>
         <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-2 max-w-sm">
             <p className="text-base font-medium text-foreground">Tribo não encontrada</p>
             <p className="text-sm text-muted-foreground">
-              Verifique se o endereço está correto.
+              O endereço <span className="font-mono">/s/{slug}</span> ainda não está
+              ativo. Conclua o onboarding ou confirme o slug informado.
             </p>
           </div>
         </div>
