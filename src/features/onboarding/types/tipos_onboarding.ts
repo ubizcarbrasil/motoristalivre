@@ -27,6 +27,21 @@ export interface DadosConfiguracao {
   cashbackPadrao: number;
 }
 
+export type ModoCobranca = "fixed" | "hourly" | "daily";
+
+export interface DadosServico {
+  id: string;
+  nome: string;
+  descricao: string;
+  modoCobranca: ModoCobranca;
+  preco: number;
+  duracao: number; // unidade conforme modoCobranca: minutos / horas / dias
+  depositoAtivo: boolean;
+  depositoTipo: "percent" | "value";
+  depositoPct: number;
+  depositoValor: number;
+}
+
 export type ModuloPlataforma = "mobility" | "services";
 
 export interface DadosOnboarding {
@@ -35,6 +50,7 @@ export interface DadosOnboarding {
   planoSelecionado: string;
   pagamentoConfirmado: boolean;
   configuracao: DadosConfiguracao;
+  servicos: DadosServico[];
 }
 
 export type EtapaOnboarding = 0 | 1 | 2 | 3 | 4 | 5;

@@ -1453,6 +1453,7 @@ export type Database = {
           is_immediate: boolean
           name: string
           price: number
+          pricing_mode: Database["public"]["Enums"]["service_pricing_mode"]
           tenant_id: string
           updated_at: string
         }
@@ -1469,6 +1470,7 @@ export type Database = {
           is_immediate?: boolean
           name: string
           price: number
+          pricing_mode?: Database["public"]["Enums"]["service_pricing_mode"]
           tenant_id: string
           updated_at?: string
         }
@@ -1485,6 +1487,7 @@ export type Database = {
           is_immediate?: boolean
           name?: string
           price?: number
+          pricing_mode?: Database["public"]["Enums"]["service_pricing_mode"]
           tenant_id?: string
           updated_at?: string
         }
@@ -1970,6 +1973,7 @@ export type Database = {
         | "completed"
         | "expired"
         | "cancelled"
+      service_pricing_mode: "fixed" | "hourly" | "daily"
       subscription_status: "active" | "past_due" | "cancelled" | "trialing"
       tenant_status: "active" | "inactive" | "suspended"
       user_status: "active" | "inactive" | "banned"
@@ -2146,6 +2150,7 @@ export const Constants = {
         "expired",
         "cancelled",
       ],
+      service_pricing_mode: ["fixed", "hourly", "daily"],
       subscription_status: ["active", "past_due", "cancelled", "trialing"],
       tenant_status: ["active", "inactive", "suspended"],
       user_status: ["active", "inactive", "banned"],
