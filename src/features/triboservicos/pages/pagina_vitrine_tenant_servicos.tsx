@@ -6,6 +6,7 @@ import { TemaServicos } from "../components/tema_servicos";
 import { CabecalhoVitrineTenant } from "../components/cabecalho_vitrine_tenant";
 import { CardProfissionalVitrine } from "../components/card_profissional_vitrine";
 import { FooterServicos } from "../components/footer_servicos";
+import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 import {
   buscarTenantPublicoServicos,
   listarProfissionaisVitrine,
