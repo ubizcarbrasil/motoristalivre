@@ -164,6 +164,9 @@ export default function PaginaCadastro() {
     if (tipoCadastro === "motorista") {
       localStorage.setItem("tribocar_pending_driver_join", slugGrupo.trim());
     }
+    if (tipoCadastro === "profissional") {
+      localStorage.setItem("tribocar_pending_professional_setup", "1");
+    }
     setCarregandoGoogle(true);
     const redirectPath = tipoCadastro === "grupo" ? "/onboarding" : "/painel";
     const result = await lovable.auth.signInWithOAuth("google", {
