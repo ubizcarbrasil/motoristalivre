@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
+import { criarTriboProfissional } from "../services/servico_criar_tribo_profissional";
 
-type TipoCadastro = "grupo" | "motorista" | "passageiro" | "afiliado";
+type TipoCadastro = "grupo" | "motorista" | "passageiro" | "afiliado" | "profissional";
 
 function resolverTipoInicial(valor: string | null): TipoCadastro {
   if (valor === "motorista") return "motorista";
   if (valor === "passageiro") return "passageiro";
   if (valor === "afiliado") return "afiliado";
+  if (valor === "profissional") return "profissional";
   return "grupo";
 }
 
@@ -119,6 +121,31 @@ export default function PaginaCadastro() {
       }
     }
 
+    // Profissional autônomo: tenta criar tribo agora; se email confirmation estiver ativa,
+    // marca intenção para criar no primeiro login.
+    if (tipoCadastro === "profissional") {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      if (!signInError) {
+        try {
+          await criarTriboProfissional(nome.trim());
+          setCarregando(false);
+          navigate("/painel", { replace: true });
+          return;
+        } catch (err: any) {
+          toast({
+            title: "Conta criada, mas houve erro ao preparar seu espaço",
+            description: err?.message || "Tente novamente no painel.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        localStorage.setItem("tribocar_pending_professional_setup", nome.trim());
+      }
+    }
+
     setCarregando(false);
     setEmailEnviado(true);
   }
@@ -136,6 +163,9 @@ export default function PaginaCadastro() {
     }
     if (tipoCadastro === "motorista") {
       localStorage.setItem("tribocar_pending_driver_join", slugGrupo.trim());
+    }
+    if (tipoCadastro === "profissional") {
+      localStorage.setItem("tribocar_pending_professional_setup", "1");
     }
     setCarregandoGoogle(true);
     const redirectPath = tipoCadastro === "grupo" ? "/onboarding" : "/painel";
@@ -167,6 +197,11 @@ export default function PaginaCadastro() {
               Após confirmar, sua solicitação para entrar no grupo será enviada e ficará aguardando aprovação do dono.
             </p>
           )}
+          {tipoCadastro === "profissional" && (
+            <p className="text-xs text-muted-foreground">
+              Após confirmar, vamos preparar seu espaço e pedir alguns dados rápidos para sua vitrine.
+            </p>
+          )}
           <Button variant="outline" className="w-full" onClick={() => navigate("/entrar")}>
             Voltar para login
           </Button>
@@ -177,6 +212,7 @@ export default function PaginaCadastro() {
 
   const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
     { valor: "grupo", label: "Criar grupo" },
+    { valor: "profissional", label: "Profissional" },
     { valor: "motorista", label: "Motorista" },
     { valor: "passageiro", label: "Passageiro" },
     { valor: "afiliado", label: "Afiliado" },
@@ -187,7 +223,11 @@ export default function PaginaCadastro() {
       <div className="w-full max-w-sm space-y-6 py-10">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Criar conta</h1>
-          <p className="text-sm text-muted-foreground">Preencha os dados para comecar</p>
+          <p className="text-sm text-muted-foreground">
+            {tipoCadastro === "profissional"
+              ? "Crie sua agenda e portfólio em poucos passos"
+              : "Preencha os dados para comecar"}
+          </p>
         </div>
 
         {/* Tipo de cadastro */}
@@ -211,6 +251,12 @@ export default function PaginaCadastro() {
         {tipoCadastro === "passageiro" && (
           <p className="text-xs text-muted-foreground text-center -mt-2">
             Crie sua conta uma vez. Você pode pedir corrida em qualquer tribo abrindo o link do motorista.
+          </p>
+        )}
+
+        {tipoCadastro === "profissional" && (
+          <p className="text-xs text-muted-foreground text-center -mt-2">
+            Para barbeiros, manicures, estetistas e outros autônomos. Você terá sua vitrine e agenda próprias.
           </p>
         )}
 

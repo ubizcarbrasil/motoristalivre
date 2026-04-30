@@ -1,123 +1,62 @@
 
-# Experiência aprimorada de contratação
+## Problema
 
-Objetivo: transformar o link do profissional em uma vitrine completa antes de agendar (categorias, portfólio, equipe/afiliados) e tornar o fluxo de horário/preço inequívoco, com cobrança de sinal para confirmar.
+Hoje a tela `/cadastrar` oferece apenas 4 opções: **Criar grupo, Motorista, Passageiro, Afiliado**. Não existe entrada para o **profissional de serviço** (barbeiro, manicure, estética, etc.), apesar do backend já suportar via `drivers.professional_type` e `service_categories`.
 
-## 1. Perfil público enriquecido
+Resultado: o profissional autônomo não tem caminho claro de cadastro — precisaria criar um grupo manualmente e depois mudar o tipo dentro do painel.
 
-### 1.1 Portfólio de trabalhos por serviço
-Novo recurso para o profissional anexar imagens de exemplo a cada `service_type`.
+## Solução proposta
 
-- Tabela nova `service_portfolio_items` (driver_id, service_type_id, image_url, caption, ordem).
-- Bucket `branding` reaproveitado (já existe e é público).
-- Painel do profissional → aba Configurações → editor por serviço com upload (até 6 imagens por serviço).
-- No perfil público, cada card de serviço ganha um carrossel horizontal com as miniaturas. Clique abre lightbox.
+Adicionar a opção **"Profissional"** no seletor de tipo de cadastro, criando uma conta + tribo própria automaticamente (como acontece em "Criar grupo"), mas já marcando o usuário como profissional autônomo. O fluxo termina caindo no onboarding de profissional já existente em `/painel`, que coleta os dados completos (categorias, bio, capa, etc.).
 
-### 1.2 Categorias de serviço claras
-- Já existe `drivers.service_categories text[]`. Hoje não é exibido.
-- Mostrar como chips logo abaixo do nome no `HeaderPerfil` (ex.: “Estética”, “Manicure”, “Limpeza”).
-- No painel, formulário com lista controlada (constantes_categorias_servico) + free-text complementar.
+### Mudanças na tela de cadastro (`pagina_cadastro.tsx`)
 
-### 1.3 Equipe / afiliados do profissional
-Modelo: outros profissionais do mesmo tenant que o cliente também pode contratar a partir do mesmo link (afiliação cruzada de áreas diferentes).
+1. Expandir o tipo `TipoCadastro` para incluir `"profissional"`.
+2. Adicionar a 5ª opção no grid de seleção, com label **"Profissional"** e descrição curta tipo: *"Para barbeiros, manicures, estetistas e outros autônomos."*
+3. O profissional **não** precisa de slug (cria a própria tribo, igual a "Criar grupo").
+4. No `signUp`, enviar `metadata.role = "tenant_admin"` e um flag `metadata.intent = "professional"` para diferenciar do dono de grupo de mobilidade.
+5. Após signup (e-mail/senha ou Google), redirecionar para `/onboarding` com query `?modo=profissional` — a página de onboarding cria a tribo e pré-popula `drivers.professional_type`.
 
-- Nova tabela `professional_team_members` (owner_driver_id, member_driver_id, headline, ordem). RLS: `owner_driver_id = auth.uid()` para escrita; SELECT público.
-- Painel: aba “Minha equipe” — busca outros drivers do mesmo tenant e adiciona à vitrine pessoal com headline curto.
-- Perfil público: nova seção `SecaoEquipePublica` com avatares + categoria + botão “Ver perfil”, levando para `/[slug]/perfil/[driver_slug]` do membro. Mantém o cliente sempre dentro do tenant.
+### Mudanças no onboarding de tribo (`/onboarding`)
 
-### 1.4 Reorganização da página de perfil
-Ordem nova em `pagina_perfil_motorista.tsx`:
-1. HeaderPerfil (com chips de categorias)
-2. GridMetricas
-3. SecaoBio
-4. **SecaoServicosPublica** (com portfólio embutido) ← antes
-5. **SecaoEquipePublica** ← novo
-6. SecaoDisponibilidadePublica (resumo)
-7. DistribuicaoNotas + ListaAvaliacoes
-8. Grupo
-9. CTA fixo
+1. Ler `?modo=profissional` na URL.
+2. Quando for profissional: chamar `create_tenant_with_owner` (mesmo RPC já usado), depois `ensure_driver_profile` e atualizar `drivers.professional_type` para algo diferente de `"driver"` (por exemplo `"service"` — confirmar valor padrão lendo dados existentes).
+3. Redirecionar direto para `/painel`, onde o **banner de onboarding profissional** (já implementado) vai pedir os campos restantes (avatar, bio, categorias, capa, cidade, telefone).
 
-## 2. Agendamento mais claro
+### Rotas amigáveis
 
-Em `agendamento_servico.tsx`:
+Adicionar aliases em `src/App.tsx`:
+- `/profissional/cadastro` → `/cadastrar?tipo=profissional`
+- `/profissional/criar-conta` → `/cadastrar?tipo=profissional`
 
-### 2.1 Resumo de preço/duração sempre visível
-Sticky abaixo do header da página de agendamento mostrando: serviço selecionado, duração formatada, preço total, valor do sinal, troco para pagamento presencial.
+Isso espelha o que já existe para `/profissional/login`.
 
-### 2.2 Calendário e slots mais legíveis
-- Grid de 14 dias hoje fica apertado em 4 colunas no mobile. Mudar para scroll horizontal com cards maiores (data + “X horários”).
-- Slots: agrupar visualmente por período (Manhã / Tarde / Noite) com separadores.
-- Indicar claramente serviços que não “cabem” no fim do bloco (mensagem inline em vez de slot oculto: “Último horário 17:00 — serviço de 60min”).
+### Texto e UX
 
-### 2.3 Card de serviço com mais info
-Cards na seleção mostram, além de duração e preço:
-- ícone de portfólio (n imagens)
-- tag de categoria
-- texto “Sinal R$ X para confirmar” quando ativo
+- Subtítulo dinâmico quando `tipoCadastro === "profissional"`: *"Crie sua agenda e portfólio em poucos passos."*
+- Ao escolher "Profissional", esconder campo de slug (não é necessário).
+- Tela de "verifique seu email" mostra mensagem específica: *"Após confirmar, vamos criar seu espaço e pedir alguns dados rápidos."*
 
-## 3. Pagamento de sinal para confirmar
+## Detalhes técnicos
 
-Lovable Cloud Payments (Stripe seamless) para sinal.
+**Arquivos editados:**
+- `src/features/autenticacao/pages/pagina_cadastro.tsx` — adicionar opção "profissional", lógica de metadata e redirect
+- `src/features/onboarding/pages/pagina_onboarding.tsx` (ou equivalente) — ler `?modo=profissional` e setar `professional_type` ao criar tribo
+- `src/App.tsx` — adicionar rotas alias
 
-### 3.1 Configuração por profissional
-- Novas colunas em `service_types`: `deposit_enabled boolean default false`, `deposit_amount numeric` (valor fixo) ou `deposit_percent numeric`.
-- Painel: switch “Cobrar sinal para confirmar” + valor.
+**Sem mudanças de banco:** as colunas `drivers.professional_type` e `drivers.service_categories` já existem. O fluxo apenas as utiliza.
 
-### 3.2 Fluxo do cliente
-- Se serviço tem sinal:
-  1. Cliente escolhe slot → preenche dados.
-  2. Em vez de criar booking direto, edge function `book-service` cria booking com `status = 'awaiting_deposit'` e devolve `checkout_url` Stripe.
-  3. Redireciona para Stripe Checkout (modo `payment`).
-  4. Webhook Stripe → marca booking `confirmed` e libera o slot definitivamente.
-  5. Se cliente abandona em 15min, job/edge libera o slot (`cancelled`).
-- Se serviço não tem sinal: fluxo atual (`pending`).
+**Encadeamento com onboarding existente:** o wizard de 4 passos no `/painel` (já implementado) é a fonte da verdade para coletar dados completos do profissional. Esta mudança apenas garante que ele chegue lá com a tribo e o registro `drivers` já criados.
 
-### 3.3 Backend
-- Migration: adicionar colunas em `service_types`, novo status `awaiting_deposit` no enum (texto, já é text), nova tabela `service_payments` (booking_id, stripe_session_id, amount, status, paid_at).
-- Edge function nova `confirm-deposit` (webhook Stripe).
-- Edge function `book-service` ajustada para criar Checkout Session quando aplicável.
-- Configuração Stripe via tool `enable_stripe_payments` antes de implementar (recomendação após `recommend_payment_provider`).
+## Fora do escopo
 
-## 4. Estrutura de arquivos (feature-based)
+- Não vou alterar o wizard de onboarding profissional (já existe e funciona).
+- Não vou criar páginas de marketing/landing específicas para profissionais.
+- Não vou mexer em RLS ou triggers.
 
-```text
-src/features/motorista/
-  components/
-    chips_categorias.tsx          (novo)
-    secao_equipe_publica.tsx      (novo)
-    carrossel_portfolio.tsx       (novo)
-  hooks/
-    hook_perfil_motorista.ts      (estende — carrega portfolio + equipe)
-  services/
-    servico_perfil_motorista.ts   (novo — queries de equipe/portfolio)
+## Próximo passo
 
-src/features/painel/components/configuracoes/
-  editor_portfolio_servico.tsx    (novo)
-  editor_equipe.tsx               (novo)
-  campo_sinal_servico.tsx         (novo)
+Antes de implementar, preciso confirmar 2 pontos rápidos com você:
 
-src/features/passageiro/components/
-  agendamento_servico.tsx         (refatorado — sticky resumo, slots por período)
-  resumo_servico_sticky.tsx       (novo)
-  grade_slots_periodo.tsx         (novo)
-
-supabase/functions/
-  book-service/index.ts           (estende — cria Checkout Session)
-  confirm-deposit/index.ts        (novo — webhook Stripe)
-```
-
-## 5. Ordem de implementação
-
-1. Migrations (portfólio, equipe, sinal em service_types, status awaiting_deposit, service_payments).
-2. Painel: editor de categorias + portfólio + equipe + sinal.
-3. Perfil público: chips, portfólio, seção equipe, reorganização.
-4. Agendamento: resumo sticky, slots agrupados, calendário rolável.
-5. Pagamento: enable_stripe_payments + integração no book-service + webhook.
-6. QA do fluxo completo end-to-end com `prestador-demo`.
-
-## 6. Notas
-
-- Tudo dark mode `#000` / texto `#fff` / accent `#1db865`, IBM Plex Sans, snake_case pt-BR — fiel ao design system.
-- Sem quebra para perfis sem portfólio/equipe: seções somem se vazias.
-- Categorias e portfólio são opcionais; sinal é opcional por serviço.
-- Confirmação de Stripe é obrigatória antes do passo 5 — vou rodar `recommend_payment_provider` e pedir sua aprovação para `enable_stripe_payments` quando chegarmos lá.
+1. **Valor de `professional_type`**: hoje o default é `"driver"`. Para o profissional autônomo, qual valor devo usar? Sugestão: `"service"` (genérico, e o tipo específico — barber, nails, etc. — entra como categoria).
+2. **Onboarding de tribo**: o profissional deve passar pela tela `/onboarding` (escolher nome/slug da tribo) ou eu gero automaticamente a partir do nome dele e mando direto pro `/painel`?
