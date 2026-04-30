@@ -3,23 +3,31 @@ import type { EtapaOnboarding } from "../types/tipos_onboarding";
 
 interface IndicadorProgressoProps {
   etapaAtual: EtapaOnboarding;
+  etapasHabilitadas?: EtapaOnboarding[];
 }
 
-export function IndicadorProgresso({ etapaAtual }: IndicadorProgressoProps) {
+export function IndicadorProgresso({
+  etapaAtual,
+  etapasHabilitadas,
+}: IndicadorProgressoProps) {
+  const indices = etapasHabilitadas ?? ([0, 1, 2, 3, 4, 5] as EtapaOnboarding[]);
+  const indiceAtual = indices.indexOf(etapaAtual);
+
   return (
     <div className="w-full max-w-lg mx-auto mb-10">
       <div className="flex items-center justify-between">
-        {ETAPAS.map((etapa, indice) => {
-          const ativo = indice <= etapaAtual;
-          const atual = indice === etapaAtual;
+        {indices.map((idxEtapa, indice) => {
+          const ativo = indice <= indiceAtual;
+          const atual = indice === indiceAtual;
+          const rotulo = ETAPAS[idxEtapa];
 
           return (
-            <div key={etapa} className="flex flex-col items-center flex-1">
+            <div key={idxEtapa} className="flex flex-col items-center flex-1">
               <div className="flex items-center w-full">
                 {indice > 0 && (
                   <div
                     className={`h-[2px] flex-1 transition-colors duration-300 ${
-                      indice <= etapaAtual ? "bg-primary" : "bg-border"
+                      indice <= indiceAtual ? "bg-primary" : "bg-border"
                     }`}
                   />
                 )}
@@ -28,16 +36,16 @@ export function IndicadorProgresso({ etapaAtual }: IndicadorProgressoProps) {
                     atual
                       ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
                       : ativo
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground"
                   }`}
                 >
                   {indice + 1}
                 </div>
-                {indice < ETAPAS.length - 1 && (
+                {indice < indices.length - 1 && (
                   <div
                     className={`h-[2px] flex-1 transition-colors duration-300 ${
-                      indice < etapaAtual ? "bg-primary" : "bg-border"
+                      indice < indiceAtual ? "bg-primary" : "bg-border"
                     }`}
                   />
                 )}
@@ -47,7 +55,7 @@ export function IndicadorProgresso({ etapaAtual }: IndicadorProgressoProps) {
                   atual ? "text-foreground font-medium" : "text-muted-foreground"
                 }`}
               >
-                {etapa}
+                {rotulo}
               </span>
             </div>
           );
