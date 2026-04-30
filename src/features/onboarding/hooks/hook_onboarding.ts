@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import type {
   DadosIdentidade,
   DadosConfiguracao,
+  DadosServico,
   EtapaOnboarding,
   ModuloPlataforma,
 } from "../types/tipos_onboarding";
@@ -16,6 +17,7 @@ export function useOnboarding() {
   const [planoSelecionado, setPlanoSelecionado] = useState("");
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
   const [configuracao, setConfiguracao] = useState<DadosConfiguracao>(CONFIGURACAO_INICIAL);
+  const [servicos, setServicos] = useState<DadosServico[]>([]);
   const [enviando, setEnviando] = useState(false);
 
   const avancar = useCallback(() => {
@@ -42,6 +44,8 @@ export function useOnboarding() {
     setPagamentoConfirmado,
     configuracao,
     setConfiguracao,
+    servicos,
+    setServicos,
     enviando,
     setEnviando,
     avancar,
