@@ -18,6 +18,7 @@ export interface PerfilPublicoMotorista {
   credential_verified: boolean;
   credential_type: string | null;
   credential_number: string | null;
+  service_categories: string[];
 }
 
 export interface MetricasMotorista {

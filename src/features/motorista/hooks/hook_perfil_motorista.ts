@@ -11,6 +11,11 @@ import type {
   TipoServico,
   DisponibilidadeProfissional,
 } from "@/features/servicos/types/tipos_servicos";
+import type { ItemPortfolio, MembroEquipe } from "../types/tipos_vitrine";
+import {
+  listarPortfolioPorMotorista,
+  listarEquipeDoMotorista,
+} from "../services/servico_vitrine";
 
 export function usePerfilMotorista() {
   const { slug, driver_slug } = useParams<{ slug: string; driver_slug: string }>();
@@ -25,6 +30,8 @@ export function usePerfilMotorista() {
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoPublica[]>([]);
   const [servicos, setServicos] = useState<TipoServico[]>([]);
   const [disponibilidade, setDisponibilidade] = useState<DisponibilidadeProfissional[]>([]);
+  const [portfolio, setPortfolio] = useState<ItemPortfolio[]>([]);
+  const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
 
@@ -83,6 +90,7 @@ export function usePerfilMotorista() {
           credential_verified: !!(driver as any).credential_verified,
           credential_type: ((driver as any).credential_type as string) ?? null,
           credential_number: ((driver as any).credential_number as string) ?? null,
+          service_categories: ((driver as any).service_categories as string[]) ?? [],
         });
 
         // Reviews
@@ -154,6 +162,13 @@ export function usePerfilMotorista() {
           ]);
           setServicos((servs ?? []) as unknown as TipoServico[]);
           setDisponibilidade((avail ?? []) as unknown as DisponibilidadeProfissional[]);
+
+          const [itensPortfolio, membrosEquipe] = await Promise.all([
+            listarPortfolioPorMotorista(driver.id),
+            listarEquipeDoMotorista(driver.id),
+          ]);
+          setPortfolio(itensPortfolio);
+          setEquipe(membrosEquipe);
         }
       } catch {
         setErro(true);
@@ -165,5 +180,16 @@ export function usePerfilMotorista() {
     carregar();
   }, [slug, driver_slug]);
 
-  return { perfil, metricas, distribuicao, avaliacoes, servicos, disponibilidade, carregando, erro };
+  return {
+    perfil,
+    metricas,
+    distribuicao,
+    avaliacoes,
+    servicos,
+    disponibilidade,
+    portfolio,
+    equipe,
+    carregando,
+    erro,
+  };
 }
