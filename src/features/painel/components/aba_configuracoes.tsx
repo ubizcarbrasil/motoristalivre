@@ -146,6 +146,13 @@ export function AbaConfiguracoes({
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
 
+      {precisaOnboarding && (
+        <BannerOnboardingProfissional
+          camposFaltantes={camposFaltantes}
+          onAbrir={() => setOnboardingAberto(true)}
+        />
+      )}
+
       <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
 
       <Separator />
