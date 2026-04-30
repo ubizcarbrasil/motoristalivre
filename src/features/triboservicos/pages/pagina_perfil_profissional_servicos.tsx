@@ -58,6 +58,19 @@ export default function PaginaPerfilProfissionalServicos() {
 
   const dados = useDadosServicoMotorista(driverId);
 
+  const tituloSeo = dados.full_name
+    ? `${dados.full_name} — Serviços e agendamento`
+    : "TriboServiços";
+  const descricaoSeo =
+    dados.full_name && tenant
+      ? `Veja portfólio, serviços e agende um horário com ${dados.full_name} em ${tenant.name}.`
+      : undefined;
+  const canonicalSeo =
+    tenant && driver_slug
+      ? `${window.location.origin}/s/${tenant.slug}/${driver_slug}`
+      : undefined;
+  useSeoBasico({ titulo: tituloSeo, descricao: descricaoSeo, canonical: canonicalSeo });
+
   function compartilhar() {
     const url = `${window.location.origin}/s/${slug}/${driver_slug}`;
     if (navigator.share) {
