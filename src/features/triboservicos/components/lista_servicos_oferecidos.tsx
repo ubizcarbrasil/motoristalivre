@@ -57,12 +57,16 @@ export function ListaServicosOferecidos({ servicos, onSelecionar }: Props) {
                   currency: "BRL",
                 })}
               </p>
-              {servico.pricing_mode && servico.pricing_mode !== "fixed" && (
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                  {servico.pricing_mode === "per_hour" && "por hora"}
-                  {servico.pricing_mode === "per_day" && "por diária"}
-                </p>
-              )}
+              {(() => {
+                const modo = (servico as unknown as { pricing_mode?: string }).pricing_mode;
+                if (!modo || modo === "fixed") return null;
+                return (
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                    {modo === "per_hour" && "por hora"}
+                    {modo === "per_day" && "por diária"}
+                  </p>
+                );
+              })()}
             </div>
           </div>
         </Card>
