@@ -21,6 +21,7 @@ const PERSONAS: Persona[] = [
   { email: "admin@tribocar.test", role: "tenant_admin", fullName: "Admin do Grupo" },
   { email: "manager@tribocar.test", role: "manager", fullName: "Gestor do Grupo" },
   { email: "motorista@tribocar.test", role: "driver", fullName: "Motorista Demo" },
+  { email: "prestador@tribocar.test", role: "driver", fullName: "Prestador Demo" },
   { email: "afiliado@tribocar.test", role: "affiliate", fullName: "Afiliado Demo" },
   { email: "passageiro@tribocar.test", role: "passenger", fullName: "Passageiro Demo" },
 ];
