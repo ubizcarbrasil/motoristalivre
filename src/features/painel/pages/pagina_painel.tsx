@@ -152,6 +152,9 @@ export default function PaginaPainel() {
               onAtivarMotorista={recarregar}
             />
           )}
+          {aba === "meus_links" && (
+            <AbaMeusLinksDono tribo={triboAtiva} modulosAtivos={triboAtiva.modulosAtivos} />
+          )}
           {aba === "carteira" && <AbaCarteira userId={userId} />}
           {aba === "configuracoes" && (
             <AbaConfiguracoes
