@@ -5,6 +5,7 @@ import { TemaServicos } from "../components/tema_servicos";
 import { AgendamentoServico } from "@/features/passageiro/components/agendamento_servico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
 import { resolverDriverVitrine } from "../services/servico_vitrine_publica";
+import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 
 export default function PaginaAgendamentoServicos() {
   const { slug, driver_slug } = useParams<{ slug: string; driver_slug: string }>();
@@ -39,6 +40,18 @@ export default function PaginaAgendamentoServicos() {
   }, [slug, driver_slug]);
 
   const dados = useDadosServicoMotorista(resolucao?.driverId ?? null);
+
+  const tituloSeo = dados.full_name
+    ? `Agendar com ${dados.full_name} — TriboServiços`
+    : "Agendar serviço — TriboServiços";
+  const descricaoSeo = dados.full_name
+    ? `Escolha data e horário para agendar um serviço com ${dados.full_name}.`
+    : undefined;
+  const canonicalSeo =
+    slug && driver_slug
+      ? `${window.location.origin}/s/${slug}/${driver_slug}/agendar`
+      : undefined;
+  useSeoBasico({ titulo: tituloSeo, descricao: descricaoSeo, canonical: canonicalSeo });
 
   if (carregando || (resolucao && dados.carregando)) {
     return (
