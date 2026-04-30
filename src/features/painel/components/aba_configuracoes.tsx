@@ -22,6 +22,10 @@ import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
 import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
 import { SecaoEquipeAdmin } from "./secao_equipe_admin";
 import { BotaoPreviewVitrine } from "./botao_preview_vitrine";
+import { BannerOnboardingProfissional } from "./banner_onboarding_profissional";
+import { BloqueioOnboarding } from "./bloqueio_onboarding";
+import { DialogoOnboardingProfissional } from "./dialogo_onboarding_profissional";
+import { useHookOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
 import {
   buscarMeusGrupos,
   buscarConvitesPendentes,
@@ -59,6 +63,7 @@ export function AbaConfiguracoes({
   const [carregando, setCarregando] = useState(true);
   const [idCopiado, setIdCopiado] = useState(false);
   const [salvandoTipo, setSalvandoTipo] = useState(false);
+  const [onboardingAberto, setOnboardingAberto] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -67,6 +72,13 @@ export function AbaConfiguracoes({
     disponibilidade,
     recarregar: recarregarServico,
   } = useHookPerfilServico(driverId);
+
+  const {
+    dados: dadosOnboarding,
+    camposFaltantes,
+    precisaOnboarding,
+    recarregar: recarregarOnboarding,
+  } = useHookOnboardingProfissional(driverId, tenantId);
 
   const idCurto = driverId.slice(0, 8);
 
@@ -134,6 +146,13 @@ export function AbaConfiguracoes({
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
 
+      {precisaOnboarding && (
+        <BannerOnboardingProfissional
+          camposFaltantes={camposFaltantes}
+          onAbrir={() => setOnboardingAberto(true)}
+        />
+      )}
+
       <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
 
       <Separator />
@@ -197,15 +216,37 @@ export function AbaConfiguracoes({
             onAtualizar={recarregarServico}
           />
 
-          <SecaoCategoriasAdmin driverId={driverId} />
+          {precisaOnboarding ? (
+            <div className="space-y-3">
+              <BloqueioOnboarding
+                titulo="Categorias visíveis"
+                descricao="Conclua seu cadastro profissional para gerenciar as categorias da vitrine."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+              <BloqueioOnboarding
+                titulo="Portfólio de serviços"
+                descricao="Conclua seu cadastro para enviar fotos e organizar seu portfólio."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+              <BloqueioOnboarding
+                titulo="Equipe"
+                descricao="Conclua seu cadastro para adicionar membros à sua equipe pública."
+                onAbrir={() => setOnboardingAberto(true)}
+              />
+            </div>
+          ) : (
+            <>
+              <SecaoCategoriasAdmin driverId={driverId} />
 
-          <SecaoPortfolioAdmin
-            driverId={driverId}
-            tenantId={tenantId}
-            servicos={servicos}
-          />
+              <SecaoPortfolioAdmin
+                driverId={driverId}
+                tenantId={tenantId}
+                servicos={servicos}
+              />
 
-          <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+              <SecaoEquipeAdmin driverId={driverId} tenantId={tenantId} />
+            </>
+          )}
 
           <BotaoPreviewVitrine driverId={driverId} />
         </>
@@ -347,6 +388,22 @@ export function AbaConfiguracoes({
           Criar meu próprio grupo
         </Button>
       </div>
+
+      <DialogoOnboardingProfissional
+        aberto={onboardingAberto}
+        driverId={driverId}
+        tenantId={tenantId}
+        dadosIniciais={dadosOnboarding}
+        onConcluido={async () => {
+          await recarregarOnboarding();
+          await recarregarServico();
+          setOnboardingAberto(false);
+        }}
+        onFechar={() => {
+          // Se ainda falta algo, mantemos o banner; o usuário pode fechar e voltar depois.
+          setOnboardingAberto(false);
+        }}
+      />
     </div>
   );
 }
