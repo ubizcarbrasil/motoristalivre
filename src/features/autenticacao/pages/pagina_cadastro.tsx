@@ -248,6 +248,17 @@ export default function PaginaCadastro() {
           ))}
         </div>
 
+        {tipoCadastro === "motorista" && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5 -mt-2">
+            <p className="text-xs text-foreground font-medium">É cliente ou passageiro?</p>
+            <p className="text-[11px] text-muted-foreground leading-snug mt-1">
+              Esta tela é só para motoristas que vão atender corridas. Se você quer pedir uma
+              corrida ou agendar um serviço, peça ao profissional o link correto (começa com o
+              slug da tribo, não com <span className="font-mono">/cadastro</span>).
+            </p>
+          </div>
+        )}
+
         {tipoCadastro === "passageiro" && (
           <p className="text-xs text-muted-foreground text-center -mt-2">
             Crie sua conta uma vez. Você pode pedir corrida em qualquer tribo abrindo o link do motorista.

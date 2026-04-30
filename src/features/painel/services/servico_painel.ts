@@ -43,6 +43,8 @@ export async function buscarPerfilMotorista(userId: string): Promise<PerfilMotor
     custom_base_fare: driver.custom_base_fare,
     custom_price_per_km: driver.custom_price_per_km,
     custom_price_per_min: driver.custom_price_per_min,
+    professional_type:
+      ((driver as any).professional_type as PerfilMotorista["professional_type"]) ?? "driver",
   };
 }
 

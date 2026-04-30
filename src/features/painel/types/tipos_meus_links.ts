@@ -1,5 +1,5 @@
 // Tipos da aba "Meus Links" — canais de geração de corrida do motorista
-export type TipoCanalLink = "motorista" | "afiliado" | "grupo";
+export type TipoCanalLink = "motorista" | "afiliado" | "grupo" | "servicos";
 
 export interface StatsCanalMes {
   corridas: number;
@@ -13,6 +13,11 @@ export interface CanalLink {
   descricao: string;
   url: string;
   handle: string;
-  cor: "roxo" | "azul" | "verde";
+  cor: "roxo" | "azul" | "verde" | "dourado";
   stats: StatsCanalMes;
+  rotuloMetricas?: {
+    primario: string;
+    secundario: string;
+    terciario: string;
+  };
 }

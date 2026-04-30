@@ -22,8 +22,10 @@ import PaginaPersonas from "@/features/dev_personas/pages/pagina_personas";
 import PaginaInstalar from "@/features/instalacao/pages/pagina_instalar";
 import PaginaAcesso from "@/features/acesso_publico/pages/pagina_acesso";
 import PaginaSimuladorDispatch from "@/features/dev_simulador/pages/pagina_simulador_dispatch";
-import PaginaServicosTenant from "@/features/servicos/pages/pagina_servicos_tenant";
-import PaginaServicosMotorista from "@/features/servicos/pages/pagina_servicos_motorista";
+import {
+  RedirectVitrineTenantLegado,
+  RedirectVitrineProfissionalLegado,
+} from "@/features/triboservicos/components/redirects_legados";
 import PaginaLandingServicos from "@/features/triboservicos/pages/pagina_landing_servicos";
 import PaginaEntrarServicos from "@/features/triboservicos/pages/pagina_entrar_servicos";
 import PaginaCadastroTribo from "@/features/triboservicos/pages/pagina_cadastro_tribo";
@@ -82,8 +84,11 @@ const App = () => (
             <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
             <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
             <Route path="/:slug/perfil/:driver_slug" element={<PaginaPerfilMotorista />} />
-            <Route path="/:slug/servicos" element={<ProvedorTenant><PaginaServicosTenant /></ProvedorTenant>} />
-            <Route path="/:slug/servicos/:driver_slug" element={<ProvedorTenant><PaginaServicosMotorista /></ProvedorTenant>} />
+            <Route path="/:slug/servicos" element={<RedirectVitrineTenantLegado />} />
+            <Route
+              path="/:slug/servicos/:driver_slug"
+              element={<RedirectVitrineProfissionalLegado />}
+            />
             <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
 
             <Route path="*" element={<NotFound />} />

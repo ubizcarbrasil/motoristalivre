@@ -53,6 +53,7 @@ export interface PerfilMotorista {
   custom_base_fare: number | null;
   custom_price_per_km: number | null;
   custom_price_per_min: number | null;
+  professional_type: "driver" | "service_provider" | "both";
 }
 
 export interface ReputacaoMotorista {

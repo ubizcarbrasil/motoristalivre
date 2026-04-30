@@ -23,7 +23,6 @@ async function statsPorOrigem(
   const corridas = rides?.length ?? 0;
   const ganhos = rides?.reduce((a, r) => a + (r.price_paid ?? 0), 0) ?? 0;
 
-  // Conversão: corridas concluídas / ride_requests via esse canal no mês
   const { count: requests } = await supabase
     .from("ride_requests")
     .select("id", { count: "exact", head: true })
@@ -57,6 +56,28 @@ async function statsTenant(tenantId: string): Promise<StatsCanalMes> {
   return { corridas, ganhos, conversao };
 }
 
+async function statsServicos(driverId: string): Promise<StatsCanalMes> {
+  const desde = inicioDoMes();
+
+  const { data: bookings } = await supabase
+    .from("service_bookings" as any)
+    .select("price_agreed, status")
+    .eq("driver_id", driverId)
+    .gte("created_at", desde);
+
+  const lista = ((bookings ?? []) as unknown) as Array<{
+    price_agreed: number | null;
+    status: string;
+  }>;
+  const concluidos = lista.filter((b) => b.status === "completed");
+  const corridas = concluidos.length;
+  const ganhos = concluidos.reduce((a, b) => a + Number(b.price_agreed ?? 0), 0);
+  const total = lista.length;
+  const conversao = total > 0 ? (corridas / total) * 100 : 0;
+
+  return { corridas, ganhos, conversao };
+}
+
 interface BuscarCanaisParams {
   driverId: string;
   driverSlug: string;
@@ -64,38 +85,76 @@ interface BuscarCanaisParams {
   tenantSlug: string;
   tenantNome: string;
   ehAdminGrupo: boolean;
+  professionalType: "driver" | "service_provider" | "both";
 }
 
 export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLink[]> {
   const base = typeof window !== "undefined" ? window.location.origin : "https://tribocar.app";
 
-  const [statsMotorista, statsAfiliado] = await Promise.all([
-    statsPorOrigem("origin_driver_id", p.driverId),
-    statsPorOrigem("origin_affiliate_id", p.driverId),
-  ]);
+  const ofereceCorridas = p.professionalType === "driver" || p.professionalType === "both";
+  const ofereceServicos =
+    p.professionalType === "service_provider" || p.professionalType === "both";
 
-  const canais: CanalLink[] = [
-    {
-      tipo: "motorista",
-      titulo: "Meu link de corrida",
-      descricao:
-        "Corrida chega para você primeiro. Se você não atender, o grupo assume.",
-      url: `${base}/${p.tenantSlug}/${p.driverSlug}`,
+  const canais: CanalLink[] = [];
+
+  if (ofereceServicos) {
+    const stats = await statsServicos(p.driverId);
+    canais.push({
+      tipo: "servicos",
+      titulo: "Link de Serviços",
+      descricao: "Para clientes verem seu portfólio e agendarem horário.",
+      url: `${base}/s/${p.tenantSlug}/${p.driverSlug}`,
       handle: `@${p.driverSlug}`,
-      cor: "roxo",
-      stats: statsMotorista,
-    },
-    {
+      cor: "dourado",
+      stats,
+      rotuloMetricas: {
+        primario: "Agendamentos/mês",
+        secundario: "Conclusão",
+        terciario: "Receita/mês",
+      },
+    });
+  }
+
+  if (ofereceCorridas) {
+    const [statsMotorista, statsAfiliado] = await Promise.all([
+      statsPorOrigem("origin_driver_id", p.driverId),
+      statsPorOrigem("origin_affiliate_id", p.driverId),
+    ]);
+
+    canais.push(
+      {
+        tipo: "motorista",
+        titulo: "Link de corrida",
+        descricao:
+          "Para passageiros pedirem corrida direto com você. Se não atender, o grupo assume.",
+        url: `${base}/${p.tenantSlug}/${p.driverSlug}`,
+        handle: `@${p.driverSlug}`,
+        cor: "roxo",
+        stats: statsMotorista,
+      },
+      {
+        tipo: "afiliado",
+        titulo: "Link de afiliado",
+        descricao: "Para indicar corridas e ganhar comissão por cada uma atendida.",
+        url: `${base}/${p.tenantSlug}/a/${p.driverSlug}`,
+        handle: `@${p.driverSlug}`,
+        cor: "azul",
+        stats: statsAfiliado,
+      },
+    );
+  } else {
+    // Profissional puro (sem corridas) ainda pode indicar — mantém afiliado
+    const statsAfiliado = await statsPorOrigem("origin_affiliate_id", p.driverId);
+    canais.push({
       tipo: "afiliado",
-      titulo: "Meu link de afiliado",
-      descricao:
-        "Indique corridas e ganhe comissão por cada uma atendida, mesmo sem dirigir.",
+      titulo: "Link de afiliado",
+      descricao: "Para indicar corridas e ganhar comissão por cada uma atendida.",
       url: `${base}/${p.tenantSlug}/a/${p.driverSlug}`,
       handle: `@${p.driverSlug}`,
       cor: "azul",
       stats: statsAfiliado,
-    },
-  ];
+    });
+  }
 
   if (p.ehAdminGrupo) {
     const stats = await statsTenant(p.tenantId);
