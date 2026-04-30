@@ -221,7 +221,11 @@ export default function PaginaPainel() {
       )}
 
       {aba === "meus_links" && (
-        <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
+        <AbaMeusLinks
+          perfil={perfil}
+          tenant={triboAtiva ? { id: triboAtiva.id, name: triboAtiva.nome, slug: triboAtiva.slug } : tenant}
+          ehAdminGrupo={ehAdmin || (triboAtiva?.papel === "dono")}
+        />
       )}
 
       {aba === "carteira" && <AbaCarteira userId={userId} />}
