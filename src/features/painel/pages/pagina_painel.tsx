@@ -102,6 +102,24 @@ export default function PaginaPainel() {
       });
   }, [userId]);
 
+  // Onboarding profissional: detecta campos faltantes e abre auto após criação da tribo
+  const onboardingDriverId = userId ?? "";
+  const onboardingTenantId = tenant?.id ?? "";
+  const {
+    dados: dadosOnboarding,
+    camposFaltantes,
+    precisaOnboarding,
+    recarregar: recarregarOnboarding,
+  } = useHookOnboardingProfissional(onboardingDriverId, onboardingTenantId);
+
+  useEffect(() => {
+    if (!userId || !tenant?.id) return;
+    if (precisaOnboarding && !onboardingJaAbriu && !dialogoOnboardingAberto) {
+      setDialogoOnboardingAberto(true);
+      setOnboardingJaAbriu(true);
+    }
+  }, [userId, tenant?.id, precisaOnboarding, onboardingJaAbriu, dialogoOnboardingAberto]);
+
   if (carregando) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
