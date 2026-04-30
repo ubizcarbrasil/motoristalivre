@@ -121,6 +121,31 @@ export default function PaginaCadastro() {
       }
     }
 
+    // Profissional autônomo: tenta criar tribo agora; se email confirmation estiver ativa,
+    // marca intenção para criar no primeiro login.
+    if (tipoCadastro === "profissional") {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      if (!signInError) {
+        try {
+          await criarTriboProfissional(nome.trim());
+          setCarregando(false);
+          navigate("/painel", { replace: true });
+          return;
+        } catch (err: any) {
+          toast({
+            title: "Conta criada, mas houve erro ao preparar seu espaço",
+            description: err?.message || "Tente novamente no painel.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        localStorage.setItem("tribocar_pending_professional_setup", nome.trim());
+      }
+    }
+
     setCarregando(false);
     setEmailEnviado(true);
   }
