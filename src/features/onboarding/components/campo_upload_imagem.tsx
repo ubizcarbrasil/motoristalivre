@@ -89,10 +89,11 @@ export function CampoUploadImagem({ label, valor, pasta, aspecto, dimensoesMinim
 
     const { error } = await supabase.storage
       .from("branding")
-      .upload(nomeArquivo, arquivo, { upsert: true });
+      .upload(nomeArquivo, arquivo, { upsert: true, contentType: arquivo.type });
 
     if (error) {
-      toast.error("Erro ao enviar imagem");
+      console.error("[upload branding] erro:", error, { nomeArquivo, userId, perfil });
+      toast.error(`Erro ao enviar imagem: ${error.message}`);
       setEnviando(false);
       return;
     }
