@@ -26,6 +26,8 @@ import {
 } from "../utils/calcular_slots_disponiveis";
 import { baixarIcs } from "../utils/gerador_ics";
 import { BlocosDisponibilidade } from "./blocos_disponibilidade";
+import { ResumoServicoSticky } from "./resumo_servico_sticky";
+import { GradeSlotsPeriodo } from "./grade_slots_periodo";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
@@ -317,6 +319,12 @@ export function AgendamentoServico({
         <span className="text-sm font-medium text-foreground">Agendar serviço</span>
       </div>
 
+      <ResumoServicoSticky
+        servico={servicoAtual}
+        slotHora={slotSelecionado?.hora ?? null}
+        slotData={diaSelecionado ? formatarDataLonga(diaSelecionado) : null}
+      />
+
       <div className="px-4 py-5 pb-32 max-w-md mx-auto space-y-6">
         {/* Header profissional */}
         <div className="flex items-center gap-3">
@@ -392,7 +400,7 @@ export function AgendamentoServico({
         {/* Blocos de disponibilidade */}
         {servicoAtual && <BlocosDisponibilidade blocos={availability} />}
 
-        {/* Calendário 14 dias */}
+        {/* Calendário 14 dias - scroll horizontal */}
         {servicoAtual && (
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">Escolha a data</h2>
@@ -401,7 +409,7 @@ export function AgendamentoServico({
                 <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x">
                 {dias14.map((d) => {
                   const slots = slotsPorDia.get(d.toDateString()) ?? [];
                   const desabilitado = slots.length === 0;
@@ -415,7 +423,7 @@ export function AgendamentoServico({
                         setDiaSelecionado(d);
                         setSlotSelecionado(null);
                       }}
-                      className={`rounded-lg p-2 text-center transition-colors border ${
+                      className={`snap-start shrink-0 w-[72px] rounded-xl p-2.5 text-center transition-colors border ${
                         ativo
                           ? "border-primary bg-primary/15 text-foreground"
                           : desabilitado
@@ -426,8 +434,15 @@ export function AgendamentoServico({
                       <p className="text-[10px] uppercase tracking-wider">
                         {DIAS_SEMANA[d.getDay()]}
                       </p>
-                      <p className="text-base font-semibold">{d.getDate()}</p>
+                      <p className="text-lg font-semibold leading-tight">{d.getDate()}</p>
                       <p className="text-[10px] text-muted-foreground">{MESES[d.getMonth()]}</p>
+                      <p
+                        className={`text-[10px] mt-1 font-medium ${
+                          desabilitado ? "text-muted-foreground/40" : "text-primary"
+                        }`}
+                      >
+                        {desabilitado ? "—" : `${slots.length} hr`}
+                      </p>
                     </button>
                   );
                 })}
