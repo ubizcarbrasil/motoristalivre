@@ -9,6 +9,7 @@ import { CabecalhoPerfilProfissional } from "../components/cabecalho_perfil_prof
 import { GaleriaPortfolio } from "../components/galeria_portfolio";
 import { ListaServicosOferecidos } from "../components/lista_servicos_oferecidos";
 import { FooterServicos } from "../components/footer_servicos";
+import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
 import {
   buscarTenantPublicoServicos,
