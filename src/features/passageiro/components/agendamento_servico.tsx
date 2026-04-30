@@ -451,29 +451,15 @@ export function AgendamentoServico({
           </div>
         )}
 
-        {/* Slots do dia */}
-        {diaSelecionado && slotsDoDiaSelecionado.length > 0 && (
+        {/* Slots do dia agrupados por período */}
+        {diaSelecionado && (
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">Horários disponíveis</h2>
-            <div className="grid grid-cols-4 gap-2">
-              {slotsDoDiaSelecionado.map((s) => {
-                const ativo = slotSelecionado?.iso === s.iso;
-                return (
-                  <button
-                    key={s.iso}
-                    type="button"
-                    onClick={() => setSlotSelecionado(s)}
-                    className={`h-10 rounded-lg text-sm font-mono font-medium transition-colors border ${
-                      ativo
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-foreground hover:bg-secondary/40"
-                    }`}
-                  >
-                    {s.hora}
-                  </button>
-                );
-              })}
-            </div>
+            <GradeSlotsPeriodo
+              slots={slotsDoDiaSelecionado}
+              selecionado={slotSelecionado}
+              onSelecionar={setSlotSelecionado}
+            />
           </div>
         )}
 
