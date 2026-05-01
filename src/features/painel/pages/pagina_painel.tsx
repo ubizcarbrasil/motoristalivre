@@ -154,6 +154,7 @@ export default function PaginaPainel() {
               driverId={userId}
               tenantId={triboAtiva.id}
               ehAdmin={true}
+              activeModules={activeModulesAtual}
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
