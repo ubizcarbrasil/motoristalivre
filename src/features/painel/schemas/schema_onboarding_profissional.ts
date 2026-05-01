@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { slugValido } from "@/compartilhados/constants/constantes_categorias_servico";
 
 export const schemaOnboardingProfissional = z.object({
   full_name: z
@@ -25,8 +26,13 @@ export const schemaOnboardingProfissional = z.object({
     .min(20, "Descreva seu trabalho com pelo menos 20 caracteres")
     .max(500, "Máximo de 500 caracteres"),
   service_categories: z
-    .array(z.string().trim().min(1).max(50))
-    .min(1, "Selecione ao menos 1 categoria"),
+    .array(z.string().trim().min(1).max(80))
+    .min(1, "Selecione ao menos 1 categoria")
+    .max(10, "Máximo de 10 categorias")
+    .refine(
+      (lista) => lista.every((s) => slugValido(s)),
+      { message: "Categoria inválida na lista" },
+    ),
   avatar_url: z.string().url("Faça upload da foto de perfil"),
   cover_url: z.string().url("Faça upload da foto de capa"),
 });
