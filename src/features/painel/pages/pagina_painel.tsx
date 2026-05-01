@@ -238,6 +238,7 @@ export default function PaginaPainel() {
           driverId={userId}
           tenantId={tenant.id}
           ehAdmin={ehAdmin}
+          activeModules={activeModulesAtual}
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}
