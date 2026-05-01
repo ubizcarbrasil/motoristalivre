@@ -1,49 +1,41 @@
-import { CardLinkAcesso } from "../components/card_link_acesso";
-import { BlocoCredenciais } from "../components/bloco_credenciais";
-import { LINKS_ACESSO } from "../constants/constantes_acesso";
-
-const SECOES = [
-  { id: "motorista" as const, titulo: "Motorista" },
-  { id: "profissional" as const, titulo: "Profissional" },
-  { id: "admin" as const, titulo: "Administrador geral" },
-  { id: "passageiro" as const, titulo: "App do passageiro" },
-  { id: "servicos" as const, titulo: "Módulo Serviços" },
-  { id: "dev" as const, titulo: "Ferramentas de teste" },
-];
+import { Link } from "react-router-dom";
+import { CardPerfilAcesso } from "../components/card_perfil_acesso";
+import { PERFIS_ACESSO } from "../constants/constantes_perfis_acesso";
 
 export default function PaginaAcesso() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-semibold">Acessos públicos</h1>
-          <p className="text-sm text-muted-foreground">
-            Links diretos para abrir o app fora do editor. Funciona em qualquer navegador.
+      <div className="mx-auto max-w-5xl px-4 py-10 space-y-10 sm:py-14">
+        <header className="space-y-3 text-center">
+          <span className="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            TriboCar
+          </span>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Acessos por perfil
+          </h1>
+          <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
+            Escolha seu perfil para entrar ou criar sua conta. Cada perfil tem
+            seu próprio fluxo dedicado.
           </p>
         </header>
 
-        <BlocoCredenciais />
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {PERFIS_ACESSO.map((perfil) => (
+            <CardPerfilAcesso key={perfil.id} perfil={perfil} />
+          ))}
+        </section>
 
-        {SECOES.map((secao) => {
-          const links = LINKS_ACESSO.filter((l) => l.categoria === secao.id);
-          if (!links.length) return null;
-          return (
-            <section key={secao.id} className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                {secao.titulo}
-              </h2>
-              <div className="space-y-3">
-                {links.map((link) => (
-                  <CardLinkAcesso key={link.id} link={link} />
-                ))}
-              </div>
-            </section>
-          );
-        })}
-
-        <footer className="pt-4 text-xs text-muted-foreground text-center">
-          Para usar com seu grupo real: <span className="font-mono">/SEU_SLUG</span> ou{" "}
-          <span className="font-mono">/SEU_SLUG/SLUG_DO_MOTORISTA</span>
+        <footer className="space-y-2 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+          <p>
+            Já tem o link da tribo?{" "}
+            <span className="font-mono text-foreground">/SEU_SLUG</span> ou{" "}
+            <span className="font-mono text-foreground">/SEU_SLUG/SLUG_DO_MOTORISTA</span>
+          </p>
+          <p>
+            <Link to="/" className="text-primary hover:underline">
+              Voltar ao site
+            </Link>
+          </p>
         </footer>
       </div>
     </div>
