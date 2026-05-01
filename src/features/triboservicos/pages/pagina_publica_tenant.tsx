@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ProvedorTenant } from "@/features/tenant/contexts/contexto_tenant";
-import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
 import PaginaVitrineTenantServicos from "./pagina_vitrine_tenant_servicos";
 import { TemaServicos } from "../components/tema_servicos";
 
-type EstadoCarregamento = "carregando" | "servicos" | "mobility" | "nao_encontrado";
+type EstadoCarregamento = "carregando" | "ok" | "modulo_incorreto" | "nao_encontrado";
 
+/**
+ * Rota /s/:slug — EXCLUSIVA do módulo de Serviços.
+ *
+ * Se a tribo não tem 'services' em active_modules, mostra mensagem clara
+ * indicando que o link público dela é o de Mobilidade (/{slug}).
+ */
 export default function PaginaPublicaTenant() {
   const { slug } = useParams<{ slug: string }>();
   const [estado, setEstado] = useState<EstadoCarregamento>("carregando");
@@ -35,9 +39,9 @@ export default function PaginaPublicaTenant() {
 
       const modulos = (data.active_modules ?? []) as string[];
       if (modulos.includes("services")) {
-        setEstado("servicos");
+        setEstado("ok");
       } else {
-        setEstado("mobility");
+        setEstado("modulo_incorreto");
       }
     }
     resolverModulo();
@@ -69,14 +73,28 @@ export default function PaginaPublicaTenant() {
     );
   }
 
-  if (estado === "servicos") {
-    return <PaginaVitrineTenantServicos />;
+  if (estado === "modulo_incorreto") {
+    return (
+      <TemaServicos>
+        <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
+          <div className="text-center space-y-3 max-w-sm">
+            <p className="text-base font-medium text-foreground">
+              Esta tribo não oferece serviços agendáveis
+            </p>
+            <p className="text-sm text-muted-foreground">
+              O link público desta tribo é o de mobilidade. Acesse:
+            </p>
+            <a
+              href={`/m/${slug}`}
+              className="inline-block text-sm font-medium text-primary underline"
+            >
+              /m/{slug}
+            </a>
+          </div>
+        </div>
+      </TemaServicos>
+    );
   }
 
-  // mobility (fallback): renderiza página de corridas dentro do ProvedorTenant
-  return (
-    <ProvedorTenant>
-      <PaginaPassageiro />
-    </ProvedorTenant>
-  );
+  return <PaginaVitrineTenantServicos />;
 }
