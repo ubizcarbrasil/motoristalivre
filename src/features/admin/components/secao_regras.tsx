@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { TIMEZONES_DISPONIVEIS } from "../constants/constantes_timezones";
+import { CardModulosTribo } from "./card_modulos_tribo";
 
 export function SecaoRegras() {
   const { usuario } = useAutenticacao();
@@ -66,6 +67,7 @@ export function SecaoRegras() {
 
   return (
     <div className="max-w-lg space-y-6 p-4 sm:p-6">
+      {tenantId && <CardModulosTribo tenantId={tenantId} />}
       <div className="space-y-2">
         <Label>Modo de despacho</Label>
         <Select value={modoDespacho} onValueChange={setModoDespacho}>
