@@ -16,6 +16,7 @@ import { usePainel } from "../hooks/hook_painel";
 import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { usePublicarPresencaMotorista } from "../hooks/hook_publicar_presenca";
 import { useTribosMotorista } from "../hooks/hook_tribos_motorista";
+import { abaPermitida } from "../utils/abas_por_modulo";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
