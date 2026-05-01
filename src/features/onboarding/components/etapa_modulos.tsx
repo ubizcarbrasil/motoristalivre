@@ -14,17 +14,11 @@ interface EtapaModulosProps {
 
 export function EtapaModulos({ selecionados, onChange, onAvancar, onVoltar }: EtapaModulosProps) {
   const alternar = (id: ModuloPlataforma) => {
-    if (selecionados.includes(id)) {
-      if (selecionados.length === 1) return; // não permitir vazio
-      onChange(selecionados.filter((m) => m !== id));
-    } else {
-      onChange([...selecionados, id]);
-    }
+    // Apenas um módulo ativo por vez (escolha exclusiva)
+    onChange([id]);
   };
 
-  const ambos = selecionados.length === 2;
-
-  const podeAvancar = selecionados.length > 0;
+  const podeAvancar = selecionados.length === 1;
 
   return (
     <div className="space-y-6">
