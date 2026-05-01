@@ -28,6 +28,65 @@ import { salvarOnboardingProfissional } from "../services/servico_onboarding_pro
 import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
 import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
 import { IndicadorAutoSave } from "./indicador_autosave";
+import { SeletorCategoriasServico } from "./seletor_categorias_servico";
+import { iconePorSlug, nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+
+function SeletorCategoriasServicoInline({
+  selecionadas,
+  onChange,
+}: {
+  selecionadas: string[];
+  onChange: (lista: string[]) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setAberto(true)}
+        className="w-full h-11 gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        {selecionadas.length === 0
+          ? "Selecionar categorias"
+          : `Editar (${selecionadas.length}/10)`}
+      </Button>
+      {selecionadas.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selecionadas.map((slug) => {
+            const Icone = iconePorSlug(slug);
+            return (
+              <Badge
+                key={slug}
+                variant="outline"
+                className="border-primary/40 text-primary bg-primary/5 gap-1.5 pl-2 pr-1 py-1 text-[11px]"
+              >
+                <Icone className="w-3 h-3" />
+                {nomePorSlug(slug)}
+                <button
+                  type="button"
+                  onClick={() => onChange(selecionadas.filter((s) => s !== slug))}
+                  className="rounded-full hover:bg-primary/10 p-0.5"
+                  aria-label={`Remover ${nomePorSlug(slug)}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+      <SeletorCategoriasServico
+        aberto={aberto}
+        onFechar={() => setAberto(false)}
+        selecionadas={selecionadas}
+        onConfirmar={onChange}
+        limite={10}
+      />
+    </div>
+  );
+}
 
 interface DialogoOnboardingProfissionalProps {
   aberto: boolean;
@@ -384,53 +443,14 @@ function PassoTipoCategorias({
       </div>
 
       <div className="space-y-2">
-        <Label>Categorias visíveis na vitrine</Label>
+        <Label>Categorias de serviço</Label>
         <p className="text-[11px] text-muted-foreground">
-          Adicione até 10. Aparecerão como filtros no seu perfil público.
+          Selecione até 10. Aparecem como filtros no seu perfil público.
         </p>
-        <div className="flex gap-2">
-          <Input
-            value={novaCategoria}
-            onChange={(e) => setNovaCategoria(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onAdicionar();
-              }
-            }}
-            placeholder="Ex: Estética, Manutenção…"
-            maxLength={50}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={onAdicionar}
-            className="h-10 w-10 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        {form.service_categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {form.service_categories.map((c) => (
-              <Badge
-                key={c}
-                variant="secondary"
-                className="gap-1 pl-3 pr-1.5 py-1.5"
-              >
-                {c}
-                <button
-                  type="button"
-                  onClick={() => onRemover(c)}
-                  className="rounded-full hover:bg-background/40 p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+        <SeletorCategoriasServicoInline
+          selecionadas={form.service_categories}
+          onChange={(lista) => onChange("service_categories", lista)}
+        />
       </div>
     </div>
   );
