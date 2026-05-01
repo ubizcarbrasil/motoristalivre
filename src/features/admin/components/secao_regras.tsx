@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { TIMEZONES_DISPONIVEIS } from "../constants/constantes_timezones";
+import { CardModulosTribo } from "./card_modulos_tribo";
 
 export function SecaoRegras() {
   const { usuario } = useAutenticacao();
