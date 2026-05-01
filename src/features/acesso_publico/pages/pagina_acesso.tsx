@@ -3,8 +3,10 @@ import { BlocoCredenciais } from "../components/bloco_credenciais";
 import { LINKS_ACESSO } from "../constants/constantes_acesso";
 
 const SECOES = [
+  { id: "motorista" as const, titulo: "Motorista" },
+  { id: "profissional" as const, titulo: "Profissional" },
+  { id: "admin" as const, titulo: "Administrador geral" },
   { id: "passageiro" as const, titulo: "App do passageiro" },
-  { id: "motorista" as const, titulo: "App do motorista" },
   { id: "servicos" as const, titulo: "Módulo Serviços" },
   { id: "dev" as const, titulo: "Ferramentas de teste" },
 ];
