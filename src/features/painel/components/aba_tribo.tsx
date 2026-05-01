@@ -96,7 +96,7 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
 
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex gap-1 overflow-x-auto px-3 py-2 scrollbar-none">
-          {SUB_ABAS.map(({ id, label, icone: Icone }) => {
+          {subAbasVisiveis.map(({ id, label, icone: Icone }) => {
             const ativo = secao === id;
             return (
               <button
