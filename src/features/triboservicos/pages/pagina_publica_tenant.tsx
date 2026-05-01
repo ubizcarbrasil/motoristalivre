@@ -62,11 +62,18 @@ export default function PaginaPublicaTenant() {
     return (
       <TemaServicos>
         <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3 max-w-sm">
             <p className="text-base font-medium text-foreground">Tribo não encontrada</p>
             <p className="text-sm text-muted-foreground">
-              Verifique se o endereço está correto.
+              Não existe nenhuma tribo com o endereço{" "}
+              <span className="font-mono text-foreground">/s/{slug ?? ""}</span>.
             </p>
+            <a
+              href="/"
+              className="inline-block text-sm font-medium text-primary underline"
+            >
+              Voltar para a página inicial
+            </a>
           </div>
         </div>
       </TemaServicos>
