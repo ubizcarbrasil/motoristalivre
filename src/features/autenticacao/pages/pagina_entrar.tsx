@@ -44,7 +44,7 @@ const TEXTOS_MODO: Record<ModoEntrar, { titulo: string; subtitulo: string; chip?
 export default function PaginaEntrar() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
   const { destino, carregando: carregandoDestino } = useRedirecionamento();
-  const navigate = useNavigate();
+  
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
