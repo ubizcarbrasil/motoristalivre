@@ -102,8 +102,8 @@ export default function PaginaEntrar() {
 
   async function handleGoogle() {
     // Slug é obrigatório apenas para passageiros novos.
-    // Profissionais já cadastrados dispensam o slug — o redirecionamento usa o tenant_id do perfil.
-    if (!modoProfissional && !slugGrupo.trim()) {
+    // Profissional, motorista e admin já cadastrados dispensam o slug — o redirecionamento usa o tenant_id do perfil.
+    if (!ocultarSlugPassageiro && !slugGrupo.trim()) {
       toast({ title: "Informe o slug do grupo antes de continuar", variant: "destructive" });
       return;
     }
