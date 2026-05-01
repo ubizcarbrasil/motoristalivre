@@ -14,6 +14,7 @@ import PaginaPainel from "@/features/painel/pages/pagina_painel";
 // PaginaAdmin removido — admin agora é acessado via /painel?aba=tribo
 import PaginaAfiliado from "@/features/afiliado/pages/pagina_afiliado";
 import PaginaRoot from "@/features/root/pages/pagina_root";
+import { RotaProtegidaRoot } from "@/features/root/components/rota_protegida_root";
 import PaginaPassageiro from "@/features/passageiro/pages/pagina_passageiro";
 import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_motorista";
 import PaginaLanding from "@/features/landing/pages/pagina_landing";
@@ -84,7 +85,7 @@ const App = () => (
             <Route path="/admin" element={<Navigate to="/painel?aba=tribo" replace />} />
             {/* /afiliado removido — afiliados usam /painel unificado */}
             <Route path="/afiliado" element={<Navigate to="/painel" replace />} />
-            <Route path="/root" element={<RotaProtegida><PaginaRoot /></RotaProtegida>} />
+            <Route path="/root" element={<RotaProtegidaRoot><PaginaRoot /></RotaProtegidaRoot>} />
 
             {/* Rotas com tenant (slug) */}
             <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />

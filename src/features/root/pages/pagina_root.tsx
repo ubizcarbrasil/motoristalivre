@@ -6,6 +6,7 @@ import { SecaoTenants } from "../components/secao_tenants";
 import { SecaoPlanos } from "../components/secao_planos";
 import { SecaoAfiliadosRoot } from "../components/secao_afiliados_root";
 import { SecaoFinanceiro } from "../components/secao_financeiro";
+import { SecaoOperacao } from "../components/secao_operacao";
 import { SecaoAuditoria } from "../components/secao_auditoria";
 import { useRoot } from "../hooks/hook_root";
 
@@ -15,6 +16,7 @@ const SECOES = {
   planos: SecaoPlanos,
   afiliados: SecaoAfiliadosRoot,
   financeiro: SecaoFinanceiro,
+  operacao: SecaoOperacao,
   auditoria: SecaoAuditoria,
 } as const;
 

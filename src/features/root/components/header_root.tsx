@@ -2,11 +2,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { SecaoRoot } from "../types/tipos_root";
 
 const TITULOS: Record<SecaoRoot, string> = {
-  visao_geral: "Visao Geral",
-  tenants: "Tenants",
+  visao_geral: "Visão Geral",
+  tenants: "Tribos",
   planos: "Planos",
   afiliados: "Afiliados",
   financeiro: "Financeiro",
+  operacao: "Operação",
   auditoria: "Auditoria",
 };
 

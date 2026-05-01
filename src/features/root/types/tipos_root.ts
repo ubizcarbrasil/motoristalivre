@@ -4,6 +4,7 @@ export type SecaoRoot =
   | "planos"
   | "afiliados"
   | "financeiro"
+  | "operacao"
   | "auditoria";
 
 export interface StatsPlataforma {
