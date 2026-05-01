@@ -10,6 +10,7 @@ interface HeaderPainelProps {
   tenantSlug: string;
   realtimeAtivo?: boolean;
   audioDestravado?: boolean;
+  mostrarToggleOnline?: boolean;
   onToggleOnline: () => void;
   tribos?: TriboMotorista[];
   triboAtivaId?: string | null;
@@ -71,6 +72,7 @@ export function HeaderPainel({
   tenantSlug,
   realtimeAtivo = false,
   audioDestravado = false,
+  mostrarToggleOnline = true,
   onToggleOnline,
   tribos,
   triboAtivaId,
@@ -92,7 +94,9 @@ export function HeaderPainel({
     return () => window.clearTimeout(timer);
   }, [realtimeAtivo]);
 
-  const status = calcularStatus(perfil.is_online, realtimeAtivo, audioDestravado, conectando);
+  const status = mostrarToggleOnline
+    ? calcularStatus(perfil.is_online, realtimeAtivo, audioDestravado, conectando)
+    : null;
   const mostrarSeletor = tribos && tribos.length > 0 && onSelecionarTribo;
 
   return (
@@ -105,10 +109,18 @@ export function HeaderPainel({
           <p className="text-xs text-muted-foreground truncate">{tenantSlug}.tribocar.com</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-xs font-medium ${perfil.is_online ? "text-primary" : "text-muted-foreground"}`}>
-            {perfil.is_online ? "Online" : "Offline"}
-          </span>
-          <Switch checked={perfil.is_online} onCheckedChange={onToggleOnline} />
+          {mostrarToggleOnline ? (
+            <>
+              <span className={`text-xs font-medium ${perfil.is_online ? "text-primary" : "text-muted-foreground"}`}>
+                {perfil.is_online ? "Online" : "Offline"}
+              </span>
+              <Switch checked={perfil.is_online} onCheckedChange={onToggleOnline} />
+            </>
+          ) : (
+            <span className="text-[11px] font-medium text-primary bg-primary/10 border border-primary/30 rounded-full px-2.5 py-1">
+              Aceitando agendamentos
+            </span>
+          )}
         </div>
       </div>
 

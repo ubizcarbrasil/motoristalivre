@@ -68,6 +68,10 @@ export default function PaginaPainel() {
   const semPerfilMotorista = !perfil || !tenant;
   const podeAcessarComoDono = semPerfilMotorista && ehDonoDeAlguma && !!triboAtiva;
 
+  // Módulos da tribo ativa (fonte da verdade da UI)
+  const activeModulesAtual =
+    triboAtiva?.activeModules ?? tenant?.active_modules ?? ["mobility"];
+
   // Se não é motorista mas é dono de tribo, força aba "tribo"
   useEffect(() => {
     if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
@@ -150,6 +154,7 @@ export default function PaginaPainel() {
               driverId={userId}
               tenantId={triboAtiva.id}
               ehAdmin={true}
+              activeModules={activeModulesAtual}
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
@@ -192,6 +197,7 @@ export default function PaginaPainel() {
           <AbaInicio
             perfil={perfil}
             tenantSlug={triboAtiva?.slug ?? tenant.slug}
+            activeModules={activeModulesAtual}
             stats={stats}
             corridas={corridasRecentes}
             dispatch={dispatch}
@@ -233,6 +239,7 @@ export default function PaginaPainel() {
           driverId={userId}
           tenantId={tenant.id}
           ehAdmin={ehAdmin}
+          activeModules={activeModulesAtual}
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}

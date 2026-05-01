@@ -320,11 +320,11 @@ export async function buscarTenantDoMotorista(userId: string) {
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, name, slug")
+    .select("id, name, slug, active_modules")
     .eq("id", data.tenant_id)
     .maybeSingle();
 
-  return tenant;
+  return tenant as { id: string; name: string; slug: string; active_modules: string[] } | null;
 }
 
 export async function buscarConfigPrecoTenant(tenantId: string) {

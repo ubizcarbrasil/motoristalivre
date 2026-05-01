@@ -35,7 +35,10 @@ export function NavegacaoInferior({
       ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
       : ITENS_BASE;
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="flex items-center justify-around h-14">
         {itens.map(({ id, label, icone: Icone }) => {
           const ativo = abaAtiva === id;

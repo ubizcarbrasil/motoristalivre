@@ -42,20 +42,32 @@ const SECOES: Record<SecaoAdmin, () => JSX.Element> = {
   comissoes: SecaoComissoes,
 };
 
-const SUB_ABAS: { id: SecaoAdmin; label: string; icone: LucideIcon }[] = [
-  { id: "dashboard", label: "Visão", icone: LayoutDashboard },
-  { id: "motoristas", label: "Motoristas", icone: Car },
-  { id: "afiliados", label: "Afiliados", icone: Users },
-  { id: "crm", label: "CRM", icone: UserCheck },
-  { id: "corridas", label: "Corridas", icone: Route },
-  { id: "carteira", label: "Carteira", icone: Wallet },
-  { id: "identidade", label: "Visual", icone: Palette },
-  { id: "regras", label: "Regras", icone: Settings },
-  { id: "comissoes", label: "Comissões", icone: Percent },
+interface SubAbaConfig {
+  id: SecaoAdmin;
+  label: string;
+  icone: LucideIcon;
+  modulos: ("mobility" | "services")[] | null; // null = sempre visível
+}
+
+const SUB_ABAS: SubAbaConfig[] = [
+  { id: "dashboard", label: "Visão", icone: LayoutDashboard, modulos: null },
+  { id: "motoristas", label: "Motoristas", icone: Car, modulos: ["mobility"] },
+  { id: "afiliados", label: "Afiliados", icone: Users, modulos: ["mobility"] },
+  { id: "crm", label: "CRM", icone: UserCheck, modulos: null },
+  { id: "corridas", label: "Corridas", icone: Route, modulos: ["mobility"] },
+  { id: "carteira", label: "Carteira", icone: Wallet, modulos: null },
+  { id: "identidade", label: "Visual", icone: Palette, modulos: null },
+  { id: "regras", label: "Regras", icone: Settings, modulos: null },
+  { id: "comissoes", label: "Comissões", icone: Percent, modulos: ["mobility"] },
 ];
 
 export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTriboProps) {
   const [secao, setSecao] = useState<SecaoAdmin>("dashboard");
+
+  const subAbasVisiveis = SUB_ABAS.filter((s) => {
+    if (s.modulos === null) return true;
+    return s.modulos.some((m) => tribo.activeModules.includes(m));
+  });
 
   if (tribo.papel !== "dono") {
     return (
@@ -84,7 +96,7 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
 
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex gap-1 overflow-x-auto px-3 py-2 scrollbar-none">
-          {SUB_ABAS.map(({ id, label, icone: Icone }) => {
+          {subAbasVisiveis.map(({ id, label, icone: Icone }) => {
             const ativo = secao === id;
             return (
               <button

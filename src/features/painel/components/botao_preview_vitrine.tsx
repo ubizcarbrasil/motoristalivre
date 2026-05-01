@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PreviewVitrine } from "./preview_vitrine";
 
 interface Props {
@@ -11,15 +12,16 @@ export function BotaoPreviewVitrine({ driverId }: Props) {
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setAberto(true)}
-        className="fixed right-4 bottom-24 z-30 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 px-4 h-12 text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"
+        variant="default"
+        className="w-full h-11 gap-2"
         aria-label="Ver vitrine ao vivo"
       >
         <Eye className="w-4 h-4" />
-        <span>Ver vitrine</span>
-      </button>
+        Ver vitrine
+      </Button>
 
       <PreviewVitrine
         aberto={aberto}

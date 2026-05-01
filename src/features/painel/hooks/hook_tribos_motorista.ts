@@ -24,11 +24,11 @@ export function useTribosMotorista(userId: string | undefined | null) {
     const [{ data: donas }, { data: motorista }] = await Promise.all([
       supabase
         .from("tenants")
-        .select("id, name, slug")
+        .select("id, name, slug, active_modules")
         .eq("owner_user_id", userId),
       supabase
         .from("drivers")
-        .select("tenant_id, tenants:tenant_id(id, name, slug)")
+        .select("tenant_id, tenants:tenant_id(id, name, slug, active_modules)")
         .eq("id", userId)
         .maybeSingle(),
     ]);
@@ -37,7 +37,9 @@ export function useTribosMotorista(userId: string | undefined | null) {
     const mapa = new Map<string, TriboMotorista>();
 
     // Tribo principal (membro/dirige)
-    const tribuPrincipal = motorista?.tenants as { id: string; name: string; slug: string } | null;
+    const tribuPrincipal = motorista?.tenants as
+      | { id: string; name: string; slug: string; active_modules: string[] }
+      | null;
     if (tribuPrincipal) {
       mapa.set(tribuPrincipal.id, {
         id: tribuPrincipal.id,
@@ -45,11 +47,12 @@ export function useTribosMotorista(userId: string | undefined | null) {
         slug: tribuPrincipal.slug,
         papel: "membro",
         ehPrincipal: true,
+        activeModules: tribuPrincipal.active_modules ?? ["mobility"],
       });
     }
 
     // Tribos onde é dono (sobrescreve papel se já estiver no mapa)
-    (donas ?? []).forEach((t) => {
+    (donas ?? []).forEach((t: any) => {
       const existente = mapa.get(t.id);
       mapa.set(t.id, {
         id: t.id,
@@ -57,6 +60,7 @@ export function useTribosMotorista(userId: string | undefined | null) {
         slug: t.slug,
         papel: "dono",
         ehPrincipal: existente?.ehPrincipal ?? t.id === principalId,
+        activeModules: t.active_modules ?? ["mobility"],
       });
     });
 
