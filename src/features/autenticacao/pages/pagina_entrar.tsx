@@ -6,9 +6,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Briefcase } from "lucide-react";
+import { Loader2, Briefcase, Car, ShieldCheck } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
 import { useRedirecionamento } from "../hooks/hook_redirecionamento";
+
+type ModoEntrar = "padrao" | "profissional" | "motorista" | "admin";
+
+function resolverModo(valor: string | null): ModoEntrar {
+  if (valor === "profissional") return "profissional";
+  if (valor === "motorista") return "motorista";
+  if (valor === "admin") return "admin";
+  return "padrao";
+}
+
+const TEXTOS_MODO: Record<ModoEntrar, { titulo: string; subtitulo: string; chip?: { label: string; Icone: typeof Briefcase } }> = {
+  padrao: {
+    titulo: "Entrar",
+    subtitulo: "Acesse sua conta para continuar",
+  },
+  profissional: {
+    titulo: "Acesso do profissional",
+    subtitulo: "Acesse o painel para gerenciar seu portfólio, equipe e categorias",
+    chip: { label: "Profissional", Icone: Briefcase },
+  },
+  motorista: {
+    titulo: "Acesso do motorista",
+    subtitulo: "Acesse o painel para receber corridas e gerenciar seu link",
+    chip: { label: "Motorista", Icone: Car },
+  },
+  admin: {
+    titulo: "Acesso administrativo",
+    subtitulo: "Painel do administrador geral. Restrito a contas autorizadas.",
+    chip: { label: "Administrador", Icone: ShieldCheck },
+  },
+};
 
 export default function PaginaEntrar() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
@@ -17,7 +48,12 @@ export default function PaginaEntrar() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
-  const modoProfissional = searchParams.get("modo") === "profissional";
+  const modo = resolverModo(searchParams.get("modo"));
+  const modoProfissional = modo === "profissional";
+  const modoMotorista = modo === "motorista";
+  const modoAdmin = modo === "admin";
+  const ocultarSlugPassageiro = modoProfissional || modoMotorista || modoAdmin;
+  const textosModo = TEXTOS_MODO[modo];
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -38,6 +74,14 @@ export default function PaginaEntrar() {
   }
 
   if (usuario && destino) {
+    // Aviso quando alguém tenta usar o link de admin sem permissão
+    if (modoAdmin && destino !== "/root") {
+      toast({
+        title: "Conta sem permissão administrativa",
+        description: "Esta conta não é administrador geral do sistema. Redirecionando para seu painel.",
+        variant: "destructive",
+      });
+    }
     return <Navigate to={destino} replace />;
   }
 
