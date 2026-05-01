@@ -70,6 +70,10 @@ const App = () => (
 
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
+
+            {/* Mobilidade — link público exclusivo */}
+            <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
+
             <Route path="/s/:slug/:driver_slug" element={<PaginaPerfilProfissionalServicos />} />
             <Route path="/s/:slug/:driver_slug/agendar" element={<PaginaAgendamentoServicos />} />
 
