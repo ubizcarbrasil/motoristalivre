@@ -1,85 +1,78 @@
+# Página de QA de Links — `/dev/links`
 
-# Links dedicados de acesso e cadastro por perfil
+Criar uma página simples (rota dev, sem autenticação obrigatória) que lista todas as tribos cadastradas no banco e gera os links clicáveis de todos os fluxos públicos para cada uma. Serve para testar rapidamente o sistema ponta a ponta sem precisar digitar slugs manualmente.
 
-## Situação atual
+## O que será criado
 
-- `/entrar` único para todos, com `?modo=` como variação.
-- `/cadastro` único, com `?tipo=` para diferenciar.
-- Para profissional já existem aliases (`/profissional/login`, `/profissional/cadastro`) que redirecionam.
-- Não há link próprio para motorista nem para administrador geral (root).
+### Nova feature: `src/features/dev_links/`
 
-Faltam URLs limpas e memorizáveis por perfil, separando claramente **acesso** (login) de **cadastro**.
-
-## URLs finais propostas
-
-### Acesso (login)
-| Perfil | URL pública | Comportamento |
-|---|---|---|
-| Motorista | `/motorista/acesso` | Abre `/entrar` no modo motorista |
-| Profissional | `/profissional/acesso` | Abre `/entrar` no modo profissional |
-| Administrador geral (root) | `/admin/acesso` | Abre `/entrar` no modo admin; após login, vai para `/root` se for `root_admin`, senão `/painel` |
-
-### Cadastro
-| Perfil | URL pública |
-|---|---|
-| Motorista | `/motorista/cadastro` → `PaginaCadastro` com `tipo=motorista` |
-| Profissional | `/profissional/cadastro` → `PaginaCadastroProfissional` (`/s/cadastro/profissional`) |
-
-Administrador geral **não tem cadastro público** — promoção é manual via banco. Deixar isso explícito na página de acesso admin.
-
-### Aliases mantidos (compatibilidade)
-- `/entrar`, `/cadastro` continuam funcionando (genéricos).
-- `/profissional/login`, `/profissional/entrar`, `/profissional/criar-conta` redirecionam para os novos.
-
-## Implementação
-
-### 1. Novas rotas em `src/App.tsx`
-Adicionar:
 ```
-/motorista/acesso     → Navigate /entrar?modo=motorista
-/motorista/cadastro   → Navigate /cadastro?tipo=motorista
-/profissional/acesso  → Navigate /entrar?modo=profissional
-/admin/acesso         → Navigate /entrar?modo=admin
+src/features/dev_links/
+├── pages/
+│   └── pagina_dev_links.tsx         # tela principal
+├── components/
+│   ├── card_tribo_links.tsx         # card por tribo com links
+│   ├── secao_links_globais.tsx      # links que não dependem de tribo
+│   └── linha_link.tsx               # uma linha (label + URL + botão copiar)
+├── hooks/
+│   └── hook_listar_tribos_dev.ts    # busca tenants do banco
+├── services/
+│   └── servico_dev_links.ts         # query dos tenants
+├── types/
+│   └── tipos_dev_links.ts           # TriboDev, GrupoLinks
+└── utils/
+    └── construtor_links.ts          # monta as URLs por slug
 ```
-Manter os redirects antigos.
 
-### 2. Suportar `modo=motorista` e `modo=admin` em `PaginaEntrar`
-- Editar `src/features/autenticacao/pages/pagina_entrar.tsx`:
-  - Ler `searchParams.get("modo")`.
-  - Ajustar título/subtítulo: "Acesso do motorista" / "Acesso do profissional" / "Acesso administrativo".
-  - Para `modo=admin`: após login bem-sucedido, consultar `users.role`; se `root_admin` → `navigate("/root")`, senão mostrar mensagem "Conta sem permissão administrativa" e redirecionar para `/painel`.
-  - Para `modo=motorista` e `modo=profissional`: após login → `/painel`.
+### Estrutura da tela
 
-### 3. Suportar `tipo=motorista` em `PaginaCadastro`
-Verificar `src/features/autenticacao/pages/pagina_cadastro.tsx`:
-- Garantir branch para `tipo=motorista` (formulário/labels específicos do motorista).
-- Se `tipo=profissional`, manter redirect para `/s/cadastro/profissional` (já existe).
+**Topo:** título "Links para teste" + descrição curta.
 
-### 4. Página de hub de acesso (opcional, recomendado)
-- Substituir/atualizar `src/pages/pagina_acesso.tsx` (rota `/acesso`) para listar visualmente os 3 acessos + 2 cadastros, servindo como índice navegável e fácil de compartilhar.
-- Cards: "Sou Motorista", "Sou Profissional", "Sou Administrador", com botões "Entrar" e "Criar conta" (admin sem cadastro).
+**Seção 1 — Links globais** (não dependem de tribo):
+- `/` Landing mobilidade
+- `/s` Landing serviços
+- `/acesso` Hub de acessos
+- `/entrar`, `/cadastro`
+- `/motorista/acesso`, `/motorista/cadastro`
+- `/profissional/acesso`, `/profissional/cadastro`
+- `/admin/acesso`
+- `/instalar`
 
-### 5. Documentação
-- Criar `docs/links_acesso.md` com a tabela final dos links para o time guardar.
+**Seção 2 — Tribos cadastradas** (uma card por tenant retornado do banco):
+Cada card mostra: nome da tribo, slug em mono, módulos ativos como badges, e os links da tribo:
+- `/{slug}` — passageiro (mobilidade)
+- `/m/{slug}` — mobilidade direto (só se `mobility` em active_modules)
+- `/s/{slug}` — vitrine serviços (só se `services` em active_modules)
+- `/{slug}/{driver_slug}` — exemplo com primeiro motorista da tribo (se houver)
 
-## Arquivos previstos
+Cada linha tem: label, URL clicável (abre em nova aba) e botão copiar (toast "Copiado").
 
-Editar:
-- `src/App.tsx` — novas rotas.
-- `src/features/autenticacao/pages/pagina_entrar.tsx` — modos `motorista` e `admin` + redirect pós-login por role.
-- `src/features/autenticacao/pages/pagina_cadastro.tsx` — confirmar branch `tipo=motorista`.
-- `src/pages/pagina_acesso.tsx` — hub visual com os 5 links.
+### Roteamento
+Adicionar em `src/App.tsx`:
+```tsx
+<Route path="/dev/links" element={<PaginaDevLinks />} />
+```
+Sem proteção (igual a `/dev/personas` que já existe).
 
-Criar:
-- `docs/links_acesso.md`.
+### Query
+`servico_dev_links.ts` faz:
+```sql
+select id, slug, name, active_modules from tenants order by created_at desc;
+```
+Para cada tribo, opcionalmente busca o primeiro motorista:
+```sql
+select slug from drivers where tenant_id = ? limit 1;
+```
 
-Nenhuma alteração de banco. Nenhuma mudança de RLS. As permissões reais continuam protegidas pelos guards existentes (`RotaProtegida`, `RotaProtegidaRoot`).
+## Detalhes técnicos
 
-## Resultado para o usuário
+- Usa tokens do design system (bg `#000`, accent `#1db865`, fonte IBM Plex Sans).
+- Componentização: `LinhaLink` é reutilizável, `CardTriboLinks` compõe várias linhas, `SecaoLinksGlobais` segue mesmo padrão.
+- Sem chamadas de API em componente visual — tudo passa pelo `servico_dev_links.ts` e hook.
+- Tipos: `TriboDev { id, slug, name, modulos, motoristaSlug? }`.
+- Botão copiar usa `navigator.clipboard.writeText` + `toast` do sonner.
 
-Links finais para divulgar:
-
-- Motorista: `motoristalivre.com.br/motorista/acesso` e `/motorista/cadastro`
-- Profissional: `motoristalivre.com.br/profissional/acesso` e `/profissional/cadastro`
-- Administrador: `motoristalivre.com.br/admin/acesso` (só você acessa de fato)
-- Hub: `motoristalivre.com.br/acesso` (página com todos os botões)
+## Fora do escopo
+- Não cria autenticação para a rota.
+- Não modifica `/acesso` nem `docs/links_acesso.md`.
+- Não adiciona QR codes (pode ser próxima iteração se quiser).
