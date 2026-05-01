@@ -10,7 +10,7 @@ import type { PerfilMotorista } from "../types/tipos_painel";
 
 interface AbaMeusLinksProps {
   perfil: PerfilMotorista;
-  tenant: { id: string; name: string; slug: string };
+  tenant: { id: string; name: string; slug: string; active_modules?: string[] };
   ehAdminGrupo: boolean;
 }
 
