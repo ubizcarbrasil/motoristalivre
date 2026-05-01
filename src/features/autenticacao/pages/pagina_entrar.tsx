@@ -1,23 +1,59 @@
 import { useState } from "react";
-import { Link, useNavigate, Navigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Briefcase } from "lucide-react";
+import { Loader2, Briefcase, Car, ShieldCheck } from "lucide-react";
 import { useAutenticacao } from "../hooks/hook_autenticacao";
 import { useRedirecionamento } from "../hooks/hook_redirecionamento";
+
+type ModoEntrar = "padrao" | "profissional" | "motorista" | "admin";
+
+function resolverModo(valor: string | null): ModoEntrar {
+  if (valor === "profissional") return "profissional";
+  if (valor === "motorista") return "motorista";
+  if (valor === "admin") return "admin";
+  return "padrao";
+}
+
+const TEXTOS_MODO: Record<ModoEntrar, { titulo: string; subtitulo: string; chip?: { label: string; Icone: typeof Briefcase } }> = {
+  padrao: {
+    titulo: "Entrar",
+    subtitulo: "Acesse sua conta para continuar",
+  },
+  profissional: {
+    titulo: "Acesso do profissional",
+    subtitulo: "Acesse o painel para gerenciar seu portfólio, equipe e categorias",
+    chip: { label: "Profissional", Icone: Briefcase },
+  },
+  motorista: {
+    titulo: "Acesso do motorista",
+    subtitulo: "Acesse o painel para receber corridas e gerenciar seu link",
+    chip: { label: "Motorista", Icone: Car },
+  },
+  admin: {
+    titulo: "Acesso administrativo",
+    subtitulo: "Painel do administrador geral. Restrito a contas autorizadas.",
+    chip: { label: "Administrador", Icone: ShieldCheck },
+  },
+};
 
 export default function PaginaEntrar() {
   const { usuario, carregando: carregandoAuth } = useAutenticacao();
   const { destino, carregando: carregandoDestino } = useRedirecionamento();
-  const navigate = useNavigate();
+  
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
-  const modoProfissional = searchParams.get("modo") === "profissional";
+  const modo = resolverModo(searchParams.get("modo"));
+  const modoProfissional = modo === "profissional";
+  const modoMotorista = modo === "motorista";
+  const modoAdmin = modo === "admin";
+  const ocultarSlugPassageiro = modoProfissional || modoMotorista || modoAdmin;
+  const textosModo = TEXTOS_MODO[modo];
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -38,6 +74,14 @@ export default function PaginaEntrar() {
   }
 
   if (usuario && destino) {
+    // Aviso quando alguém tenta usar o link de admin sem permissão
+    if (modoAdmin && destino !== "/root") {
+      toast({
+        title: "Conta sem permissão administrativa",
+        description: "Esta conta não é administrador geral do sistema. Redirecionando para seu painel.",
+        variant: "destructive",
+      });
+    }
     return <Navigate to={destino} replace />;
   }
 
@@ -58,8 +102,8 @@ export default function PaginaEntrar() {
 
   async function handleGoogle() {
     // Slug é obrigatório apenas para passageiros novos.
-    // Profissionais já cadastrados dispensam o slug — o redirecionamento usa o tenant_id do perfil.
-    if (!modoProfissional && !slugGrupo.trim()) {
+    // Profissional, motorista e admin já cadastrados dispensam o slug — o redirecionamento usa o tenant_id do perfil.
+    if (!ocultarSlugPassageiro && !slugGrupo.trim()) {
       toast({ title: "Informe o slug do grupo antes de continuar", variant: "destructive" });
       return;
     }
@@ -81,20 +125,19 @@ export default function PaginaEntrar() {
     <div className="fixed inset-0 bg-background flex items-center justify-center px-6 overflow-y-auto py-10">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-3">
-          {modoProfissional && (
+          {textosModo.chip && (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
-              <Briefcase className="w-3 h-3" />
-              Acesso do profissional
+              <textosModo.chip.Icone className="w-3 h-3" />
+              {textosModo.chip.label}
             </div>
           )}
-          <h1 className="text-2xl font-bold text-foreground">
-            {modoProfissional ? "Entrar no painel" : "Entrar"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {modoProfissional
-              ? "Acesse o painel para gerenciar seu portfólio, equipe e categorias"
-              : "Acesse sua conta para continuar"}
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{textosModo.titulo}</h1>
+          <p className="text-sm text-muted-foreground">{textosModo.subtitulo}</p>
+          {modoAdmin && (
+            <p className="text-xs text-muted-foreground">
+              Não há cadastro público de administrador. Use a conta autorizada pelo dono do sistema.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleEntrar} className="space-y-4">
@@ -140,7 +183,7 @@ export default function PaginaEntrar() {
         </div>
 
         <div className="space-y-3">
-          {!modoProfissional && (
+          {!ocultarSlugPassageiro && (
             <div className="space-y-2">
               <Label htmlFor="slugGrupoLogin" className="text-foreground">
                 Slug do grupo <span className="text-muted-foreground font-normal">(passageiros)</span>
@@ -178,29 +221,58 @@ export default function PaginaEntrar() {
         </div>
 
         <div className="space-y-3 text-center text-sm">
-          <p className="text-muted-foreground">
-            Não tem conta?{" "}
-            <Link
-              to={redirectTo ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}` : "/cadastro"}
-              className="text-primary hover:underline font-medium"
-            >
-              Criar conta
-            </Link>
-          </p>
-
-          {modoProfissional ? (
-            <Link to="/entrar" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Sou passageiro
-            </Link>
+          {modoAdmin ? (
+            <p className="text-muted-foreground">
+              Acesso restrito.{" "}
+              <Link to="/entrar" className="text-primary hover:underline font-medium">
+                Sou usuário comum
+              </Link>
+            </p>
           ) : (
-            <Link
-              to="/entrar?modo=profissional"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Briefcase className="w-3 h-3" />
-              Sou profissional
-            </Link>
+            <p className="text-muted-foreground">
+              Não tem conta?{" "}
+              <Link
+                to={
+                  modoProfissional
+                    ? "/profissional/cadastro"
+                    : modoMotorista
+                    ? "/motorista/cadastro"
+                    : redirectTo
+                    ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/cadastro"
+                }
+                className="text-primary hover:underline font-medium"
+              >
+                Criar conta
+              </Link>
+            </p>
           )}
+
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            {modo !== "padrao" && (
+              <Link to="/entrar" className="hover:text-foreground transition-colors">
+                Sou passageiro
+              </Link>
+            )}
+            {!modoProfissional && (
+              <Link
+                to="/profissional/acesso"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Briefcase className="w-3 h-3" />
+                Sou profissional
+              </Link>
+            )}
+            {!modoMotorista && (
+              <Link
+                to="/motorista/acesso"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Car className="w-3 h-3" />
+                Sou motorista
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -51,12 +51,22 @@ const App = () => (
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
-            <Route path="/profissional/login" element={<Navigate to="/entrar?modo=profissional" replace />} />
-            <Route path="/profissional/entrar" element={<Navigate to="/entrar?modo=profissional" replace />} />
             <Route path="/cadastro" element={<PaginaCadastro />} />
             <Route path="/cadastrar" element={<PaginaCadastro />} />
+
+            {/* Links dedicados por perfil — acesso (login) */}
+            <Route path="/motorista/acesso" element={<Navigate to="/entrar?modo=motorista" replace />} />
+            <Route path="/profissional/acesso" element={<Navigate to="/entrar?modo=profissional" replace />} />
+            <Route path="/admin/acesso" element={<Navigate to="/entrar?modo=admin" replace />} />
+
+            {/* Links dedicados por perfil — cadastro */}
+            <Route path="/motorista/cadastro" element={<Navigate to="/cadastro?tipo=motorista" replace />} />
             <Route path="/profissional/cadastro" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
-            <Route path="/profissional/criar-conta" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
+
+            {/* Aliases legados — mantidos por compatibilidade */}
+            <Route path="/profissional/login" element={<Navigate to="/profissional/acesso" replace />} />
+            <Route path="/profissional/entrar" element={<Navigate to="/profissional/acesso" replace />} />
+            <Route path="/profissional/criar-conta" element={<Navigate to="/profissional/cadastro" replace />} />
             <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
             <Route path="/dev/personas" element={<PaginaPersonas />} />
             <Route path="/instalar" element={<PaginaInstalar />} />

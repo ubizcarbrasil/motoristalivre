@@ -5,7 +5,7 @@ export interface LinkAcesso {
   titulo: string;
   descricao: string;
   caminho: string;
-  categoria: "passageiro" | "motorista" | "servicos" | "dev";
+  categoria: "passageiro" | "motorista" | "profissional" | "admin" | "servicos" | "dev";
 }
 
 export const LINKS_ACESSO: LinkAcesso[] = [
@@ -24,10 +24,17 @@ export const LINKS_ACESSO: LinkAcesso[] = [
     categoria: "passageiro",
   },
   {
-    id: "motorista_login",
-    titulo: "Login do motorista",
-    descricao: "Entrar com conta de motorista",
-    caminho: "/entrar",
+    id: "motorista_acesso",
+    titulo: "Acesso do motorista",
+    descricao: "Login dedicado para motoristas — /motorista/acesso",
+    caminho: "/motorista/acesso",
+    categoria: "motorista",
+  },
+  {
+    id: "motorista_cadastro",
+    titulo: "Cadastro do motorista",
+    descricao: "Criar conta de motorista — /motorista/cadastro",
+    caminho: "/motorista/cadastro",
     categoria: "motorista",
   },
   {
@@ -36,6 +43,27 @@ export const LINKS_ACESSO: LinkAcesso[] = [
     descricao: "Acesso direto ao painel (precisa estar logado)",
     caminho: "/painel",
     categoria: "motorista",
+  },
+  {
+    id: "profissional_acesso",
+    titulo: "Acesso do profissional",
+    descricao: "Login dedicado para profissionais — /profissional/acesso",
+    caminho: "/profissional/acesso",
+    categoria: "profissional",
+  },
+  {
+    id: "profissional_cadastro",
+    titulo: "Cadastro do profissional",
+    descricao: "Criar conta de profissional — /profissional/cadastro",
+    caminho: "/profissional/cadastro",
+    categoria: "profissional",
+  },
+  {
+    id: "admin_acesso",
+    titulo: "Acesso do administrador geral",
+    descricao: "Login do dono do sistema — /admin/acesso (sem cadastro público)",
+    caminho: "/admin/acesso",
+    categoria: "admin",
   },
   {
     id: "servicos_lista_tenant",
