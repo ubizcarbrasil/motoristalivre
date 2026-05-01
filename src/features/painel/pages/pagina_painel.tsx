@@ -234,7 +234,7 @@ export default function PaginaPainel() {
         <AbaTribo tribo={triboAtiva} semPerfilDriver={!perfil} onAtivarMotorista={recarregar} />
       )}
 
-      {aba === "meus_links" && (
+      {aba === "meus_links" && abaPermitida("meus_links", activeModulesAtual) && (
         <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
       )}
 
