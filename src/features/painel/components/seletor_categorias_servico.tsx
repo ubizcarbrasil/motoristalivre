@@ -23,9 +23,12 @@ export function SeletorCategoriasServico({
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState<string[]>(selecionadas);
 
-  // Sincroniza quando reabre
-  useMemo(() => {
-    if (aberto) setEstado(selecionadas);
+  // Sincroniza estado interno com a seleção atual sempre que o modal abre
+  useEffect(() => {
+    if (aberto) {
+      setEstado(selecionadas);
+      setBusca("");
+    }
   }, [aberto, selecionadas]);
 
   const categorias = listarCategorias();
