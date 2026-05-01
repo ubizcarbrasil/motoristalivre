@@ -10,7 +10,7 @@ import type { PerfilMotorista } from "../types/tipos_painel";
 
 interface AbaMeusLinksProps {
   perfil: PerfilMotorista;
-  tenant: { id: string; name: string; slug: string };
+  tenant: { id: string; name: string; slug: string; active_modules?: string[] };
   ehAdminGrupo: boolean;
 }
 
@@ -28,6 +28,7 @@ export function AbaMeusLinks({ perfil, tenant, ehAdminGrupo }: AbaMeusLinksProps
       tenantNome: tenant.name,
       ehAdminGrupo,
       professionalType: perfil.professional_type,
+      activeModules: tenant.active_modules,
     })
       .then(setCanais)
       .finally(() => setCarregando(false));
@@ -38,6 +39,7 @@ export function AbaMeusLinks({ perfil, tenant, ehAdminGrupo }: AbaMeusLinksProps
     tenant.id,
     tenant.slug,
     tenant.name,
+    tenant.active_modules,
     ehAdminGrupo,
   ]);
 

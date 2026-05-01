@@ -32,6 +32,7 @@ import PaginaCadastroTribo from "@/features/triboservicos/pages/pagina_cadastro_
 import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_cadastro_profissional";
 import PaginaVitrineTenantServicos from "@/features/triboservicos/pages/pagina_vitrine_tenant_servicos";
 import PaginaPublicaTenant from "@/features/triboservicos/pages/pagina_publica_tenant";
+import PaginaPublicaMobilidade from "@/features/passageiro/pages/pagina_publica_mobilidade";
 import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pagina_perfil_profissional_servicos";
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import NotFound from "./pages/NotFound";
@@ -69,6 +70,10 @@ const App = () => (
 
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
+
+            {/* Mobilidade — link público exclusivo */}
+            <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
+
             <Route path="/s/:slug/:driver_slug" element={<PaginaPerfilProfissionalServicos />} />
             <Route path="/s/:slug/:driver_slug/agendar" element={<PaginaAgendamentoServicos />} />
 

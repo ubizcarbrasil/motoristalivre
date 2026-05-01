@@ -1,6 +1,6 @@
 import { Car, CalendarDays, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { MODULOS_DISPONIVEIS } from "../constants/constantes_onboarding";
 import type { ModuloPlataforma } from "../types/tipos_onboarding";
 import { cn } from "@/lib/utils";
@@ -14,24 +14,18 @@ interface EtapaModulosProps {
 
 export function EtapaModulos({ selecionados, onChange, onAvancar, onVoltar }: EtapaModulosProps) {
   const alternar = (id: ModuloPlataforma) => {
-    if (selecionados.includes(id)) {
-      if (selecionados.length === 1) return; // não permitir vazio
-      onChange(selecionados.filter((m) => m !== id));
-    } else {
-      onChange([...selecionados, id]);
-    }
+    // Apenas um módulo ativo por vez (escolha exclusiva)
+    onChange([id]);
   };
 
-  const ambos = selecionados.length === 2;
-
-  const podeAvancar = selecionados.length > 0;
+  const podeAvancar = selecionados.length === 1;
 
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
-        <h2 className="text-xl font-bold text-foreground">Quais módulos você quer ativar?</h2>
+        <h2 className="text-xl font-bold text-foreground">Qual módulo você quer ativar?</h2>
         <p className="text-sm text-muted-foreground">
-          Você pode escolher um ou os dois. É possível ativar mais módulos depois.
+          Escolha apenas um módulo. Os fluxos ficam separados para não causar confusão. Você poderá trocar depois.
         </p>
       </div>
 
@@ -68,13 +62,6 @@ export function EtapaModulos({ selecionados, onChange, onAvancar, onVoltar }: Et
         })}
       </div>
 
-      {ambos && (
-        <div className="flex justify-center">
-          <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20">
-            Plataforma completa — 25% de desconto
-          </Badge>
-        </div>
-      )}
 
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1 h-11" onClick={onVoltar}>

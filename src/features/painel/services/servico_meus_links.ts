@@ -86,6 +86,12 @@ interface BuscarCanaisParams {
   tenantNome: string;
   ehAdminGrupo: boolean;
   professionalType: "driver" | "service_provider" | "both";
+  /**
+   * Módulos ativos da tribo. Define qual link público de grupo será gerado:
+   * - 'services' → /s/{slug}
+   * - caso contrário → /m/{slug}
+   */
+  activeModules?: string[];
 }
 
 export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLink[]> {
@@ -94,6 +100,7 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
   const ofereceCorridas = p.professionalType === "driver" || p.professionalType === "both";
   const ofereceServicos =
     p.professionalType === "service_provider" || p.professionalType === "both";
+  const triboEhServicos = (p.activeModules ?? []).includes("services");
 
   const canais: CanalLink[] = [];
 
@@ -158,11 +165,16 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
 
   if (p.ehAdminGrupo) {
     const stats = await statsTenant(p.tenantId);
+    const urlGrupo = triboEhServicos
+      ? `${base}/s/${p.tenantSlug}`
+      : `${base}/m/${p.tenantSlug}`;
     canais.push({
       tipo: "grupo",
       titulo: `Link do grupo ${p.tenantNome}`,
-      descricao: "Página pública do seu grupo. Compartilhe para captar passageiros.",
-      url: `${base}/${p.tenantSlug}`,
+      descricao: triboEhServicos
+        ? "Página pública de serviços do seu grupo. Compartilhe para captar clientes."
+        : "Página pública de corridas do seu grupo. Compartilhe para captar passageiros.",
+      url: urlGrupo,
       handle: `@${p.tenantSlug}`,
       cor: "verde",
       stats,
