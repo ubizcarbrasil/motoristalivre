@@ -86,6 +86,12 @@ interface BuscarCanaisParams {
   tenantNome: string;
   ehAdminGrupo: boolean;
   professionalType: "driver" | "service_provider" | "both";
+  /**
+   * Módulos ativos da tribo. Define qual link público de grupo será gerado:
+   * - 'services' → /s/{slug}
+   * - caso contrário → /m/{slug}
+   */
+  activeModules?: string[];
 }
 
 export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLink[]> {
@@ -94,6 +100,7 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
   const ofereceCorridas = p.professionalType === "driver" || p.professionalType === "both";
   const ofereceServicos =
     p.professionalType === "service_provider" || p.professionalType === "both";
+  const triboEhServicos = (p.activeModules ?? []).includes("services");
 
   const canais: CanalLink[] = [];
 
