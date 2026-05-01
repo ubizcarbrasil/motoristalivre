@@ -141,58 +141,65 @@ export function AbaConfiguracoes({
     }
   };
 
+  const temMobilidade = activeModules.includes("mobility");
+  const temServicos = activeModules.includes("services");
+
   const ofereceServico =
-    professionalType === "service_provider" || professionalType === "both";
+    temServicos &&
+    (professionalType === "service_provider" || professionalType === "both");
 
   return (
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
 
-      {precisaOnboarding && (
+      {precisaOnboarding && temServicos && (
         <BannerOnboardingProfissional
           camposFaltantes={camposFaltantes}
           onAbrir={() => setOnboardingAberto(true)}
         />
       )}
 
-      <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
+      {temMobilidade && (
+        <>
+          <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
+          <Separator />
+          <SecaoRegrasLink driverId={driverId} tenantId={tenantId} ehAdmin={ehAdmin} />
+          <Separator />
+          <SeletorSomChamada valor={tipoSom} onChange={onMudarSom} />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
-
-      <SecaoRegrasLink driverId={driverId} tenantId={tenantId} ehAdmin={ehAdmin} />
-
-      <Separator />
-
-      <SeletorSomChamada valor={tipoSom} onChange={onMudarSom} />
-
-      <Separator />
-
-      {/* Tipo de profissional */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Briefcase className="w-4 h-4 text-primary" />
-          <Label className="text-sm font-semibold text-foreground">
-            Tipo de profissional
-          </Label>
+      {/* Tipo de profissional — só faz sentido quando a tribo tem mobilidade
+          (define se atende corrida, serviço ou ambos). Em tribo só de serviços
+          o tipo é fixo em service_provider. */}
+      {temMobilidade && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-primary" />
+            <Label className="text-sm font-semibold text-foreground">
+              Tipo de profissional
+            </Label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Define como você atende seus clientes neste link.
+          </p>
+          <Select
+            value={professionalType}
+            onValueChange={(v) => alterarTipoProfissional(v as TipoProfissional)}
+            disabled={salvandoTipo}
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="driver">Somente motorista</SelectItem>
+              <SelectItem value="service_provider">Somente prestador de serviços</SelectItem>
+              {temServicos && <SelectItem value="both">Ambos</SelectItem>}
+            </SelectContent>
+          </Select>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          Define como você atende seus clientes neste link.
-        </p>
-        <Select
-          value={professionalType}
-          onValueChange={(v) => alterarTipoProfissional(v as TipoProfissional)}
-          disabled={salvandoTipo}
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="driver">Somente motorista</SelectItem>
-            <SelectItem value="service_provider">Somente prestador de serviços</SelectItem>
-            <SelectItem value="both">Ambos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      )}
 
       {ofereceServico && (
         <>
