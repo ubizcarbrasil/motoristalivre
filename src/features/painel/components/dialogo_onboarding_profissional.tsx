@@ -384,53 +384,14 @@ function PassoTipoCategorias({
       </div>
 
       <div className="space-y-2">
-        <Label>Categorias visíveis na vitrine</Label>
+        <Label>Categorias de serviço</Label>
         <p className="text-[11px] text-muted-foreground">
-          Adicione até 10. Aparecerão como filtros no seu perfil público.
+          Selecione até 10. Aparecem como filtros no seu perfil público.
         </p>
-        <div className="flex gap-2">
-          <Input
-            value={novaCategoria}
-            onChange={(e) => setNovaCategoria(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onAdicionar();
-              }
-            }}
-            placeholder="Ex: Estética, Manutenção…"
-            maxLength={50}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={onAdicionar}
-            className="h-10 w-10 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        {form.service_categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {form.service_categories.map((c) => (
-              <Badge
-                key={c}
-                variant="secondary"
-                className="gap-1 pl-3 pr-1.5 py-1.5"
-              >
-                {c}
-                <button
-                  type="button"
-                  onClick={() => onRemover(c)}
-                  className="rounded-full hover:bg-background/40 p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+        <SeletorCategoriasServicoInline
+          selecionadas={form.service_categories}
+          onChange={(lista) => onChange("service_categories", lista)}
+        />
       </div>
     </div>
   );
