@@ -125,20 +125,19 @@ export default function PaginaEntrar() {
     <div className="fixed inset-0 bg-background flex items-center justify-center px-6 overflow-y-auto py-10">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-3">
-          {modoProfissional && (
+          {textosModo.chip && (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
-              <Briefcase className="w-3 h-3" />
-              Acesso do profissional
+              <textosModo.chip.Icone className="w-3 h-3" />
+              {textosModo.chip.label}
             </div>
           )}
-          <h1 className="text-2xl font-bold text-foreground">
-            {modoProfissional ? "Entrar no painel" : "Entrar"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {modoProfissional
-              ? "Acesse o painel para gerenciar seu portfólio, equipe e categorias"
-              : "Acesse sua conta para continuar"}
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{textosModo.titulo}</h1>
+          <p className="text-sm text-muted-foreground">{textosModo.subtitulo}</p>
+          {modoAdmin && (
+            <p className="text-xs text-muted-foreground">
+              Não há cadastro público de administrador. Use a conta autorizada pelo dono do sistema.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleEntrar} className="space-y-4">
