@@ -165,11 +165,16 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
 
   if (p.ehAdminGrupo) {
     const stats = await statsTenant(p.tenantId);
+    const urlGrupo = triboEhServicos
+      ? `${base}/s/${p.tenantSlug}`
+      : `${base}/m/${p.tenantSlug}`;
     canais.push({
       tipo: "grupo",
       titulo: `Link do grupo ${p.tenantNome}`,
-      descricao: "Página pública do seu grupo. Compartilhe para captar passageiros.",
-      url: `${base}/${p.tenantSlug}`,
+      descricao: triboEhServicos
+        ? "Página pública de serviços do seu grupo. Compartilhe para captar clientes."
+        : "Página pública de corridas do seu grupo. Compartilhe para captar passageiros.",
+      url: urlGrupo,
       handle: `@${p.tenantSlug}`,
       cor: "verde",
       stats,
