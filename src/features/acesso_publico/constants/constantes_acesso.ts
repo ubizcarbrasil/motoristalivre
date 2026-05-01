@@ -5,7 +5,7 @@ export interface LinkAcesso {
   titulo: string;
   descricao: string;
   caminho: string;
-  categoria: "passageiro" | "motorista" | "servicos" | "dev";
+  categoria: "passageiro" | "motorista" | "profissional" | "admin" | "servicos" | "dev";
 }
 
 export const LINKS_ACESSO: LinkAcesso[] = [
