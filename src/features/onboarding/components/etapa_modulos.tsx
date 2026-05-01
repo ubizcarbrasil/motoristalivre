@@ -62,13 +62,6 @@ export function EtapaModulos({ selecionados, onChange, onAvancar, onVoltar }: Et
         })}
       </div>
 
-      {ambos && (
-        <div className="flex justify-center">
-          <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20">
-            Plataforma completa — 25% de desconto
-          </Badge>
-        </div>
-      )}
 
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1 h-11" onClick={onVoltar}>
