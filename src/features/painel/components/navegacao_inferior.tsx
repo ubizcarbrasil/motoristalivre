@@ -1,11 +1,13 @@
 import { Home, Link2, Wallet, User, Settings, Crown } from "lucide-react";
 import type { AbaPainel } from "../types/tipos_painel";
+import { abaPermitida } from "../utils/abas_por_modulo";
 
 interface NavegacaoInferiorProps {
   abaAtiva: AbaPainel;
   onMudar: (aba: AbaPainel) => void;
   mostrarTribo?: boolean;
   modoSomenteDono?: boolean;
+  activeModules?: string[];
 }
 
 const ITEM_TRIBO = { id: "tribo" as AbaPainel, label: "Tribo", icone: Crown };
@@ -28,12 +30,16 @@ export function NavegacaoInferior({
   onMudar,
   mostrarTribo = false,
   modoSomenteDono = false,
+  activeModules,
 }: NavegacaoInferiorProps) {
-  const itens = modoSomenteDono
+  const itensBrutos = modoSomenteDono
     ? ITENS_SOMENTE_DONO
     : mostrarTribo
       ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
       : ITENS_BASE;
+
+  const itens = itensBrutos.filter((i) => abaPermitida(i.id, activeModules));
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border"
