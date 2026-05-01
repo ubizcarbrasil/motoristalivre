@@ -62,7 +62,6 @@ export async function criarGrupo({
     whatsapp: identidade.whatsapp || null,
     logo_url: identidade.logoUrl || null,
     cover_url: identidade.capaUrl || null,
-    primary_color: identidade.corPrimaria || null,
   });
 
   // Criar settings (mantém defaults de mobilidade quando módulo não está ativo)

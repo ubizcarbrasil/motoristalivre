@@ -1,38 +1,109 @@
-Identifiquei dois problemas prováveis:
+# Diagnóstico do problema com o seu link
 
-1. A tribo `gina` ainda não existe no banco após a limpeza da órfã, então `/s/gina` e `/gina` retornam “Tribo/Link não encontrado” até o onboarding ser concluído.
-2. A tela “Meus Links” ainda gera o link do grupo como `/{slug}`, que abre o fluxo antigo de corridas. Para tribos de serviços, o link correto da vitrine é `/s/{slug}`. Isso explica a confusão entre “Link não encontrado” e “Tribo não encontrada”.
+Você compartilhou: `https://gina.tribocar.com/cadastro?tipo=motorista`
 
-Plano de correção:
+Existem **três problemas** acontecendo ao mesmo tempo:
 
-1. Corrigir geração dos links públicos
-   - Em `src/features/painel/services/servico_meus_links.ts`, alterar o canal “Link do grupo” quando a tribo/profissional for de serviços para gerar `/s/{tenantSlug}`.
-   - Manter link de corrida em `/{tenantSlug}/{driverSlug}` somente para profissionais que atendem corridas.
-   - Manter link de serviço profissional em `/s/{tenantSlug}/{driverSlug}`.
+### 1. Subdomínio `gina.tribocar.com` não está configurado
+O sistema só conhece os domínios:
+- `motoristalivre.lovable.app` (publicado)
+- `www.motoristalivre.com.br` (custom domain)
 
-2. Ajustar a aba “Meus Links” para usar a tribo ativa
-   - Hoje ela recebe `tenant`, que vem do `users.tenant_id`; em cenários multi-tenant/dono de tribo isso pode não ser a tribo selecionada.
-   - Passar `triboAtiva` para a aba quando existir, garantindo que os links sejam gerados com o slug correto, como `gina`.
+Subdomínios por tenant tipo `gina.tribocar.com` **não existem na infra**. O cliente cai num site desconhecido e nem chega na sua tribo.
 
-3. Melhorar o caso “dono de tribo sem perfil de motorista”
-   - Permitir acesso à aba de links do grupo mesmo sem perfil de motorista, quando o usuário é dono da tribo.
-   - Exibir pelo menos o “Link da vitrine de serviços” (`/s/gina`) para o dono copiar/compartilhar.
+### 2. O link estava errado para "cliente"
+Você quis enviar para um **cliente final** (passageiro/agendamento), mas a URL era `/cadastro?tipo=motorista` — uma tela de cadastro **de motorista**, não de cliente. O cliente nunca deveria ver isso.
 
-4. Melhorar mensagens de erro nas vitrines
-   - Em `/s/:slug`, trocar a mensagem genérica por uma explicação mais útil quando a tribo não existe:
-     - “Tribo não encontrada”
-     - “Conclua o onboarding ou verifique se o slug foi criado.”
-   - Isso evita parecer erro de rota quando, na verdade, falta registro no banco.
+### 3. Há rotas demais e duplicadas para a mesma coisa
+Hoje temos rotas concorrentes para serviços:
 
-5. Garantir persistência correta do branding no onboarding
-   - Atualizar `src/features/onboarding/services/servico_onboarding.ts` para salvar `primary_color` em `tenant_branding` se o fluxo já estiver capturando esse campo.
-   - Caso o campo de cor ainda não esteja na etapa de identidade, adicionar o campo de cor primária de forma simples e refletir no resumo final.
+```text
+/:slug/servicos                 ← antigo (mobilidade + serviços misturados)
+/:slug/servicos/:driver_slug    ← antigo
+/s/:slug                        ← novo (TriboServiços)
+/s/:slug/:driver_slug           ← novo
+/s/:slug/:driver_slug/agendar   ← novo
+```
 
-6. Validar o estado da Gina após aprovação
-   - Conferir se `gina` foi criada em `tenants` e se existe linha correspondente em `tenant_branding`.
-   - Se ainda não existir, orientar o fluxo correto: entrar/cadastrar, ir para `/onboarding?fluxo=solo&modulo=services`, preencher slug `gina` e concluir.
+Isso confunde quem compartilha e quem recebe.
 
-Resultado esperado:
-- O painel passa a mostrar o link correto da vitrine: `/s/gina`.
-- Links de serviço não caem mais no fluxo antigo de corridas.
-- Se a Gina ainda não tiver sido criada, a mensagem ficará clara e o onboarding salvará os dados necessários em `tenants` e `tenant_branding`.
+---
+
+# Plano de revisão
+
+## Etapa 1 — Corrigir o link que você compartilha hoje
+
+Em **Painel → Meus Links**, hoje só existem 2 cards (corrida e afiliado). Vou:
+
+- **Adicionar um terceiro card "Link de Serviços"** para profissionais com `professional_type = service_provider | both`, apontando para `/s/{tenantSlug}/{driverSlug}` (perfil público de serviços, com botão "Agendar agora").
+- Renomear textos para deixar claro **para quem é cada link**:
+  - 🟣 Link de corrida → "Para passageiros pedirem corrida"
+  - 🔵 Link de afiliado → "Para indicar corridas e ganhar comissão"
+  - 🟡 Link de serviços → "Para clientes verem portfólio e agendar"
+
+## Etapa 2 — Unificar rotas de serviço
+
+**Manter apenas o prefixo `/s/`** (TriboServiços) como rota oficial:
+
+```text
+/s                              → landing institucional
+/s/entrar                       → login
+/s/cadastro/tribo               → cadastro de operador (dono de tribo)
+/s/cadastro/profissional        → cadastro de profissional solo
+/s/:slug                        → vitrine pública da tribo
+/s/:slug/:driver_slug           → perfil + portfólio do profissional
+/s/:slug/:driver_slug/agendar   → fluxo de agendamento
+```
+
+**Aposentar as rotas antigas** (`/:slug/servicos` e `/:slug/servicos/:driver_slug`) com **redirect 301-style** (`<Navigate replace>`) para as novas equivalentes em `/s/...`. Assim links antigos continuam funcionando.
+
+## Etapa 3 — Resolver o `gina.tribocar.com`
+
+Subdomínio por tenant **não é viável sem configuração de infra** (DNS wildcard + provisionamento SSL para cada tribo). Duas opções:
+
+- **Opção A (recomendada, imediata):** Não usar subdomínios. Seu link da Gina passa a ser:
+  `https://www.motoristalivre.com.br/s/gina` (vitrine de serviços)
+  ou `https://www.motoristalivre.com.br/gina` (mobilidade)
+  Isso já funciona hoje, é o formato que o painel "Meus Links" gera, e é o caminho mais sólido.
+
+- **Opção B (futura):** Configurar wildcard DNS `*.tribocar.com` + reescrita no front para mapear `gina.tribocar.com` → `/s/gina`. Exige mudança de DNS do domínio `tribocar.com` apontando para Lovable e provisionamento de SSL wildcard. Pode ser feito depois.
+
+Sigo com a **Opção A** agora. Se quiser a Opção B no futuro, abrimos como tarefa separada.
+
+## Etapa 4 — Mensagem clara na tela de cadastro
+
+Hoje `/cadastro` aceita `?tipo=motorista|passageiro|afiliado|profissional|grupo`. Vou:
+- Adicionar um **alerta amigável** quando alguém cair em `?tipo=motorista` sem ser convidado, lembrando que "este cadastro é para motoristas que vão atender corridas; se você é cliente, peça o link correto ao profissional".
+- Bloquear cadastro de motorista sem `slug` da tribo (já bloqueado, mas com mensagem mais clara).
+
+## Etapa 5 — Mapa visual no painel
+
+Criar uma seção pequena no topo da aba "Meus Links" mostrando:
+
+```text
+👤 Cliente quer agendar  →  /s/sua-tribo/seu-slug
+🚗 Passageiro quer corrida →  /sua-tribo/seu-slug
+🤝 Quer indicar corridas  →  /sua-tribo/a/seu-slug
+```
+
+Para você nunca mais errar qual link mandar.
+
+---
+
+# Detalhes técnicos
+
+**Arquivos afetados:**
+- `src/App.tsx` — adicionar redirects das rotas antigas `/:slug/servicos*` para `/s/:slug*`.
+- `src/features/painel/services/servico_meus_links.ts` — adicionar canal "servicos" condicional.
+- `src/features/painel/types/tipos_meus_links.ts` — incluir tipo `"servicos"` e cor `"dourado"`.
+- `src/features/painel/components/card_link_canal.tsx` — suportar nova cor.
+- `src/features/painel/components/aba_meus_links.tsx` — passar `professionalType` para filtrar canais.
+- `src/features/painel/hooks/...` — se houver hook de perfil, garantir que `professional_type` é carregado (já existe em `drivers`).
+- `src/features/autenticacao/pages/pagina_cadastro.tsx` — alerta contextual em `?tipo=motorista`.
+- `src/features/painel/components/aba_meus_links.tsx` — bloco "guia rápido" no topo.
+
+**Sem mudanças de banco** — já temos `drivers.professional_type` e todas as colunas necessárias.
+
+**Sem mudanças de DNS** — fica para uma fase futura, se realmente quiser subdomínios.
+
+Quando aprovar, eu implemento as etapas 1, 2, 4 e 5 numa única passagem.

@@ -24,11 +24,11 @@ export function useTribosMotorista(userId: string | undefined | null) {
     const [{ data: donas }, { data: motorista }] = await Promise.all([
       supabase
         .from("tenants")
-        .select("id, name, slug, active_modules")
+        .select("id, name, slug")
         .eq("owner_user_id", userId),
       supabase
         .from("drivers")
-        .select("tenant_id, tenants:tenant_id(id, name, slug, active_modules)")
+        .select("tenant_id, tenants:tenant_id(id, name, slug)")
         .eq("id", userId)
         .maybeSingle(),
     ]);
@@ -37,9 +37,7 @@ export function useTribosMotorista(userId: string | undefined | null) {
     const mapa = new Map<string, TriboMotorista>();
 
     // Tribo principal (membro/dirige)
-    const tribuPrincipal = motorista?.tenants as
-      | { id: string; name: string; slug: string; active_modules?: string[] }
-      | null;
+    const tribuPrincipal = motorista?.tenants as { id: string; name: string; slug: string } | null;
     if (tribuPrincipal) {
       mapa.set(tribuPrincipal.id, {
         id: tribuPrincipal.id,
@@ -47,7 +45,6 @@ export function useTribosMotorista(userId: string | undefined | null) {
         slug: tribuPrincipal.slug,
         papel: "membro",
         ehPrincipal: true,
-        modulosAtivos: tribuPrincipal.active_modules ?? [],
       });
     }
 
@@ -60,7 +57,6 @@ export function useTribosMotorista(userId: string | undefined | null) {
         slug: t.slug,
         papel: "dono",
         ehPrincipal: existente?.ehPrincipal ?? t.id === principalId,
-        modulosAtivos: (t as { active_modules?: string[] }).active_modules ?? [],
       });
     });
 

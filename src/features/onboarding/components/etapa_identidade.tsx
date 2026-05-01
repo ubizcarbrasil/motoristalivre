@@ -123,29 +123,6 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="corPrimaria">Cor primária</Label>
-          <div className="flex items-center gap-3">
-            <input
-              id="corPrimaria"
-              type="color"
-              value={dados.corPrimaria}
-              onChange={(e) => atualizar("corPrimaria", e.target.value)}
-              className="h-10 w-14 rounded-md border border-input bg-background cursor-pointer"
-              aria-label="Cor primária"
-            />
-            <Input
-              value={dados.corPrimaria}
-              onChange={(e) => atualizar("corPrimaria", e.target.value)}
-              maxLength={9}
-              className="flex-1 font-mono text-xs"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Usada como destaque na vitrine pública da sua tribo.
-          </p>
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="descricao">Descrição</Label>
           <Textarea
             id="descricao"

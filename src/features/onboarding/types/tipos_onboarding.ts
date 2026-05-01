@@ -6,7 +6,6 @@ export interface DadosIdentidade {
   whatsapp: string;
   logoUrl: string;
   capaUrl: string;
-  corPrimaria: string;
 }
 
 export interface PlanoOpcao {
