@@ -14,6 +14,7 @@ import type { TriboMotorista } from "../types/tipos_tribos";
 interface AbaInicioProps {
   perfil: PerfilMotorista;
   tenantSlug: string;
+  activeModules: string[];
   stats: EstatisticasHoje;
   corridas: CorridaRecente[];
   dispatch: DispatchAtivo | null;
@@ -39,6 +40,7 @@ interface AbaInicioProps {
 export function AbaInicio({
   perfil,
   tenantSlug,
+  activeModules,
   stats,
   corridas,
   dispatch,
@@ -61,14 +63,18 @@ export function AbaInicio({
   onSelecionarTribo,
 }: AbaInicioProps) {
   const servico = useHookPerfilServico(perfil.id);
+  const temMobilidade = activeModules.includes("mobility");
+  const temServicos = activeModules.includes("services");
   const ehProfissional =
-    servico.professionalType === "service_provider" || servico.professionalType === "both";
+    temServicos &&
+    (servico.professionalType === "service_provider" || servico.professionalType === "both");
 
   return (
     <div className="pb-20 space-y-4">
       <HeaderPainel
         perfil={perfil}
         tenantSlug={tenantSlug}
+        mostrarToggleOnline={temMobilidade}
         realtimeAtivo={realtimeAtivo}
         audioDestravado={audioDestravado}
         onToggleOnline={onToggleOnline}
@@ -77,7 +83,7 @@ export function AbaInicio({
         onSelecionarTribo={onSelecionarTribo}
       />
 
-      {temCorridaAtiva && (
+      {temMobilidade && temCorridaAtiva && (
         <div className="px-4 flex items-center gap-2">
           <ToggleLocalizacao ativo={localizacaoAtiva} onToggle={onToggleLocalizacao} />
           <Button variant="outline" size="sm" className="gap-2" onClick={onAbrirChat}>
@@ -89,7 +95,7 @@ export function AbaInicio({
 
       {ehProfissional && <SecaoAgendaHoje agendamentos={servico.agendaHoje} />}
 
-      {dispatch && (
+      {temMobilidade && dispatch && (
         <CardDispatch
           dispatch={dispatch}
           timeoutSec={timeoutSec}
@@ -101,9 +107,9 @@ export function AbaInicio({
         />
       )}
 
-      <GridStats stats={stats} />
+      {temMobilidade && <GridStats stats={stats} />}
       <AcessoRapido onNavegar={onNavegar} tenantSlug={tenantSlug} />
-      <ListaCorridas corridas={corridas} />
+      {temMobilidade && <ListaCorridas corridas={corridas} />}
     </div>
   );
 }
