@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Check, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,12 @@ export function SeletorCategoriasServico({
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState<string[]>(selecionadas);
 
-  // Sincroniza quando reabre
-  useMemo(() => {
-    if (aberto) setEstado(selecionadas);
+  // Sincroniza estado interno com a seleção atual sempre que o modal abre
+  useEffect(() => {
+    if (aberto) {
+      setEstado(selecionadas);
+      setBusca("");
+    }
   }, [aberto, selecionadas]);
 
   const categorias = listarCategorias();
