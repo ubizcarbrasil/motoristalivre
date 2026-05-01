@@ -173,6 +173,7 @@ export default function PaginaPainel() {
             onMudar={setAba}
             mostrarTribo={true}
             modoSomenteDono
+            activeModules={activeModulesAtual}
           />
         </div>
       );
