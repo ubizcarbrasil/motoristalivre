@@ -20,6 +20,7 @@ import PaginaPerfilMotorista from "@/features/motorista/pages/pagina_perfil_moto
 import PaginaLanding from "@/features/landing/pages/pagina_landing";
 import PaginaValidacaoCorrida from "@/features/validacao_corrida/pages/pagina_validacao_corrida";
 import PaginaPersonas from "@/features/dev_personas/pages/pagina_personas";
+import PaginaDevLinks from "@/features/dev_links/pages/pagina_dev_links";
 import PaginaInstalar from "@/features/instalacao/pages/pagina_instalar";
 import PaginaAcesso from "@/features/acesso_publico/pages/pagina_acesso";
 import PaginaSimuladorDispatch from "@/features/dev_simulador/pages/pagina_simulador_dispatch";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/profissional/criar-conta" element={<Navigate to="/profissional/cadastro" replace />} />
             <Route path="/validar-corrida/:id" element={<PaginaValidacaoCorrida />} />
             <Route path="/dev/personas" element={<PaginaPersonas />} />
+            <Route path="/dev/links" element={<PaginaDevLinks />} />
             <Route path="/instalar" element={<PaginaInstalar />} />
             <Route path="/acesso" element={<PaginaAcesso />} />
             <Route path="/dev/simular-dispatch" element={<RotaProtegida><PaginaSimuladorDispatch /></RotaProtegida>} />
