@@ -34,7 +34,7 @@ export function usePainel() {
   const [stats, setStats] = useState<EstatisticasHoje>({ faturamento: 0, corridas: 0, comissoes: 0, avaliacao: 0 });
   const [corridasRecentes, setCorridasRecentes] = useState<CorridaRecente[]>([]);
   const [dispatchInicial, setDispatchInicial] = useState<DispatchAtivo | null>(null);
-  const [tenant, setTenant] = useState<{ id: string; name: string; slug: string } | null>(null);
+  const [tenant, setTenant] = useState<{ id: string; name: string; slug: string; active_modules: string[] } | null>(null);
   const [timeoutSec, setTimeoutSec] = useState<number>(TIMEOUT_DISPATCH_SEG);
   const [carregando, setCarregando] = useState(true);
   const [corridaAtiva, setCorridaAtiva] = useState<Awaited<ReturnType<typeof buscarCorridaAtiva>>>(null);
