@@ -23,9 +23,9 @@ export function EtapaModulos({ selecionados, onChange, onAvancar, onVoltar }: Et
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
-        <h2 className="text-xl font-bold text-foreground">Quais módulos você quer ativar?</h2>
+        <h2 className="text-xl font-bold text-foreground">Qual módulo você quer ativar?</h2>
         <p className="text-sm text-muted-foreground">
-          Você pode escolher um ou os dois. É possível ativar mais módulos depois.
+          Escolha apenas um módulo. Os fluxos ficam separados para não causar confusão. Você poderá trocar depois.
         </p>
       </div>
 
