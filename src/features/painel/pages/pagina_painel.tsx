@@ -73,6 +73,13 @@ export default function PaginaPainel() {
   const activeModulesAtual =
     triboAtiva?.activeModules ?? tenant?.active_modules ?? ["mobility"];
 
+  // Se a aba atual não é permitida pelos módulos ativos, volta para Início
+  useEffect(() => {
+    if (!abaPermitida(aba, activeModulesAtual)) {
+      setAba("inicio");
+    }
+  }, [aba, activeModulesAtual, setAba]);
+
   // Se não é motorista mas é dono de tribo, força aba "tribo"
   useEffect(() => {
     if (podeAcessarComoDono && aba !== "tribo" && aba !== "carteira" && aba !== "perfil" && aba !== "configuracoes") {
