@@ -1,6 +1,6 @@
 import { Car, CalendarDays, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { MODULOS_DISPONIVEIS } from "../constants/constantes_onboarding";
 import type { ModuloPlataforma } from "../types/tipos_onboarding";
 import { cn } from "@/lib/utils";
