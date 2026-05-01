@@ -16,6 +16,7 @@ import { usePainel } from "../hooks/hook_painel";
 import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { usePublicarPresencaMotorista } from "../hooks/hook_publicar_presenca";
 import { useTribosMotorista } from "../hooks/hook_tribos_motorista";
+import { abaPermitida } from "../utils/abas_por_modulo";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
@@ -71,6 +72,13 @@ export default function PaginaPainel() {
   // Módulos da tribo ativa (fonte da verdade da UI)
   const activeModulesAtual =
     triboAtiva?.activeModules ?? tenant?.active_modules ?? ["mobility"];
+
+  // Se a aba atual não é permitida pelos módulos ativos, volta para Início
+  useEffect(() => {
+    if (!abaPermitida(aba, activeModulesAtual)) {
+      setAba("inicio");
+    }
+  }, [aba, activeModulesAtual, setAba]);
 
   // Se não é motorista mas é dono de tribo, força aba "tribo"
   useEffect(() => {
@@ -165,6 +173,7 @@ export default function PaginaPainel() {
             onMudar={setAba}
             mostrarTribo={true}
             modoSomenteDono
+            activeModules={activeModulesAtual}
           />
         </div>
       );
@@ -226,7 +235,7 @@ export default function PaginaPainel() {
         <AbaTribo tribo={triboAtiva} semPerfilDriver={!perfil} onAtivarMotorista={recarregar} />
       )}
 
-      {aba === "meus_links" && (
+      {aba === "meus_links" && abaPermitida("meus_links", activeModulesAtual) && (
         <AbaMeusLinks perfil={perfil} tenant={tenant} ehAdminGrupo={ehAdmin} />
       )}
 
@@ -246,7 +255,12 @@ export default function PaginaPainel() {
         />
       )}
 
-      <NavegacaoInferior abaAtiva={aba} onMudar={setAba} mostrarTribo={mostrarAbaTribo} />
+      <NavegacaoInferior
+        abaAtiva={aba}
+        onMudar={setAba}
+        mostrarTribo={mostrarAbaTribo}
+        activeModules={activeModulesAtual}
+      />
 
       {mostraChat && corridaAtiva && (
         <TelaChat
