@@ -183,7 +183,7 @@ export default function PaginaEntrar() {
         </div>
 
         <div className="space-y-3">
-          {!modoProfissional && (
+          {!ocultarSlugPassageiro && (
             <div className="space-y-2">
               <Label htmlFor="slugGrupoLogin" className="text-foreground">
                 Slug do grupo <span className="text-muted-foreground font-normal">(passageiros)</span>
@@ -221,29 +221,58 @@ export default function PaginaEntrar() {
         </div>
 
         <div className="space-y-3 text-center text-sm">
-          <p className="text-muted-foreground">
-            Não tem conta?{" "}
-            <Link
-              to={redirectTo ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}` : "/cadastro"}
-              className="text-primary hover:underline font-medium"
-            >
-              Criar conta
-            </Link>
-          </p>
-
-          {modoProfissional ? (
-            <Link to="/entrar" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Sou passageiro
-            </Link>
+          {modoAdmin ? (
+            <p className="text-muted-foreground">
+              Acesso restrito.{" "}
+              <Link to="/entrar" className="text-primary hover:underline font-medium">
+                Sou usuário comum
+              </Link>
+            </p>
           ) : (
-            <Link
-              to="/entrar?modo=profissional"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Briefcase className="w-3 h-3" />
-              Sou profissional
-            </Link>
+            <p className="text-muted-foreground">
+              Não tem conta?{" "}
+              <Link
+                to={
+                  modoProfissional
+                    ? "/profissional/cadastro"
+                    : modoMotorista
+                    ? "/motorista/cadastro"
+                    : redirectTo
+                    ? `/cadastro?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/cadastro"
+                }
+                className="text-primary hover:underline font-medium"
+              >
+                Criar conta
+              </Link>
+            </p>
           )}
+
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            {modo !== "padrao" && (
+              <Link to="/entrar" className="hover:text-foreground transition-colors">
+                Sou passageiro
+              </Link>
+            )}
+            {!modoProfissional && (
+              <Link
+                to="/profissional/acesso"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Briefcase className="w-3 h-3" />
+                Sou profissional
+              </Link>
+            )}
+            {!modoMotorista && (
+              <Link
+                to="/motorista/acesso"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Car className="w-3 h-3" />
+                Sou motorista
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>
