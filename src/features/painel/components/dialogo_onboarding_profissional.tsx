@@ -28,6 +28,65 @@ import { salvarOnboardingProfissional } from "../services/servico_onboarding_pro
 import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profissional";
 import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
 import { IndicadorAutoSave } from "./indicador_autosave";
+import { SeletorCategoriasServico } from "./seletor_categorias_servico";
+import { iconePorSlug, nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+
+function SeletorCategoriasServicoInline({
+  selecionadas,
+  onChange,
+}: {
+  selecionadas: string[];
+  onChange: (lista: string[]) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setAberto(true)}
+        className="w-full h-11 gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        {selecionadas.length === 0
+          ? "Selecionar categorias"
+          : `Editar (${selecionadas.length}/10)`}
+      </Button>
+      {selecionadas.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selecionadas.map((slug) => {
+            const Icone = iconePorSlug(slug);
+            return (
+              <Badge
+                key={slug}
+                variant="outline"
+                className="border-primary/40 text-primary bg-primary/5 gap-1.5 pl-2 pr-1 py-1 text-[11px]"
+              >
+                <Icone className="w-3 h-3" />
+                {nomePorSlug(slug)}
+                <button
+                  type="button"
+                  onClick={() => onChange(selecionadas.filter((s) => s !== slug))}
+                  className="rounded-full hover:bg-primary/10 p-0.5"
+                  aria-label={`Remover ${nomePorSlug(slug)}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+      <SeletorCategoriasServico
+        aberto={aberto}
+        onFechar={() => setAberto(false)}
+        selecionadas={selecionadas}
+        onConfirmar={onChange}
+        limite={10}
+      />
+    </div>
+  );
+}
 
 interface DialogoOnboardingProfissionalProps {
   aberto: boolean;
