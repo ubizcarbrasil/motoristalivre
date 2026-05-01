@@ -254,7 +254,12 @@ export default function PaginaPainel() {
         />
       )}
 
-      <NavegacaoInferior abaAtiva={aba} onMudar={setAba} mostrarTribo={mostrarAbaTribo} />
+      <NavegacaoInferior
+        abaAtiva={aba}
+        onMudar={setAba}
+        mostrarTribo={mostrarAbaTribo}
+        activeModules={activeModulesAtual}
+      />
 
       {mostraChat && corridaAtiva && (
         <TelaChat
