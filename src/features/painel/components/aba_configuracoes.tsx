@@ -45,6 +45,7 @@ interface AbaConfiguracoesProps {
   driverId: string;
   tenantId: string;
   ehAdmin: boolean;
+  activeModules: string[];
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
   onTestarAlerta?: () => void | Promise<void>;
@@ -54,6 +55,7 @@ export function AbaConfiguracoes({
   driverId,
   tenantId,
   ehAdmin,
+  activeModules,
   tipoSom,
   onMudarSom,
   onTestarAlerta,
