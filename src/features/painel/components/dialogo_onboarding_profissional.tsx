@@ -403,8 +403,8 @@ function PassoTipoCategorias({ form, onChange }: PropsPasso) {
           Selecione até 10. Aparecem como filtros no seu perfil público.
         </p>
         <SeletorCategoriasServicoInline
-          selecionadas={form.service_categories}
-          onChange={(lista) => onChange("service_categories", lista)}
+          selecionadas={form.service_categories.filter((s) => slugValido(s))}
+          onChange={(lista) => onChange("service_categories", lista.filter((s) => slugValido(s)))}
         />
       </div>
     </div>
