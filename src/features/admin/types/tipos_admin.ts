@@ -7,7 +7,8 @@ export type SecaoAdmin =
   | "carteira"
   | "identidade"
   | "regras"
-  | "comissoes";
+  | "comissoes"
+  | "regras_comissao";
 
 export interface StatsAdmin {
   receitaHoje: number;

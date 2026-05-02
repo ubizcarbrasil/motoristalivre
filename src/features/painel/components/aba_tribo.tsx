@@ -9,6 +9,7 @@ import {
   Palette,
   Settings,
   Percent,
+  SlidersHorizontal,
   Briefcase,
   Calendar,
   type LucideIcon,
@@ -22,6 +23,7 @@ import { SecaoCarteira } from "@/features/admin/components/secao_carteira";
 import { SecaoIdentidade } from "@/features/admin/components/secao_identidade";
 import { SecaoRegras } from "@/features/admin/components/secao_regras";
 import { SecaoComissoes } from "@/features/admin/components/secao_comissoes";
+import { SecaoRegrasComissao } from "@/features/admin/components/secao_regras_comissao";
 import type { SecaoAdmin } from "@/features/admin/types/tipos_admin";
 import type { TriboMotorista } from "../types/tipos_tribos";
 import type { TipoProfissional } from "@/features/servicos/types/tipos_servicos";
@@ -51,6 +53,7 @@ const SECOES: Record<SecaoAdmin, (props: PropsSecaoAdmin) => JSX.Element> = {
   identidade: SecaoIdentidade,
   regras: SecaoRegras,
   comissoes: SecaoComissoes,
+  regras_comissao: SecaoRegrasComissao,
 };
 
 interface SubAbaConfig {
@@ -87,6 +90,12 @@ const SUB_ABAS: SubAbaConfig[] = [
   { id: "identidade", label: "Visual", icone: Palette, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "regras", label: "Regras", icone: Settings, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "comissoes", label: "Comissões", icone: Percent, modos: ["mobilidade", "servicos", "hibrido"] },
+  {
+    id: "regras_comissao",
+    label: "Regras por categoria",
+    icone: SlidersHorizontal,
+    modos: ["servicos", "hibrido"],
+  },
 ];
 
 export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, professionalType }: AbaTriboProps) {
