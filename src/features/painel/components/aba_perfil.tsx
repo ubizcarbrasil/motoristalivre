@@ -109,6 +109,18 @@ export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
     <div className="pt-12 pb-20 px-5 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Meu perfil</h2>
 
+      {perfil.professional_type !== "driver" && (
+        <ChecklistPublicacao
+          driverId={perfil.id}
+          bio={bio}
+          avatarUrl={avatar || null}
+          coverUrl={cover || null}
+          serviceCategories={(perfil as any).service_categories ?? []}
+          onIrParaServicos={() => onMudarAba?.("configuracoes")}
+          onIrParaPortfolio={() => onMudarAba?.("configuracoes")}
+        />
+      )}
+
       {/* Formulário */}
       <div className="space-y-4">
         <CampoUploadImagem
