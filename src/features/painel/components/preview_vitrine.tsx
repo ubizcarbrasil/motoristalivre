@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { MemoryRouter } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeCheck, ShieldCheck, Eye, Loader2, RefreshCw, ExternalLink, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -113,7 +112,7 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                   </span>
                 </div>
 
-                <MemoryRouter><div className="bg-background">
+                <div className="bg-background">
                   {/* Cabeçalho */}
                   <div className="px-5 py-5 space-y-3">
                     <div className="flex items-center gap-3">
@@ -224,7 +223,7 @@ export function PreviewVitrine({ aberto, onAbertoChange, driverId }: Props) {
                       )}
                     </>
                   )}
-                </div></MemoryRouter>
+                </div>
               </div>
             </div>
           </div>
