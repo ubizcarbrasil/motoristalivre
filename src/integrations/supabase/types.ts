@@ -1681,6 +1681,278 @@ export type Database = {
         }
         Relationships: []
       }
+      service_quote_dispatches: {
+        Row: {
+          dispatched_at: string
+          driver_id: string
+          id: string
+          request_id: string
+          responded_at: string | null
+          response: Database["public"]["Enums"]["quote_dispatch_response"]
+          tenant_id: string
+        }
+        Insert: {
+          dispatched_at?: string
+          driver_id: string
+          id?: string
+          request_id: string
+          responded_at?: string | null
+          response?: Database["public"]["Enums"]["quote_dispatch_response"]
+          tenant_id: string
+        }
+        Update: {
+          dispatched_at?: string
+          driver_id?: string
+          id?: string
+          request_id?: string
+          responded_at?: string | null
+          response?: Database["public"]["Enums"]["quote_dispatch_response"]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_quote_dispatches_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_quote_offers: {
+        Row: {
+          created_at: string
+          data_disponivel: string | null
+          driver_id: string
+          id: string
+          mensagem: string | null
+          prazo_dias_max: number | null
+          prazo_dias_min: number | null
+          request_id: string
+          status: Database["public"]["Enums"]["quote_offer_status"]
+          tenant_id: string
+          updated_at: string
+          valid_until: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_disponivel?: string | null
+          driver_id: string
+          id?: string
+          mensagem?: string | null
+          prazo_dias_max?: number | null
+          prazo_dias_min?: number | null
+          request_id: string
+          status?: Database["public"]["Enums"]["quote_offer_status"]
+          tenant_id: string
+          updated_at?: string
+          valid_until?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_disponivel?: string | null
+          driver_id?: string
+          id?: string
+          mensagem?: string | null
+          prazo_dias_max?: number | null
+          prazo_dias_min?: number | null
+          request_id?: string
+          status?: Database["public"]["Enums"]["quote_offer_status"]
+          tenant_id?: string
+          updated_at?: string
+          valid_until?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_quote_offers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_quote_questions: {
+        Row: {
+          ajuda: string | null
+          condicional: Json | null
+          created_at: string
+          id: string
+          key: string
+          label: string
+          obrigatorio: boolean
+          opcoes: Json | null
+          ordem: number
+          template_id: string
+          tipo: Database["public"]["Enums"]["quote_question_type"]
+        }
+        Insert: {
+          ajuda?: string | null
+          condicional?: Json | null
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          template_id: string
+          tipo: Database["public"]["Enums"]["quote_question_type"]
+        }
+        Update: {
+          ajuda?: string | null
+          condicional?: Json | null
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          template_id?: string
+          tipo?: Database["public"]["Enums"]["quote_question_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_quote_questions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "service_quote_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_quote_requests: {
+        Row: {
+          category_id: string
+          client_id: string | null
+          closed_at: string | null
+          contact_name: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          data_desejada: string | null
+          endereco: Json | null
+          endereco_lat: number | null
+          endereco_lng: number | null
+          expires_at: string
+          fotos: string[]
+          guest_passenger_id: string | null
+          id: string
+          max_propostas: number
+          observacao: string | null
+          perguntas_snapshot: Json
+          respostas: Json
+          service_type_id: string | null
+          status: Database["public"]["Enums"]["quote_request_status"]
+          template_id: string | null
+          tenant_id: string
+          updated_at: string
+          urgencia: Database["public"]["Enums"]["quote_urgency"]
+        }
+        Insert: {
+          category_id: string
+          client_id?: string | null
+          closed_at?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          data_desejada?: string | null
+          endereco?: Json | null
+          endereco_lat?: number | null
+          endereco_lng?: number | null
+          expires_at?: string
+          fotos?: string[]
+          guest_passenger_id?: string | null
+          id?: string
+          max_propostas?: number
+          observacao?: string | null
+          perguntas_snapshot?: Json
+          respostas?: Json
+          service_type_id?: string | null
+          status?: Database["public"]["Enums"]["quote_request_status"]
+          template_id?: string | null
+          tenant_id: string
+          updated_at?: string
+          urgencia?: Database["public"]["Enums"]["quote_urgency"]
+        }
+        Update: {
+          category_id?: string
+          client_id?: string | null
+          closed_at?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          data_desejada?: string | null
+          endereco?: Json | null
+          endereco_lat?: number | null
+          endereco_lng?: number | null
+          expires_at?: string
+          fotos?: string[]
+          guest_passenger_id?: string | null
+          id?: string
+          max_propostas?: number
+          observacao?: string | null
+          perguntas_snapshot?: Json
+          respostas?: Json
+          service_type_id?: string | null
+          status?: Database["public"]["Enums"]["quote_request_status"]
+          template_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+          urgencia?: Database["public"]["Enums"]["quote_urgency"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_quote_requests_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "service_quote_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_quote_templates: {
+        Row: {
+          ativo: boolean
+          category_id: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          scope: Database["public"]["Enums"]["quote_template_scope"]
+          service_type_id: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          category_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          scope?: Database["public"]["Enums"]["quote_template_scope"]
+          service_type_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          category_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          scope?: Database["public"]["Enums"]["quote_template_scope"]
+          service_type_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_reminders: {
         Row: {
           booking_id: string | null
@@ -2237,6 +2509,10 @@ export type Database = {
         Args: { _driver_id: string; _tenant_id: string }
         Returns: string
       }
+      _haversine_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
       approve_payout: { Args: { _payout_id: string }; Returns: undefined }
       create_guest_ride_request: {
         Args: {
@@ -2362,6 +2638,18 @@ export type Database = {
         | "approved"
         | "rejected"
       pix_key_type: "cpf" | "email" | "telefone" | "aleatoria"
+      quote_dispatch_response: "pending" | "accepted" | "declined" | "expired"
+      quote_offer_status: "pending" | "accepted" | "declined" | "withdrawn"
+      quote_question_type:
+        | "single_select"
+        | "multi_select"
+        | "number_chips"
+        | "date_chips"
+        | "text_short"
+        | "photo"
+      quote_request_status: "open" | "closed" | "expired" | "cancelled"
+      quote_template_scope: "category" | "service_type"
+      quote_urgency: "agora" | "hoje" | "esta_semana" | "data_marcada"
       referral_type: "driver" | "affiliate"
       ride_origin_type: "driver_link" | "affiliate_link" | "group_link"
       ride_status:
@@ -2548,6 +2836,19 @@ export const Constants = {
         "rejected",
       ],
       pix_key_type: ["cpf", "email", "telefone", "aleatoria"],
+      quote_dispatch_response: ["pending", "accepted", "declined", "expired"],
+      quote_offer_status: ["pending", "accepted", "declined", "withdrawn"],
+      quote_question_type: [
+        "single_select",
+        "multi_select",
+        "number_chips",
+        "date_chips",
+        "text_short",
+        "photo",
+      ],
+      quote_request_status: ["open", "closed", "expired", "cancelled"],
+      quote_template_scope: ["category", "service_type"],
+      quote_urgency: ["agora", "hoje", "esta_semana", "data_marcada"],
       referral_type: ["driver", "affiliate"],
       ride_origin_type: ["driver_link", "affiliate_link", "group_link"],
       ride_status: [
