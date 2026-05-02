@@ -125,6 +125,7 @@ export default function PaginaPainel() {
   const onboardingDriverId = userId ?? "";
   const onboardingTenantId = tenant?.id ?? "";
   const {
+    carregando: carregandoOnboarding,
     dados: dadosOnboarding,
     camposFaltantes,
     precisaOnboarding,
@@ -133,11 +134,12 @@ export default function PaginaPainel() {
 
   useEffect(() => {
     if (!userId || !tenant?.id) return;
+    if (carregandoOnboarding) return;
     if (precisaOnboarding && !onboardingJaAbriu && !dialogoOnboardingAberto) {
       setDialogoOnboardingAberto(true);
       setOnboardingJaAbriu(true);
     }
-  }, [userId, tenant?.id, precisaOnboarding, onboardingJaAbriu, dialogoOnboardingAberto]);
+  }, [userId, tenant?.id, carregandoOnboarding, precisaOnboarding, onboardingJaAbriu, dialogoOnboardingAberto]);
 
   if (carregando) {
     return (

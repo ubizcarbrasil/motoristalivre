@@ -50,10 +50,20 @@ export function useHookOnboardingProfissional(
   driverId: string,
   tenantId: string,
 ): RetornoHook {
-  const [dados, setDados] = useState<DadosOnboardingProfissional | null>(null);
+  const [resultado, setResultado] = useState<{
+    driverId: string;
+    tenantId: string;
+    dados: DadosOnboardingProfissional | null;
+  } | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   const carregar = useCallback(async () => {
+    if (!driverId || !tenantId) {
+      setResultado(null);
+      setCarregando(false);
+      return;
+    }
+
     setCarregando(true);
     try {
       const [{ data: driver }, { data: user }, { data: branding }] = await Promise.all([
@@ -85,20 +95,19 @@ export function useHookOnboardingProfissional(
         slugValido(slug),
       );
 
-      console.log("[onboarding] versão sanitização v3", {
-        categoriasOriginais: driverRow?.service_categories ?? [],
-        categoriasSaneadas,
-      });
-
-      setDados({
-        full_name: user?.full_name ?? null,
-        phone: user?.phone ?? null,
-        avatar_url: user?.avatar_url ?? null,
-        bio: driverRow?.bio ?? null,
-        cover_url: driverRow?.cover_url ?? null,
-        professional_type: driverRow?.professional_type ?? null,
-        service_categories: categoriasSaneadas,
-        cidade: branding?.city ?? null,
+      setResultado({
+        driverId,
+        tenantId,
+        dados: {
+          full_name: user?.full_name ?? null,
+          phone: user?.phone ?? null,
+          avatar_url: user?.avatar_url ?? null,
+          bio: driverRow?.bio ?? null,
+          cover_url: driverRow?.cover_url ?? null,
+          professional_type: driverRow?.professional_type ?? null,
+          service_categories: categoriasSaneadas,
+          cidade: branding?.city ?? null,
+        },
       });
     } finally {
       setCarregando(false);
@@ -109,13 +118,19 @@ export function useHookOnboardingProfissional(
     carregar();
   }, [carregar]);
 
-  const camposFaltantes = calcularCamposFaltantes(dados);
+  const resultadoAtual =
+    resultado?.driverId === driverId && resultado?.tenantId === tenantId
+      ? resultado
+      : null;
+  const aguardandoConsultaAtual = Boolean(driverId && tenantId && !resultadoAtual);
+  const dados = resultadoAtual?.dados ?? null;
+  const camposFaltantes = aguardandoConsultaAtual ? [] : calcularCamposFaltantes(dados);
 
   return {
-    carregando,
+    carregando: carregando || aguardandoConsultaAtual,
     dados,
     camposFaltantes,
-    precisaOnboarding: camposFaltantes.length > 0,
+    precisaOnboarding: !aguardandoConsultaAtual && camposFaltantes.length > 0,
     recarregar: carregar,
   };
 }
