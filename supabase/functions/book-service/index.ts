@@ -23,6 +23,7 @@ interface Payload {
   return_reminder_date?: string | null;
   client_id?: string | null;
   guest?: { full_name: string; whatsapp: string } | null;
+  briefing?: Record<string, unknown> | null;
 }
 
 function json(body: unknown, status = 200) {
