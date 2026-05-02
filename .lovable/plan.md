@@ -72,18 +72,19 @@ Fase 1 (Schema base)
 
 ---
 
-## Fase 4 — Categorias e regras configuráveis (Semana 4)
+## Fase 4 — Categorias e regras configuráveis (Semana 4) ✅ CONCLUÍDA
 
-**Objetivo:** dar ao admin controle sobre comissões por categoria, substituindo o controle único global atual.
+**Entregue:**
+- Tela admin `secao_regras_comissao.tsx` com CRUD completo de `commission_rules` por categoria
+- Hook `useHookRegrasComissao` + service `servico_regras_comissao.ts`
+- Editor `dialogo_editor_regra.tsx` suportando regra mista (% cobertura, % indicação, R$ fixo)
+- Simulador `simulador_repasse.tsx` ("se um serviço de R$ X for cobertura/indicação, repasse será R$ Y")
+- Sub-aba "Regras por categoria" no painel da tribo (modos `servicos` e `hibrido`)
+- % global da `secao_comissoes` permanece como fallback quando não há regra de categoria
+- Trigger `trg_audit_commission_rules` registrando insert/update/delete em `audit_logs`
+- Índice único `(tenant_id, category_id)` evita regras duplicadas
 
-**Entregáveis**
-- Tela admin `pagina_regras_comissao.tsx` para CRUD de `commission_rules`
-- Suporte a regra mista: `% sobre o valor` OU `R$ fixo por atendimento`
-- Migração da `secao_comissoes` atual: % global vira fallback quando não há regra de categoria
-- Painel de simulação ("se um serviço de R$ 200 for cobertura, repasse será R$ X")
-- Auditoria de alterações em `audit_logs`
-
-**Depende de:** Fases 1 e 2 (precisa que o motor leia das regras).
+**Depende de:** Fases 1 e 2 (motor já lê das regras).
 
 ---
 
