@@ -72,7 +72,11 @@ export function useHookComissoes() {
 
     setSalvando(true);
     try {
-      await salvarComissoesTenant(tenantId, validacao.data);
+      await salvarComissoesTenant(tenantId, {
+        transbordo_commission: validacao.data.transbordo_commission,
+        affiliate_commission: validacao.data.affiliate_commission,
+        cashback_pct: validacao.data.cashback_pct,
+      });
       toast.success("Comissões atualizadas");
     } catch (erro) {
       console.error("[useHookComissoes] erro ao salvar:", erro);
