@@ -93,6 +93,10 @@ const App = () => (
             {/* Mobilidade — link público exclusivo */}
             <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
 
+            {/* Friendly URL via @handle — resolve para o perfil canônico */}
+            <Route path="/@:handle" element={<PaginaResolverHandle />} />
+
+
             <Route path="/s/:slug/a/:driver_slug" element={<PaginaIndicacaoServicos />} />
             <Route path="/s/:slug/:driver_slug/rede" element={<PaginaRedePublica />} />
             <Route path="/s/:slug/:driver_slug" element={<PaginaPerfilProfissionalServicos />} />
