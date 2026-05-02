@@ -123,28 +123,43 @@ export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
         />
         <div className="space-y-2">
           <Label htmlFor="bio">Bio</Label>
-          <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Fale sobre você..." rows={3} maxLength={300} />
+          <Textarea
+            id="bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder={
+              perfil.professional_type === "service_provider"
+                ? "Descreva seus serviços, experiência e diferenciais..."
+                : "Fale sobre você..."
+            }
+            rows={3}
+            maxLength={300}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="modelo">Veículo</Label>
-            <Input id="modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} placeholder="Corolla" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ano">Ano</Label>
-            <Input id="ano" value={ano} onChange={(e) => setAno(e.target.value)} placeholder="2022" type="number" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="cor">Cor</Label>
-            <Input id="cor" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Preto" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="placa">Placa</Label>
-            <Input id="placa" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" />
-          </div>
-        </div>
+        {perfil.professional_type !== "service_provider" && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="modelo">Veículo</Label>
+                <Input id="modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} placeholder="Corolla" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ano">Ano</Label>
+                <Input id="ano" value={ano} onChange={(e) => setAno(e.target.value)} placeholder="2022" type="number" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="cor">Cor</Label>
+                <Input id="cor" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Preto" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="placa">Placa</Label>
+                <Input id="placa" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" />
+              </div>
+            </div>
+          </>
+        )}
         <Button onClick={salvar} disabled={salvando} className="w-full h-11">
           {salvando ? "Salvando..." : "Salvar alterações"}
         </Button>
