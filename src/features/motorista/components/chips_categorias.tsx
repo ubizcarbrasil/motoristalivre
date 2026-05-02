@@ -31,7 +31,7 @@ export function ChipsCategorias({ categorias, selecionadas, onToggle }: Props) {
               variant="outline"
               className={`${classeBase} ${classeEstado}`}
             >
-              {c}
+              {nomePorSlug(c)}
             </Badge>
           );
         }
@@ -48,7 +48,7 @@ export function ChipsCategorias({ categorias, selecionadas, onToggle }: Props) {
               variant="outline"
               className={`${classeBase} ${classeEstado} ${classeInterativo}`}
             >
-              {c}
+              {nomePorSlug(c)}
             </Badge>
           </button>
         );
