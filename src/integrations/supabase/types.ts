@@ -1530,6 +1530,7 @@ export type Database = {
       }
       service_types: {
         Row: {
+          category_id: string | null
           created_at: string
           deposit_amount: number | null
           deposit_enabled: boolean
@@ -1547,6 +1548,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           deposit_amount?: number | null
           deposit_enabled?: boolean
@@ -1564,6 +1566,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           deposit_amount?: number | null
           deposit_enabled?: boolean
@@ -1581,6 +1584,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_types_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_types_driver_id_fkey"
             columns: ["driver_id"]
@@ -2048,6 +2058,10 @@ export type Database = {
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
       process_ride_commission: { Args: { _ride_id: string }; Returns: Json }
+      process_service_commission: {
+        Args: { _booking_id: string }
+        Returns: Json
+      }
       reject_payout: { Args: { _payout_id: string }; Returns: undefined }
       request_driver_join: {
         Args: { _message?: string; _tenant_slug: string }
@@ -2073,7 +2087,13 @@ export type Database = {
         | "passenger"
       cashback_type: "credit" | "debit"
       commission_status: "pending" | "processed" | "failed"
-      commission_type: "transbordo" | "affiliate" | "referral" | "platform"
+      commission_type:
+        | "transbordo"
+        | "affiliate"
+        | "referral"
+        | "platform"
+        | "service_coverage"
+        | "service_referral"
       dispatch_mode: "auto" | "manual" | "hybrid"
       dispatch_response: "pending" | "accepted" | "rejected" | "timeout"
       favorite_type: "home" | "work" | "other"
@@ -2112,6 +2132,8 @@ export type Database = {
         | "pix_topup"
         | "withdrawal"
         | "subscription_fee"
+        | "commission_service_coverage"
+        | "commission_service_referral"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2249,7 +2271,14 @@ export const Constants = {
       ],
       cashback_type: ["credit", "debit"],
       commission_status: ["pending", "processed", "failed"],
-      commission_type: ["transbordo", "affiliate", "referral", "platform"],
+      commission_type: [
+        "transbordo",
+        "affiliate",
+        "referral",
+        "platform",
+        "service_coverage",
+        "service_referral",
+      ],
       dispatch_mode: ["auto", "manual", "hybrid"],
       dispatch_response: ["pending", "accepted", "rejected", "timeout"],
       favorite_type: ["home", "work", "other"],
@@ -2290,6 +2319,8 @@ export const Constants = {
         "pix_topup",
         "withdrawal",
         "subscription_fee",
+        "commission_service_coverage",
+        "commission_service_referral",
       ],
     },
   },
