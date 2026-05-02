@@ -3,8 +3,10 @@ import type {
   DadosIdentidade,
   DadosConfiguracao,
   DadosServico,
+  DadosDisponibilidadeOnboarding,
   ModuloPlataforma,
 } from "../types/tipos_onboarding";
+import { diasParaBlocosPlanos } from "@/features/painel/components/editor_disponibilidade_semanal";
 
 interface CriarGrupoParams {
   identidade: DadosIdentidade;
@@ -12,6 +14,7 @@ interface CriarGrupoParams {
   planoId: string;
   configuracao: DadosConfiguracao;
   servicos: DadosServico[];
+  disponibilidade?: DadosDisponibilidadeOnboarding;
 }
 
 function duracaoEmMinutos(servico: DadosServico): number {
