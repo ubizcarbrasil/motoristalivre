@@ -37,6 +37,16 @@ export function SecaoMotoristas() {
       const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
       if (!perfil) return;
 
+      // Detecta o modo dominante da tribo
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("active_modules")
+        .eq("id", perfil.tenant_id)
+        .maybeSingle();
+      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+      const ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      setModo(ehServicos ? "servicos" : "mobilidade");
+
       const { data: drivers } = await supabase
         .from("drivers")
         .select("id, slug, is_online, is_verified")
@@ -47,10 +57,26 @@ export function SecaoMotoristas() {
       const ids = drivers.map((d) => d.id);
       const { data: users } = await supabase.from("users").select("id, full_name, status").in("id", ids);
 
-      const { data: rides } = await supabase
-        .from("rides")
-        .select("driver_id")
-        .eq("tenant_id", perfil.tenant_id);
+      // Conta corridas (mobilidade) ou agendamentos (serviços) por profissional
+      let contagemPorDriver = new Map<string, number>();
+      if (ehServicos) {
+        const { data: bookings } = await supabase
+          .from("service_bookings" as any)
+          .select("driver_id")
+          .eq("tenant_id", perfil.tenant_id);
+        (bookings as any[] | null)?.forEach((b) => {
+          contagemPorDriver.set(b.driver_id, (contagemPorDriver.get(b.driver_id) || 0) + 1);
+        });
+      } else {
+        const { data: rides } = await supabase
+          .from("rides")
+          .select("driver_id")
+          .eq("tenant_id", perfil.tenant_id);
+        rides?.forEach((r) => {
+          if (!r.driver_id) return;
+          contagemPorDriver.set(r.driver_id, (contagemPorDriver.get(r.driver_id) || 0) + 1);
+        });
+      }
 
       setMotoristas(
         drivers.map((d) => {
@@ -59,7 +85,7 @@ export function SecaoMotoristas() {
             id: d.id,
             slug: d.slug,
             nome: u?.full_name || d.slug,
-            corridasTotal: rides?.filter((r) => r.driver_id === d.id).length || 0,
+            corridasTotal: contagemPorDriver.get(d.id) || 0,
             online: d.is_online,
             status: u?.status || "active",
           };
