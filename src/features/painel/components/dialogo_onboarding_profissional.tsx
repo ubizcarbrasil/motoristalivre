@@ -371,21 +371,7 @@ function PassoDadosBasicos({ form, onChange }: PropsPasso) {
   );
 }
 
-interface PropsPassoCategorias extends PropsPasso {
-  novaCategoria: string;
-  setNovaCategoria: (v: string) => void;
-  onAdicionar: () => void;
-  onRemover: (cat: string) => void;
-}
-
-function PassoTipoCategorias({
-  form,
-  onChange,
-  novaCategoria,
-  setNovaCategoria,
-  onAdicionar,
-  onRemover,
-}: PropsPassoCategorias) {
+function PassoTipoCategorias({ form, onChange }: PropsPasso) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
