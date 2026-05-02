@@ -17,7 +17,6 @@ interface Motorista {
 
 type Modo = "mobilidade" | "servicos";
 
-type Modo = "mobilidade" | "servicos";
 
 interface SecaoMotoristasProps {
   modo?: "mobilidade" | "servicos" | "hibrido";
