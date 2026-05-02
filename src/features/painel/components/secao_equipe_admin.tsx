@@ -18,6 +18,7 @@ import {
   removerMembroEquipe,
   type CandidatoEquipe,
 } from "../services/servico_vitrine_admin";
+import { DialogoEspelhamento } from "./dialogo_espelhamento";
 
 interface Props {
   driverId: string;
@@ -32,6 +33,7 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
   const [candidatos, setCandidatos] = useState<CandidatoEquipe[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [headlineMap, setHeadlineMap] = useState<Record<string, string>>({});
+  const [espelhamento, setEspelhamento] = useState<{ id: string; nome: string } | null>(null);
 
   const carregar = async () => {
     setCarregando(true);
@@ -81,6 +83,8 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
       setTermo("");
       setHeadlineMap({});
       await carregar();
+      // Após adicionar, oferece envio do convite de espelhamento
+      setEspelhamento({ id: cand.id, nome: cand.nome });
     } catch (err: any) {
       toast.error(err?.message ?? "Erro ao adicionar");
     }
@@ -234,6 +238,17 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {espelhamento && (
+        <DialogoEspelhamento
+          aberto={!!espelhamento}
+          onFechar={() => setEspelhamento(null)}
+          tenantId={tenantId}
+          ownerDriverId={driverId}
+          membroId={espelhamento.id}
+          membroNome={espelhamento.nome}
+        />
+      )}
     </div>
   );
 }

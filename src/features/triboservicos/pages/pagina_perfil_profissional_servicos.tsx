@@ -12,6 +12,7 @@ import { FiltrosPortfolio } from "../components/filtros_portfolio";
 import { PaginacaoPortfolio } from "../components/paginacao_portfolio";
 import { useFiltroPortfolio } from "../hooks/hook_filtro_portfolio";
 import { ListaServicosOferecidos } from "../components/lista_servicos_oferecidos";
+import { SecaoEquipeServicos } from "../components/secao_equipe_servicos";
 import { FooterServicos } from "../components/footer_servicos";
 import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
@@ -225,6 +226,10 @@ export default function PaginaPerfilProfissionalServicos() {
               />
             </section>
           </>
+        )}
+
+        {driverId && (
+          <SecaoEquipeServicos ownerDriverId={driverId} tenantSlug={tenant.slug} />
         )}
       </main>
 
