@@ -186,6 +186,7 @@ export default function PaginaPainel() {
             modoSomenteDono
             activeModules={activeModulesAtual}
             modo={modoPainel}
+            tenantSlug={tenant.slug}
           />
         </div>
       );
@@ -281,6 +282,7 @@ export default function PaginaPainel() {
         mostrarTribo={mostrarAbaTribo}
         activeModules={activeModulesAtual}
         modo={modoPainel}
+        tenantSlug={triboAtiva?.slug ?? tenant.slug}
       />
 
       {mostraChat && corridaAtiva && (
