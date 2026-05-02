@@ -49,6 +49,7 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
       return;
     }
     let cancelado = false;
+    setEstado((s) => ({ ...s, carregando: true }));
 
     async function carregar() {
       const { data: driver } = await supabase
