@@ -112,34 +112,34 @@ export function SecaoRegras() {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Raio de despacho: {raio} km</Label>
-        <Slider value={[raio]} onValueChange={([v]) => setRaio(v)} min={1} max={50} step={1} />
-      </div>
+      {!modoServicos && (
+        <>
+          <div className="space-y-2">
+            <Label>Raio de despacho: {raio} km</Label>
+            <Slider value={[raio]} onValueChange={([v]) => setRaio(v)} min={1} max={50} step={1} />
+          </div>
 
-      <div className="space-y-2">
-        <Label>Tempo para o motorista responder: {timeout}s (recomendado 60-180s)</Label>
-        <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={30} max={180} step={5} />
-      </div>
+          <div className="space-y-2">
+            <Label>Tempo para o motorista responder: {timeout}s (recomendado 60-180s)</Label>
+            <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={30} max={180} step={5} />
+          </div>
 
-      <div className="space-y-2">
-        <Label>Tentativas maximas: {tentativas}</Label>
-        <Slider value={[tentativas]} onValueChange={([v]) => setTentativas(v)} min={1} max={10} step={1} />
-      </div>
+          <div className="space-y-2">
+            <Label>Tentativas maximas: {tentativas}</Label>
+            <Slider value={[tentativas]} onValueChange={([v]) => setTentativas(v)} min={1} max={10} step={1} />
+          </div>
 
-      <div className="flex items-center justify-between">
-        <Label>Permitir precos personalizados por motorista</Label>
-        <Switch checked={permitirPrecos} onCheckedChange={setPermitirPrecos} />
-      </div>
+          <div className="flex items-center justify-between">
+            <Label>Permitir precos personalizados por motorista</Label>
+            <Switch checked={permitirPrecos} onCheckedChange={setPermitirPrecos} />
+          </div>
 
-      <div className="flex items-center justify-between">
-        <Label>Permitir ofertas de passageiros</Label>
-        <Switch checked={permitirOfertas} onCheckedChange={setPermitirOfertas} />
-      </div>
-
-      <Button onClick={salvar} disabled={salvando}>
-        {salvando ? "Salvando..." : "Salvar regras"}
-      </Button>
+          <div className="flex items-center justify-between">
+            <Label>Permitir ofertas de passageiros</Label>
+            <Switch checked={permitirOfertas} onCheckedChange={setPermitirOfertas} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
