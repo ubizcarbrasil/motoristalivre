@@ -93,6 +93,9 @@ interface DialogoOnboardingProfissionalProps {
   driverId: string;
   tenantId: string;
   dadosIniciais: DadosOnboardingProfissional | null;
+  /** Quando true, força modo serviços puro: tipo profissional fica fixo em "service_provider"
+   *  e a etapa de tipo/categorias só permite escolher categorias. */
+  modoServicos?: boolean;
   onConcluido: () => void;
   onFechar?: () => void;
 }
@@ -115,16 +118,17 @@ export function DialogoOnboardingProfissional({
   driverId,
   tenantId,
   dadosIniciais,
+  modoServicos = false,
   onConcluido,
   onFechar,
 }: DialogoOnboardingProfissionalProps) {
   const [passo, setPasso] = useState(0);
   const [salvando, setSalvando] = useState(false);
-  const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais));
+  const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais, modoServicos));
 
   useEffect(() => {
     if (aberto) {
-      const proximoForm = montarFormInicial(dadosIniciais);
+      const proximoForm = montarFormInicial(dadosIniciais, modoServicos);
       const totalOriginal = dadosIniciais?.service_categories?.length ?? 0;
       if (totalOriginal > proximoForm.service_categories.length) {
         toast.info("Atualizamos sua lista. Refaça a seleção tocando em Editar.");
@@ -132,7 +136,7 @@ export function DialogoOnboardingProfissional({
       setForm(proximoForm);
       setPasso(0);
     }
-  }, [aberto, dadosIniciais]);
+  }, [aberto, dadosIniciais, modoServicos]);
 
   const { status: statusAutoSave } = useHookAutoSaveOnboarding({
     driverId,
@@ -257,7 +261,7 @@ export function DialogoOnboardingProfissional({
             <PassoDadosBasicos form={form} onChange={atualizar} />
           )}
           {passo === 1 && (
-            <PassoTipoCategorias form={form} onChange={atualizar} />
+            <PassoTipoCategorias form={form} onChange={atualizar} modoServicos={modoServicos} />
           )}
           {passo === 2 && <PassoBio form={form} onChange={atualizar} />}
           {passo === 3 && (
@@ -380,27 +384,33 @@ function PassoDadosBasicos({ form, onChange }: PropsPasso) {
   );
 }
 
-function PassoTipoCategorias({ form, onChange }: PropsPasso) {
+function PassoTipoCategorias({
+  form,
+  onChange,
+  modoServicos = false,
+}: PropsPasso & { modoServicos?: boolean }) {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Tipo de profissional</Label>
-        <Select
-          value={form.professional_type}
-          onValueChange={(v) =>
-            onChange("professional_type", v as FormState["professional_type"])
-          }
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="driver">Somente motorista</SelectItem>
-            <SelectItem value="service_provider">Prestador de serviços</SelectItem>
-            <SelectItem value="both">Ambos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!modoServicos && (
+        <div className="space-y-2">
+          <Label>Tipo de profissional</Label>
+          <Select
+            value={form.professional_type}
+            onValueChange={(v) =>
+              onChange("professional_type", v as FormState["professional_type"])
+            }
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="driver">Somente motorista</SelectItem>
+              <SelectItem value="service_provider">Prestador de serviços</SelectItem>
+              <SelectItem value="both">Ambos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Categorias de serviço</Label>
@@ -467,13 +477,14 @@ function PassoImagens({
 
 function montarFormInicial(
   dados: DadosOnboardingProfissional | null,
+  modoServicos = false,
 ): FormState {
   if (!dados) {
     return {
       full_name: "",
       phone: "",
       cidade: "",
-      professional_type: "",
+      professional_type: modoServicos ? "service_provider" : "",
       bio: "",
       service_categories: [],
       avatar_url: "",
@@ -481,14 +492,16 @@ function montarFormInicial(
     };
   }
   const tipo = dados.professional_type;
+  const tipoNormalizado: FormState["professional_type"] = modoServicos
+    ? "service_provider"
+    : tipo === "driver" || tipo === "service_provider" || tipo === "both"
+      ? tipo
+      : "";
   return {
     full_name: dados.full_name ?? "",
     phone: dados.phone ?? "",
     cidade: dados.cidade ?? "",
-    professional_type:
-      tipo === "driver" || tipo === "service_provider" || tipo === "both"
-        ? tipo
-        : "",
+    professional_type: tipoNormalizado,
     bio: dados.bio ?? "",
     service_categories: (dados.service_categories ?? []).filter((s) => slugValido(s)),
     avatar_url: dados.avatar_url ?? "",

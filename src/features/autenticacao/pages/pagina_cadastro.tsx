@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,13 @@ export default function PaginaCadastro() {
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
+
+  // Profissional autônomo usa o fluxo dedicado de serviços (sem mistura de motorista/passageiro/afiliado).
+  useEffect(() => {
+    if (tipoInicial === "profissional") {
+      navigate("/s/cadastro/profissional", { replace: true });
+    }
+  }, [tipoInicial, navigate]);
 
   if (carregandoAuth) {
     return (
@@ -210,9 +217,9 @@ export default function PaginaCadastro() {
     );
   }
 
+  // Profissional autônomo é redirecionado para /s/cadastro/profissional, então não aparece aqui.
   const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
     { valor: "grupo", label: "Criar grupo" },
-    { valor: "profissional", label: "Profissional" },
     { valor: "motorista", label: "Motorista" },
     { valor: "passageiro", label: "Passageiro" },
     { valor: "afiliado", label: "Afiliado" },

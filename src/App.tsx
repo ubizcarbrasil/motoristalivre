@@ -35,6 +35,7 @@ import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_ca
 import PaginaVitrineTenantServicos from "@/features/triboservicos/pages/pagina_vitrine_tenant_servicos";
 import PaginaPublicaTenant from "@/features/triboservicos/pages/pagina_publica_tenant";
 import PaginaPublicaMobilidade from "@/features/passageiro/pages/pagina_publica_mobilidade";
+import { ResolverPublicoTenant } from "@/features/passageiro/components/resolver_publico_tenant";
 import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pagina_perfil_profissional_servicos";
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import NotFound from "./pages/NotFound";
@@ -62,7 +63,9 @@ const App = () => (
 
             {/* Links dedicados por perfil — cadastro */}
             <Route path="/motorista/cadastro" element={<Navigate to="/cadastro?tipo=motorista" replace />} />
-            <Route path="/profissional/cadastro" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
+            {/* Profissional autônomo SEMPRE vai pro cadastro dedicado de serviços (sem opções de motorista/passageiro) */}
+            <Route path="/profissional/cadastro" element={<Navigate to="/s/cadastro/profissional" replace />} />
+            <Route path="/cadastro/profissional" element={<Navigate to="/s/cadastro/profissional" replace />} />
 
             {/* Aliases legados — mantidos por compatibilidade */}
             <Route path="/profissional/login" element={<Navigate to="/profissional/acesso" replace />} />
@@ -99,16 +102,16 @@ const App = () => (
             <Route path="/afiliado" element={<Navigate to="/painel" replace />} />
             <Route path="/root" element={<RotaProtegidaRoot><PaginaRoot /></RotaProtegidaRoot>} />
 
-            {/* Rotas com tenant (slug) */}
-            <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
-            <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            {/* Rotas com tenant (slug) — wrapper bifurca para vitrine de serviços quando tribo é só services */}
+            <Route path="/:slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
+            <Route path="/:slug/a/:affiliate_slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
             <Route path="/:slug/perfil/:driver_slug" element={<PaginaPerfilMotorista />} />
             <Route path="/:slug/servicos" element={<RedirectVitrineTenantLegado />} />
             <Route
               path="/:slug/servicos/:driver_slug"
               element={<RedirectVitrineProfissionalLegado />}
             />
-            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            <Route path="/:slug/:driver_slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

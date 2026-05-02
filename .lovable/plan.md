@@ -1,85 +1,72 @@
-Vou corrigir isso de forma mais definitiva, não só trocar texto pontual.
+Vou corrigir isso como separação de fluxo, não só troca de texto. O problema está em três pontos: cadastro/onboarding ainda deixa o profissional virar “motorista”, rotas públicas legadas ainda caem na tela de corridas, e há dados legados como Maria Brasil com configuração de mobilidade apesar do uso como profissional.
 
-Plano de implementação:
+Plano de execução:
 
-1. Travar o modo visual em `servicos` no painel
-- Passar o `modo` resolvido pelo `resolverModoPainel(...)` para `AbaConfiguracoes`, `NavegacaoInferior` e demais partes internas que ainda dependem só de `activeModules`.
-- Remover a brecha atual em que `AbaConfiguracoes` inicia com `professionalType = driver` pelo hook e renderiza temporariamente/preferencialmente blocos de mobilidade.
-- Resultado esperado: conta de serviço não verá mais “Bandeira”, “Preço por km”, “Preço por minuto”, “Cashback para passageiro”, “Regras do meu link”, “transbordo”, “dispatch”, “motoristas online” etc.
+1. Corrigir o cadastro de profissional
+- Fazer `/profissional/cadastro` apontar para o cadastro dedicado de serviços (`/s/cadastro/profissional`) ou deixar o `/cadastro?tipo=profissional` sem opções de Motorista/Passageiro/Afiliado quando o tipo for profissional.
+- Remover textos de “motorista”, “corridas”, “passageiro” e “grupo de motorista” do fluxo de cadastro profissional.
+- Manter apenas linguagem de: profissional, serviços, agenda, portfólio, cliente e agendamentos.
+- Garantir que profissional autônomo criado por esse fluxo já nasça com módulo `services` e tipo `service_provider`.
 
-2. Reorganizar a aba Config para profissional de serviços
-- Em modo serviços, a tela deve começar direto com blocos úteis de serviço:
-  - cadastro/onboarding profissional pendente;
-  - meus serviços;
-  - disponibilidade/agenda;
-  - categorias;
-  - portfólio;
-  - equipe;
-  - preview da vitrine;
-  - instalar app;
-  - tribo e rede.
-- Esconder 100% das seções de mobilidade:
-  - `SecaoMeuPreco`;
-  - `SecaoRegrasLink`;
-  - seletor de som de chamada de corrida;
-  - botão “Testar alerta de chamada”;
-  - “ID do motorista logado”;
-  - simulador de dispatch;
-  - tipo “Somente motorista”.
+2. Travar o onboarding de perfil profissional em modo serviços
+- No diálogo “Complete seu perfil profissional”, quando o usuário estiver em modo serviços puro, remover a escolha “Somente motorista” e “Ambos”.
+- Em modo serviços puro, salvar automaticamente como `service_provider`.
+- Evitar que um profissional de serviços consiga acidentalmente se transformar em motorista pelo onboarding.
+- Ajustar validação e autosave para respeitar esse modo.
 
-3. Ajustar textos remanescentes no painel profissional
-- Trocar mensagens como:
-  - “começar a receber corridas” → “começar a receber agendamentos” quando for serviço;
-  - “clientes ou passageiros” → “clientes” no modo serviços;
-  - “grupo” quando fizer sentido → “tribo/rede profissional”;
-  - “Somente motorista” escondido ou substituído conforme contexto.
-- Revisar `AbaMeusLinks`, `GuiaLinksRapido`, `TelaAguardandoAprovacao`, `DialogoOnboardingProfissional`, `NavegacaoInferior` e cards auxiliares.
+3. Corrigir dados legados que estão misturando Maria Brasil
+- Aplicar migração para corrigir registros legados identificados:
+  - `mariabrasil` deve ficar com módulo `services` quando for perfil profissional.
+  - o perfil vinculado deve ficar como `service_provider`.
+  - categorias de serviço devem continuar apenas no contexto de serviços.
+- Também vou reforçar a função que cria/garante profissional para, em chamadas futuras, atualizar `active_modules` para `services` mesmo quando o tenant já existir.
 
-4. Blindar componentes de mobilidade contra renderização em serviços
-- Manter `SecaoMeuPreco` e `SecaoRegrasLink` como componentes de mobilidade, mas impedir que apareçam em modo serviços.
-- Também vou deixar os textos internos mais seguros caso algum dia sejam reaproveitados, evitando vazamento de “passageiro”, “corrida” e “transbordo” fora do contexto correto.
+4. Separar tela pública do cliente por módulo
+- Hoje rotas legadas como `/:slug` e `/:slug/:driver_slug` ainda podem abrir a tela de corridas mesmo quando a tribo é de serviços.
+- Vou criar/ajustar um resolvedor de rota pública:
+  - tribo só de serviços → abre vitrine/agendamento de serviços;
+  - tribo só de mobilidade → abre corrida/motoristas;
+  - tribo híbrida → mantém seleção ou comportamento explícito.
+- Assim, “coisas de corridas” não aparecem mais para um cliente acessando uma tribo/profissional de serviços.
 
-5. Melhorar a tela pública do cliente em serviços
-- Revisar a tela de agendamento (`AgendamentoServico`) para ficar com cara de serviço/profissional, não reaproveitada de passageiro/mobilidade.
-- Ajustar textos, hierarquia e estados vazios:
-  - “Escolha o serviço”;
-  - “Escolha a data”;
-  - “Horários disponíveis”;
-  - “Seus dados”;
-  - confirmação de agendamento.
-- Melhorar a experiência mobile da tela do cliente: cabeçalho, resumo fixo, CTA e espaçamentos, mantendo o design system dark/premium.
+5. Filtrar motoristas/profissionais corretamente nas listagens
+- Na tela de cliente de mobilidade, listar apenas perfis `driver` ou `both`.
+- Na vitrine de serviços, listar apenas `service_provider` ou `both`.
+- Corrigir `buscarMotorista`/listagens para não puxar prestador puro como motorista.
 
-6. Remover referência pública confusa a mobilidade no rodapé de serviços
-- No footer de `TriboServiços`, remover ou suavizar “TriboCar Mobilidade”, porque no fluxo de serviços isso está reforçando a sensação de produto errado.
-- Manter a marca como família/plataforma, sem chamar atenção para mobilidade dentro da jornada de serviços.
+6. Revisar painel e navegação inferior/sidebar
+- Em modo serviços puro:
+  - esconder/evitar “Meus links” de mobilidade quando não fizer sentido;
+  - manter “Profissionais”, “Agendamentos”, “Serviços”, “Agenda”; 
+  - remover labels residuais como “motorista”, “corridas”, “dispatch”, “passageiro” quando a tela está em services.
+- Ajustar textos em Configurações como:
+  - “ID do profissional” em vez de “ID do motorista”;
+  - “testar alerta de agendamento/chamada” apenas quando aplicável;
+  - “Criar minha própria tribo/rede” com linguagem de serviços.
 
-7. Auditar páginas internas e sidebar/admin novamente
-- Rodar uma busca final por termos visíveis em componentes de painel/admin/serviços:
-  - motorista(s)
-  - corrida(s)
-  - passageiro(s)
-  - bandeira
-  - preço por km
-  - transbordo
-  - dispatch
-- Separar o que é código interno/tipagem legado do que é texto visível ao usuário.
-- Corrigir apenas os textos visíveis no contexto de serviços, sem quebrar o fluxo real de mobilidade.
+7. Atualizar “Casa em condomínio fechado” no contexto correto
+- Garantir que esse label apareça como categoria/subcategoria de serviços.
+- Garantir que ele não apareça em fluxos de mobilidade.
+- Revisar o seletor de categorias e os chips públicos para renderizarem o texto correto nas páginas internas e na vitrine.
+
+8. Validar telas principais
+- Conferir no preview mobile:
+  - cadastro de profissional;
+  - painel de profissional;
+  - configurações/perfil profissional;
+  - vitrine pública `/s/...`;
+  - acesso público legado sem `/s`;
+  - Maria Brasil após correção.
 
 Arquivos principais que pretendo alterar:
-- `src/features/painel/pages/pagina_painel.tsx`
-- `src/features/painel/components/aba_configuracoes.tsx`
-- `src/features/painel/components/secao_meu_preco.tsx`
-- `src/features/painel/components/secao_regras_link.tsx`
-- `src/features/painel/components/aba_meus_links.tsx`
-- `src/features/painel/components/guia_links_rapido.tsx`
-- `src/features/painel/components/tela_aguardando_aprovacao.tsx`
+- `src/App.tsx`
+- `src/features/autenticacao/pages/pagina_cadastro.tsx`
+- `src/features/triboservicos/pages/pagina_cadastro_profissional.tsx`
+- `src/features/autenticacao/services/servico_criar_tribo_profissional.ts`
 - `src/features/painel/components/dialogo_onboarding_profissional.tsx`
-- `src/features/passageiro/components/agendamento_servico.tsx`
-- `src/features/triboservicos/components/footer_servicos.tsx`
-- possivelmente `src/features/servicos/pages/pagina_servicos_motorista.tsx` para remover o fallback “link de corrida”.
-
-Critério de aceite:
-- Em conta/tribo de serviços, a aba Config não pode exibir nenhuma configuração de corrida.
-- Sidebar/abas/páginas internas em modo serviços devem falar em profissionais, serviços, agenda e agendamentos.
-- A tela pública do cliente deve parecer uma tela de agendamento de serviços, não um pedaço adaptado do app de corrida.
-- O fluxo de mobilidade deve continuar funcionando quando o modo for mobilidade ou híbrido.
+- `src/features/painel/services/servico_onboarding_profissional.ts`
+- `src/features/passageiro/pages/pagina_passageiro.tsx`
+- `src/features/passageiro/services/servico_passageiro.ts`
+- `src/features/painel/components/*` relacionados a início/configurações/sidebar/admin
+- `src/compartilhados/constants/constantes_categorias_servico.ts`
+- nova migração para corrigir dados legados e reforçar módulo services.
