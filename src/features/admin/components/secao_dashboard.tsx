@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, Car, Percent, Users, Wifi } from "lucide-react";
+import { DollarSign, Car, Percent, Users, Wifi, Calendar, Briefcase } from "lucide-react";
 
 interface Stat {
   label: string;
