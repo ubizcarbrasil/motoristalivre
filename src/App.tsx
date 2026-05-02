@@ -95,6 +95,7 @@ const App = () => (
 
             {/* Friendly URL via @handle — resolve para o perfil canônico */}
             <Route path="/@:handle" element={<PaginaResolverHandle />} />
+            <Route path="/%40:handle" element={<PaginaResolverHandle />} />
 
 
             <Route path="/s/:slug/a/:driver_slug" element={<PaginaIndicacaoServicos />} />

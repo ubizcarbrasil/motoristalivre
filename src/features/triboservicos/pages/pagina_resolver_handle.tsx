@@ -16,7 +16,18 @@ export default function PaginaResolverHandle() {
       setNaoEncontrado(true);
       return;
     }
-    resolverHandle(handle).then((res) => {
+    let handleLimpo = handle;
+    try {
+      handleLimpo = decodeURIComponent(handle);
+    } catch {
+      // mantém valor original se decode falhar
+    }
+    handleLimpo = handleLimpo.replace(/^@+/, "").trim();
+    if (!handleLimpo) {
+      setNaoEncontrado(true);
+      return;
+    }
+    resolverHandle(handleLimpo).then((res) => {
       if (!res) {
         setNaoEncontrado(true);
         return;
