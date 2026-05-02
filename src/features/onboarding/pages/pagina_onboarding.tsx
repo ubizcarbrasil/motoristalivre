@@ -166,6 +166,8 @@ export default function PaginaOnboarding() {
             onChange={setConfiguracao}
             servicos={servicos}
             onChangeServicos={setServicos}
+            disponibilidade={disponibilidade}
+            onChangeDisponibilidade={setDisponibilidade}
             onAvancar={acaoAvancarConfiguracao}
             onVoltar={voltarFluxo}
             rotuloAvancar={fluxoSolo && naUltima ? "Concluir" : undefined}
