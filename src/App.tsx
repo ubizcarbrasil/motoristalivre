@@ -40,7 +40,7 @@ import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pag
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import PaginaIndicacaoServicos from "@/features/triboservicos/pages/pagina_indicacao_servicos";
 import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica";
-import PaginaResolverHandle from "@/features/triboservicos/pages/pagina_resolver_handle";
+// PaginaResolverHandle é renderizado dentro do ResolverPublicoTenant (rota /:slug)
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
