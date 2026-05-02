@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { slugValido } from "@/compartilhados/constants/constantes_categorias_servico";
 
 /**
  * Salvamento parcial do onboarding profissional. Diferente de
@@ -50,7 +51,10 @@ export async function salvarRascunhoOnboarding(
     patchDrivers.professional_type = dados.professional_type;
   }
   if (Array.isArray(dados.service_categories) && dados.service_categories.length > 0) {
-    patchDrivers.service_categories = dados.service_categories;
+    const categoriasSaneadas = dados.service_categories.filter((slug) => slugValido(slug));
+    if (categoriasSaneadas.length > 0) {
+      patchDrivers.service_categories = categoriasSaneadas;
+    }
   }
 
   if (Object.keys(patchDrivers).length > 0) {
