@@ -2,12 +2,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import PaginaResolverHandle from "@/features/triboservicos/pages/pagina_resolver_handle";
 
 type Estado =
   | "carregando"
   | "ok"
   | "redirecionar_servicos"
-  | "redirecionar_handle"
+  | "resolver_handle"
   | "nao_encontrado";
 
 interface Props {
@@ -16,10 +17,10 @@ interface Props {
 
 /**
  * Resolve o link público "/:slug" baseado no módulo da tribo:
- * - slug começa com "@" (ou "%40") → trata como handle e redireciona para "/@:handle"
+ * - slug começa com "@" (ou "%40") → renderiza o resolver de handle inline
+ *   (React Router v6 não suporta segmentos dinâmicos parciais como /@:handle)
  * - tribo só de services → redireciona pra "/s/:slug" (vitrine de serviços)
  * - tribo de mobility (ou hibrida) → renderiza children (PaginaPassageiro)
- * Evita que clientes de uma tribo de serviços vejam UI de corridas.
  */
 export function ResolverPublicoTenant({ children }: Props) {
   const { slug } = useParams<{ slug: string }>();
@@ -39,10 +40,10 @@ export function ResolverPublicoTenant({ children }: Props) {
       // mantém valor original
     }
 
-    // Intercepta handles que chegaram via /:slug por encoding (%40) ou ranking de rota
+    // Intercepta handles que chegaram via /:slug (ex: /@joao ou /%40joao)
     if (slugDecodificado.startsWith("@")) {
       setHandleDetectado(slugDecodificado.replace(/^@+/, ""));
-      setEstado("redirecionar_handle");
+      setEstado("resolver_handle");
       return;
     }
 
@@ -84,8 +85,8 @@ export function ResolverPublicoTenant({ children }: Props) {
     );
   }
 
-  if (estado === "redirecionar_handle" && handleDetectado) {
-    return <Navigate to={`/@${handleDetectado}`} replace />;
+  if (estado === "resolver_handle" && handleDetectado !== null) {
+    return <PaginaResolverHandle handle={handleDetectado} />;
   }
 
   if (estado === "redirecionar_servicos") {
