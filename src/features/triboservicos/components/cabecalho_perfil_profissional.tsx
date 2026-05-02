@@ -38,7 +38,6 @@ export function CabecalhoPerfilProfissional({
 }: Props) {
   const fallbackCover = imagemDeCapa(serviceCategories);
   const [coverInvalida, setCoverInvalida] = useState(false);
-  const [avatarInvalido, setAvatarInvalido] = useState(false);
   const coverFinal = coverInvalida ? fallbackCover : coverUrl ?? fallbackCover;
   const categoriasOrdenadas = ordenarCategoriasServico(serviceCategories);
   const inicial = nome.trim().charAt(0).toUpperCase() || "P";
@@ -46,10 +45,6 @@ export function CabecalhoPerfilProfissional({
   useEffect(() => {
     setCoverInvalida(false);
   }, [coverUrl]);
-
-  useEffect(() => {
-    setAvatarInvalido(false);
-  }, [avatarUrl]);
 
   return (
     <header className="relative w-full bg-background">
@@ -78,16 +73,7 @@ export function CabecalhoPerfilProfissional({
       <div className="relative mx-auto -mt-28 max-w-3xl px-4 pb-2">
         <div className="space-y-4">
           <Avatar className="h-28 w-28 border-4 border-background ring-2 ring-primary shadow-2xl sm:h-32 sm:w-32">
-            <AvatarImage
-              src={!avatarInvalido ? avatarUrl ?? undefined : undefined}
-              alt={`Foto de ${nome}`}
-              className="object-cover"
-              onLoadingStatusChange={(status) => {
-                if (status !== "loaded") return;
-                const img = document.querySelector(`img[alt="Foto de ${nome}"]`) as HTMLImageElement | null;
-                if (img && img.naturalWidth > img.naturalHeight * 1.2) setAvatarInvalido(true);
-              }}
-            />
+            <AvatarImage src={avatarUrl ?? undefined} alt={`Foto de ${nome}`} className="object-cover" />
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-secondary text-4xl font-bold text-foreground">
               {inicial}
             </AvatarFallback>
