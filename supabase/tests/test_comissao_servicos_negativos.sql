@@ -79,16 +79,12 @@ BEGIN
   IF _wallet_a IS NULL THEN
     INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
     VALUES (_driver_a, 'driver', _tenant_id, _saldo_a_ini, 0) RETURNING id INTO _wallet_a;
-  ELSE
-    UPDATE public.wallets SET balance = _saldo_a_ini, blocked_balance = 0 WHERE id = _wallet_a;
   END IF;
 
   SELECT id INTO _wallet_b FROM public.wallets WHERE owner_id = _driver_b AND owner_type = 'driver';
   IF _wallet_b IS NULL THEN
     INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
     VALUES (_driver_b, 'driver', _tenant_id, _saldo_b_ini, 0) RETURNING id INTO _wallet_b;
-  ELSE
-    UPDATE public.wallets SET balance = _saldo_b_ini, blocked_balance = 0 WHERE id = _wallet_b;
   END IF;
 
   -- Tipos de serviço
