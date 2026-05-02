@@ -80,7 +80,7 @@ export default function PaginaPerfilMotorista() {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="text-sm font-medium text-foreground">Perfil</span>
+        <span className="text-sm font-medium text-foreground truncate">{perfil.nome}</span>
       </div>
 
       <div className="space-y-5 pb-32">
@@ -90,13 +90,25 @@ export default function PaginaPerfilMotorista() {
 
         {ofereceServico && (
           <>
-            <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
-            <SecaoServicosPublica
-              servicos={servicos}
-              portfolio={portfolio}
-              tenantSlug={perfil.tenant_slug}
-              driverSlug={perfil.slug}
-            />
+            {temServicosVendaveis ? (
+              <>
+                <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
+                <SecaoServicosPublica
+                  servicos={servicos}
+                  portfolio={portfolio}
+                  tenantSlug={perfil.tenant_slug}
+                  driverSlug={perfil.slug}
+                />
+              </>
+            ) : (
+              temEspecialidades && (
+                <SecaoEspecialidadesPublica
+                  categorias={perfil.service_categories}
+                  nomeProfissional={perfil.nome}
+                  whatsapp={perfil.whatsapp}
+                />
+              )
+            )}
             <SecaoEquipePublica membros={equipe} tenantSlug={perfil.tenant_slug} />
             <SecaoDisponibilidadePublica blocos={disponibilidade} />
           </>
