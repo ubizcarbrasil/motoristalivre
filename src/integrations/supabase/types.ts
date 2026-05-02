@@ -171,6 +171,50 @@ export type Database = {
           },
         ]
       }
+      commission_rules: {
+        Row: {
+          ativo: boolean
+          category_id: string
+          comissao_cobertura_pct: number
+          comissao_fixa_brl: number
+          comissao_indicacao_pct: number
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          category_id: string
+          comissao_cobertura_pct?: number
+          comissao_fixa_brl?: number
+          comissao_indicacao_pct?: number
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          category_id?: string
+          comissao_cobertura_pct?: number
+          comissao_fixa_brl?: number
+          comissao_indicacao_pct?: number
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commissions: {
         Row: {
           amount: number
@@ -1186,15 +1230,18 @@ export type Database = {
       }
       service_bookings: {
         Row: {
+          briefing: Json
           client_id: string | null
           created_at: string
           driver_id: string
           duration_minutes: number
           guest_passenger_id: string | null
           id: string
+          is_coverage: boolean
           notes: string | null
           origin_affiliate_id: string | null
           origin_driver_id: string | null
+          origin_service_id: string | null
           payment_method: string
           price_agreed: number
           reminder_sent_1h: boolean
@@ -1207,15 +1254,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          briefing?: Json
           client_id?: string | null
           created_at?: string
           driver_id: string
           duration_minutes: number
           guest_passenger_id?: string | null
           id?: string
+          is_coverage?: boolean
           notes?: string | null
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
+          origin_service_id?: string | null
           payment_method?: string
           price_agreed: number
           reminder_sent_1h?: boolean
@@ -1228,15 +1278,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          briefing?: Json
           client_id?: string | null
           created_at?: string
           driver_id?: string
           duration_minutes?: number
           guest_passenger_id?: string | null
           id?: string
+          is_coverage?: boolean
           notes?: string | null
           origin_affiliate_id?: string | null
           origin_driver_id?: string | null
+          origin_service_id?: string | null
           payment_method?: string
           price_agreed?: number
           reminder_sent_1h?: boolean
@@ -1299,6 +1352,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_categories: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       service_payments: {
         Row: {
