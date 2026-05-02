@@ -51,9 +51,9 @@ export function CabecalhoPerfilProfissional({
       </div>
 
       <div className="max-w-3xl mx-auto px-4 -mt-14 relative">
-        <Avatar className="w-24 h-24 ring-4 ring-background shadow-xl">
+        <Avatar className="w-20 h-20 sm:w-24 sm:h-24 ring-4 ring-background shadow-xl">
           <AvatarImage src={avatarUrl ?? undefined} />
-          <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+          <AvatarFallback className="text-xl bg-primary/10 text-primary">
             {nome.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
