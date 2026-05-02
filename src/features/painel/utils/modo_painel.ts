@@ -1,25 +1,34 @@
-// Resolve o modo visual do painel com base no tipo de profissional
-// e nos módulos ativos da tribo. A regra principal: se o usuário é
-// somente prestador de serviços, a UI deve esconder qualquer bloco
-// de mobilidade urbana, mesmo quando a tribo tem `mobility` ativo.
+// Resolve o modo visual do painel.
+// Regra principal: se o usuário (dono ou membro) é service_provider, a UI
+// trata tudo como serviços, mesmo que a tribo ainda tenha módulo `mobility`
+// ativo (caso comum em tribos legadas que vieram com mobility por padrão).
 
 import type { TipoProfissional } from "@/features/servicos/types/tipos_servicos";
 
 export type ModoPainel = "mobilidade" | "servicos" | "hibrido";
 
 export function resolverModoPainel(
-  professionalType: TipoProfissional | undefined,
-  activeModules: string[] | undefined,
+  professionalType: TipoProfissional | undefined | null,
+  activeModules: string[] | undefined | null,
 ): ModoPainel {
   const temMobilidade = !!activeModules?.includes("mobility");
   const temServicos = !!activeModules?.includes("services");
 
+  // Tipo do profissional manda quando há um.
   if (professionalType === "service_provider") return "servicos";
-  if (professionalType === "both" && temServicos) return "hibrido";
+  if (professionalType === "both") {
+    if (temServicos && temMobilidade) return "hibrido";
+    if (temServicos) return "servicos";
+    return "mobilidade";
+  }
+  if (professionalType === "driver") {
+    if (temMobilidade && temServicos) return "hibrido";
+    return "mobilidade";
+  }
 
-  // driver puro
+  // Sem tipo definido: cai nos módulos da tribo.
+  if (temServicos && !temMobilidade) return "servicos";
   if (temMobilidade && !temServicos) return "mobilidade";
-  if (!temMobilidade && temServicos) return "servicos";
   if (temMobilidade && temServicos) return "hibrido";
   return "mobilidade";
 }
