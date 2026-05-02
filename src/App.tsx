@@ -40,6 +40,8 @@ import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pag
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import PaginaIndicacaoServicos from "@/features/triboservicos/pages/pagina_indicacao_servicos";
 import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica";
+import PaginaSolicitarOrcamento from "@/features/orcamentos/pages/pagina_solicitar_orcamento";
+import PaginaAcompanharOrcamento from "@/features/orcamentos/pages/pagina_acompanhar_orcamento";
 // PaginaResolverHandle é renderizado dentro do ResolverPublicoTenant (rota /:slug)
 import NotFound from "./pages/NotFound";
 
@@ -79,6 +81,10 @@ const App = () => (
             <Route path="/dev/links" element={<PaginaDevLinks />} />
             <Route path="/instalar" element={<PaginaInstalar />} />
             <Route path="/acesso" element={<PaginaAcesso />} />
+
+            {/* Orçamentos — wizard de solicitação e acompanhamento */}
+            <Route path="/solicitar-orcamento" element={<PaginaSolicitarOrcamento />} />
+            <Route path="/orcamento/:id" element={<PaginaAcompanharOrcamento />} />
             <Route path="/dev/simular-dispatch" element={<RotaProtegida><PaginaSimuladorDispatch /></RotaProtegida>} />
 
             {/* TriboServiços — landing, cadastro dual e login */}
