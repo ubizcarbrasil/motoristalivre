@@ -128,29 +128,18 @@ BEGIN
   RAISE NOTICE '  ✓ N1 ok (skipped, 0 commissions, 0 wallet_tx)';
 
   -- =========================================================
-  -- N2: price_agreed IS NULL
+  -- N2: price_agreed NULL
+  -- Observação: a coluna service_bookings.price_agreed é NOT NULL
+  -- no schema, então este cenário é bloqueado pela própria DDL e
+  -- nunca chega ao motor. Validamos via metadados:
   -- =========================================================
-  RAISE NOTICE '--- N2: price_agreed NULL ---';
-  INSERT INTO public.service_bookings (
-    tenant_id, driver_id, service_type_id, scheduled_at,
-    duration_minutes, price_agreed, payment_method, status,
-    is_coverage, origin_driver_id, guest_passenger_id
-  ) VALUES (
-    _tenant_id, _driver_a, _service_com_regra, now(),
-    60, NULL, 'cash', 'completed',
-    true, _driver_b, _guest_id
-  ) RETURNING id INTO _booking;
-
-  _result := public.process_service_commission(_booking);
-  ASSERT (_result->>'skipped')::boolean = true,
-    format('N2: esperava skipped=true, obtido %s', _result::text);
-
-  SELECT count(*) INTO _qtd_commissions FROM public.commissions WHERE booking_id = _booking;
-  ASSERT _qtd_commissions = 0, format('N2: esperava 0 commissions, obtido %s', _qtd_commissions);
-
-  SELECT count(*) INTO _qtd_wallet_tx FROM public.wallet_transactions WHERE reference_id = _booking;
-  ASSERT _qtd_wallet_tx = 0, format('N2: esperava 0 wallet_tx, obtido %s', _qtd_wallet_tx);
-  RAISE NOTICE '  ✓ N2 ok';
+  RAISE NOTICE '--- N2: price_agreed NULL (bloqueado pela DDL) ---';
+  ASSERT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='service_bookings'
+      AND column_name='price_agreed' AND is_nullable='NO'
+  ), 'N2: price_agreed deveria ser NOT NULL no schema';
+  RAISE NOTICE '  ✓ N2 ok (NOT NULL no schema garante a proteção)';
 
   -- =========================================================
   -- N3a: price_agreed = 0
