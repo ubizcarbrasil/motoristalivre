@@ -450,6 +450,9 @@ export function AgendamentoServico({
         servico={servicoAtual}
         slotHora={slotSelecionado?.hora ?? null}
         slotData={diaSelecionado ? formatarDataLonga(diaSelecionado) : null}
+        total={calculo?.total ?? null}
+        linhasFatores={calculo?.linhas_fatores}
+        travelFee={calculo?.travel_fee}
       />
 
       <div className="px-4 py-5 pb-32 max-w-md mx-auto space-y-6">
