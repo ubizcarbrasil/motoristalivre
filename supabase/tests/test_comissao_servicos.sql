@@ -24,6 +24,7 @@ DECLARE
   _driver_a uuid;  -- atendente
   _driver_b uuid;  -- origem (cobertura/indicação)
   _service_type_id uuid;
+  _guest_id uuid;
   _booking_cobertura uuid;
   _booking_indicacao uuid;
   _booking_simples uuid;
