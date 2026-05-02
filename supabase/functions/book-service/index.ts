@@ -124,7 +124,9 @@ Deno.serve(async (req) => {
     const blocoFim = eh * 60 + em;
     return inicioMin >= blocoIni && fimMin <= blocoFim;
   });
-  if (!dentroDeBloco) {
+  // Serviços marcados como "Imediato" podem ser solicitados sem precisar
+  // estar dentro de um bloco de disponibilidade cadastrado.
+  if (!dentroDeBloco && !serviceType.is_immediate) {
     return json({ error: "Horário fora da disponibilidade do profissional" }, 400);
   }
 

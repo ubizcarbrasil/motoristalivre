@@ -458,6 +458,33 @@ export function AgendamentoServico({
           )}
         </div>
 
+        {/* Modo imediato: serviço pode ser solicitado sem disponibilidade cadastrada */}
+        {servicoAtual?.is_immediate && (
+          <button
+            type="button"
+            onClick={() => {
+              const agora = new Date();
+              agora.setSeconds(0, 0);
+              agora.setMinutes(agora.getMinutes() + 5);
+              setDiaSelecionado(agora);
+              setSlotSelecionado({
+                hora: `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`,
+                iso: agora.toISOString(),
+                inicioMs: agora.getTime(),
+              });
+            }}
+            className="w-full rounded-xl border border-primary bg-primary/10 p-4 text-left hover:bg-primary/15 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Solicitar agora</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Atendimento imediato — sem precisar escolher horário.
+            </p>
+          </button>
+        )}
+
         {/* Blocos de disponibilidade */}
         {servicoAtual && <BlocosDisponibilidade blocos={availability} />}
 
