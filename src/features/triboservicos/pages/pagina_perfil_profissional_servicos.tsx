@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarPlus, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Loader2, Share2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TemaServicos } from "../components/tema_servicos";
@@ -12,6 +12,7 @@ import { FiltrosPortfolio } from "../components/filtros_portfolio";
 import { PaginacaoPortfolio } from "../components/paginacao_portfolio";
 import { useFiltroPortfolio } from "../hooks/hook_filtro_portfolio";
 import { ListaServicosOferecidos } from "../components/lista_servicos_oferecidos";
+import { VitrineEspecialidadesVisuais } from "../components/vitrine_especialidades_visuais";
 import { SecaoEquipeServicos } from "../components/secao_equipe_servicos";
 import { FooterServicos } from "../components/footer_servicos";
 import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
@@ -95,6 +96,19 @@ export default function PaginaPerfilProfissionalServicos() {
     navigate(`/s/${slug}/${driver_slug}/agendar${params}`);
   }
 
+  function abrirOrcamentoWhatsapp() {
+    const whatsapp = tenant?.branding?.whatsapp;
+    if (!whatsapp) return;
+    const numero = whatsapp.replace(/\D/g, "");
+    const completo = numero.length <= 11 ? `55${numero}` : numero;
+    const mensagem = `Olá ${dados.full_name}, vim pelo TriboServiços e gostaria de solicitar um orçamento.`;
+    window.open(
+      `https://wa.me/${completo}?text=${encodeURIComponent(mensagem)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   if (carregando || (driverId && dados.carregando)) {
     return (
       <TemaServicos>
@@ -124,21 +138,23 @@ export default function PaginaPerfilProfissionalServicos() {
 
   const tipo = dados.professional_type;
   const ofereceServicos = tipo === "service_provider" || tipo === "both";
+  const temServicosPrecificados = dados.serviceTypes.length > 0;
+  const whatsappTenant = tenant.branding?.whatsapp ?? null;
 
   return (
     <TemaServicos>
-
-      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 h-12 bg-background/85 backdrop-blur border-b border-border">
+      {/* Botões flutuantes sobre a cover */}
+      <div className="fixed top-3 inset-x-0 z-30 flex items-center justify-between px-3 pointer-events-none">
         <button
           onClick={() => navigate(`/s/${slug}`)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80"
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
           aria-label="Voltar para vitrine"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <button
           onClick={compartilhar}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80"
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
           aria-label="Compartilhar perfil"
         >
           <Share2 className="h-4 w-4" />
@@ -179,6 +195,26 @@ export default function PaginaPerfilProfissionalServicos() {
           </section>
         ) : (
           <>
+            {/* Quando há serviços precificados, mostra a lista. Caso contrário,
+                a vitrine visual de especialidades como fallback comercial. */}
+            {temServicosPrecificados ? (
+              <section className="max-w-3xl mx-auto px-4 mt-8 space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Serviços oferecidos
+                </h2>
+                <ListaServicosOferecidos
+                  servicos={dados.serviceTypes}
+                  onSelecionar={(id) => irParaAgendamento(id)}
+                />
+              </section>
+            ) : (
+              <VitrineEspecialidadesVisuais
+                categorias={dados.service_categories}
+                nomeProfissional={dados.full_name}
+                whatsapp={whatsappTenant}
+              />
+            )}
+
             <section className="max-w-3xl mx-auto px-4 mt-8 space-y-3">
               <div className="flex items-end justify-between gap-3">
                 <h2 className="text-lg font-semibold text-foreground">Portfólio</h2>
@@ -202,6 +238,7 @@ export default function PaginaPerfilProfissionalServicos() {
 
               <GaleriaPortfolio
                 itens={filtroPortfolio.itensPagina}
+                categoriasFallback={dados.service_categories}
                 mensagemVazio={
                   portfolio.length === 0
                     ? undefined
@@ -213,16 +250,6 @@ export default function PaginaPerfilProfissionalServicos() {
                 paginaAtual={filtroPortfolio.paginaAtual}
                 totalPaginas={filtroPortfolio.totalPaginas}
                 onMudarPagina={filtroPortfolio.setPaginaAtual}
-              />
-            </section>
-
-            <section className="max-w-3xl mx-auto px-4 mt-8 space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">
-                Serviços oferecidos
-              </h2>
-              <ListaServicosOferecidos
-                servicos={dados.serviceTypes}
-                onSelecionar={(id) => irParaAgendamento(id)}
               />
             </section>
           </>
@@ -237,17 +264,32 @@ export default function PaginaPerfilProfissionalServicos() {
         )}
       </main>
 
-      {ofereceServicos && dados.serviceTypes.length > 0 && (
+      {/* Bottom action bar — agendar quando há serviços, orçamento via WA quando não. */}
+      {ofereceServicos && (
         <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur p-4">
           <div className="max-w-3xl mx-auto">
-            <Button
-              size="lg"
-              className="w-full gap-2"
-              onClick={() => irParaAgendamento()}
-            >
-              <CalendarPlus className="w-4 h-4" />
-              Agendar agora
-            </Button>
+            {temServicosPrecificados ? (
+              <Button
+                size="lg"
+                className="w-full gap-2"
+                onClick={() => irParaAgendamento()}
+              >
+                <CalendarPlus className="w-4 h-4" />
+                Agendar agora
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="w-full gap-2"
+                disabled={!whatsappTenant}
+                onClick={abrirOrcamentoWhatsapp}
+              >
+                <MessageCircle className="w-4 h-4" />
+                {whatsappTenant
+                  ? "Solicitar orçamento"
+                  : "WhatsApp não cadastrado"}
+              </Button>
+            )}
           </div>
         </div>
       )}
