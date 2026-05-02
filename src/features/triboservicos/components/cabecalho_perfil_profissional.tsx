@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { BadgeCheck, ShieldCheck, MapPin, Star, ImageIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -35,9 +36,20 @@ export function CabecalhoPerfilProfissional({
   serviceCategories,
   cidade,
 }: Props) {
-  const coverFinal = coverUrl ?? imagemDeCapa(serviceCategories);
+  const fallbackCover = imagemDeCapa(serviceCategories);
+  const [coverInvalida, setCoverInvalida] = useState(false);
+  const [avatarInvalido, setAvatarInvalido] = useState(false);
+  const coverFinal = coverInvalida ? fallbackCover : coverUrl ?? fallbackCover;
   const categoriasOrdenadas = ordenarCategoriasServico(serviceCategories);
   const inicial = nome.trim().charAt(0).toUpperCase() || "P";
+
+  useEffect(() => {
+    setCoverInvalida(false);
+  }, [coverUrl]);
+
+  useEffect(() => {
+    setAvatarInvalido(false);
+  }, [avatarUrl]);
 
   return (
     <header className="relative w-full bg-background">
@@ -46,10 +58,16 @@ export function CabecalhoPerfilProfissional({
           src={coverFinal}
           alt={`Foto de capa de ${nome}`}
           className="absolute inset-0 h-full w-full object-cover"
+          onLoad={(evento) => {
+            const imagem = evento.currentTarget;
+            if (coverUrl && imagem.naturalHeight > imagem.naturalWidth * 1.15) {
+              setCoverInvalida(true);
+            }
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/10 to-background" />
         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-background via-background/90 to-transparent" />
-        {!coverUrl && (
+        {(!coverUrl || coverInvalida) && (
           <div className="absolute bottom-5 right-4 flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground backdrop-blur-md">
             <ImageIcon className="h-3.5 w-3.5 text-primary" />
             Capa sugerida
@@ -60,7 +78,16 @@ export function CabecalhoPerfilProfissional({
       <div className="relative mx-auto -mt-28 max-w-3xl px-4 pb-2">
         <div className="space-y-4">
           <Avatar className="h-28 w-28 border-4 border-background ring-2 ring-primary shadow-2xl sm:h-32 sm:w-32">
-            <AvatarImage src={avatarUrl ?? undefined} alt={`Foto de ${nome}`} className="object-cover" />
+            <AvatarImage
+              src={!avatarInvalido ? avatarUrl ?? undefined : undefined}
+              alt={`Foto de ${nome}`}
+              className="object-cover"
+              onLoadingStatusChange={(status) => {
+                if (status !== "loaded") return;
+                const img = document.querySelector(`img[alt="Foto de ${nome}"]`) as HTMLImageElement | null;
+                if (img && img.naturalWidth > img.naturalHeight * 1.2) setAvatarInvalido(true);
+              }}
+            />
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-secondary text-4xl font-bold text-foreground">
               {inicial}
             </AvatarFallback>
