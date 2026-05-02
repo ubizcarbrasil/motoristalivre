@@ -15,6 +15,8 @@ interface Motorista {
   status: string;
 }
 
+type Modo = "mobilidade" | "servicos";
+
 export function SecaoMotoristas() {
   const { usuario } = useAutenticacao();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
