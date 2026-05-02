@@ -36,6 +36,15 @@ import { baixarIcs } from "../utils/gerador_ics";
 import { BlocosDisponibilidade } from "./blocos_disponibilidade";
 import { ResumoServicoSticky } from "./resumo_servico_sticky";
 import { GradeSlotsPeriodo } from "./grade_slots_periodo";
+import { SecaoEnderecoAtendimento } from "./secao_endereco_atendimento";
+import { SecaoFatoresServico } from "./secao_fatores_servico";
+import {
+  calcularPrecoServico,
+  validarFatoresObrigatorios,
+  type FatorPrecoServico,
+} from "@/features/servicos/utils/calculadora_preco_servico";
+import type { EnderecoAtendimento } from "@/features/servicos/types/tipos_servicos";
+import { listarFatoresPreco } from "@/features/servicos/services/servico_servicos";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
