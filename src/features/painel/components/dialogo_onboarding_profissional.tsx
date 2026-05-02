@@ -471,13 +471,14 @@ function PassoImagens({
 
 function montarFormInicial(
   dados: DadosOnboardingProfissional | null,
+  modoServicos = false,
 ): FormState {
   if (!dados) {
     return {
       full_name: "",
       phone: "",
       cidade: "",
-      professional_type: "",
+      professional_type: modoServicos ? "service_provider" : "",
       bio: "",
       service_categories: [],
       avatar_url: "",
@@ -485,14 +486,16 @@ function montarFormInicial(
     };
   }
   const tipo = dados.professional_type;
+  const tipoNormalizado: FormState["professional_type"] = modoServicos
+    ? "service_provider"
+    : tipo === "driver" || tipo === "service_provider" || tipo === "both"
+      ? tipo
+      : "";
   return {
     full_name: dados.full_name ?? "",
     phone: dados.phone ?? "",
     cidade: dados.cidade ?? "",
-    professional_type:
-      tipo === "driver" || tipo === "service_provider" || tipo === "both"
-        ? tipo
-        : "",
+    professional_type: tipoNormalizado,
     bio: dados.bio ?? "",
     service_categories: (dados.service_categories ?? []).filter((s) => slugValido(s)),
     avatar_url: dados.avatar_url ?? "",
