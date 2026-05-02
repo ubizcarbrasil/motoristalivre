@@ -127,7 +127,7 @@ export function SecaoMotoristas() {
               </Badge>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Corridas: <span className="text-foreground font-medium">{m.corridasTotal}</span></span>
+              <span className="text-muted-foreground">{labelMetrica}: <span className="text-foreground font-medium">{m.corridasTotal}</span></span>
               {m.status === "active" ? (
                 <Button size="sm" variant="destructive" onClick={() => alterarStatus(m.id, "banned")}>
                   Suspender
