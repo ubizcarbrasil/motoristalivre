@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Trash2, Loader2, ShieldCheck, Search } from "lucide-react";
+import { Users, Plus, Trash2, Loader2, ShieldCheck, Search, Link2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
