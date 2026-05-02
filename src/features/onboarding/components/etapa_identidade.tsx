@@ -42,14 +42,15 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Identidade do grupo</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="text-center md:text-left">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Identidade do grupo</h2>
+        <p className="text-sm text-muted-foreground mt-1.5">
           Defina o nome e as informações básicas do seu grupo.
         </p>
       </div>
 
-      <div className="space-y-4">
+      {/* Card 1: Identidade essencial */}
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="nome">Nome do grupo</Label>
           <Input
@@ -58,6 +59,7 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             value={dados.nome}
             onChange={(e) => atualizar("nome", e.target.value)}
             maxLength={60}
+            className="h-11"
           />
         </div>
 
@@ -70,7 +72,7 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
               value={dados.subdominio}
               onChange={(e) => atualizar("subdominio", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
               maxLength={30}
-              className="pr-10"
+              className="pr-10 h-11"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <StatusSubdominio status={statusSubdominio} />
@@ -80,7 +82,10 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             {mensagemStatus(statusSubdominio) ?? `${dados.subdominio || "seugrupo"}.tribocar.com`}
           </p>
         </div>
+      </section>
 
+      {/* Card 2: Contato */}
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="cidade">Cidade</Label>
           <Input
@@ -89,6 +94,7 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             value={dados.cidade}
             onChange={(e) => atualizar("cidade", e.target.value)}
             maxLength={60}
+            className="h-11"
           />
         </div>
 
@@ -96,13 +102,19 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
           <Label htmlFor="whatsapp">WhatsApp</Label>
           <Input
             id="whatsapp"
+            type="tel"
+            inputMode="tel"
             placeholder="(81) 99999-9999"
             value={dados.whatsapp}
             onChange={(e) => atualizar("whatsapp", e.target.value)}
             maxLength={20}
+            className="h-11"
           />
         </div>
+      </section>
 
+      {/* Card 3: Visual */}
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <CampoUploadImagem
             label="Logo"
@@ -132,12 +144,21 @@ export function EtapaIdentidade({ dados, onChange, onAvancar }: EtapaIdentidadeP
             maxLength={300}
             rows={3}
           />
+          <p className="text-[11px] text-muted-foreground text-right tabular-nums">
+            {dados.descricao.length}/300
+          </p>
         </div>
-      </div>
+      </section>
 
-      <Button onClick={onAvancar} disabled={!podeContinuar} className="w-full">
+      <Button
+        onClick={onAvancar}
+        disabled={!podeContinuar}
+        size="lg"
+        className="w-full h-12 text-base font-semibold rounded-xl"
+      >
         Continuar
       </Button>
     </div>
   );
 }
+
