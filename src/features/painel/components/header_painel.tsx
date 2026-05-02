@@ -5,12 +5,15 @@ import type { PerfilMotorista } from "../types/tipos_painel";
 import type { TriboMotorista } from "../types/tipos_tribos";
 import { SeletorTribo } from "./seletor_tribo";
 
+import type { ModoPainel } from "../utils/modo_painel";
+
 interface HeaderPainelProps {
   perfil: PerfilMotorista;
   tenantSlug: string;
   realtimeAtivo?: boolean;
   audioDestravado?: boolean;
   mostrarToggleOnline?: boolean;
+  modo?: ModoPainel;
   onToggleOnline: () => void;
   tribos?: TriboMotorista[];
   triboAtivaId?: string | null;
