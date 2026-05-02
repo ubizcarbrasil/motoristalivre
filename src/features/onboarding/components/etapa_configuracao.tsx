@@ -4,8 +4,13 @@ import { SecaoConfiguracaoMobilidade } from "./secao_configuracao_mobilidade";
 import { SecaoConfiguracaoServicos } from "./secao_configuracao_servicos";
 import { SecaoComissaoCashback } from "./secao_comissao_cashback";
 import { ResumoConfirmacao } from "./resumo_confirmacao";
+import {
+  EditorDisponibilidadeSemanal,
+  diasParaBlocosPlanos,
+} from "@/features/painel/components/editor_disponibilidade_semanal";
 import type {
   DadosConfiguracao,
+  DadosDisponibilidadeOnboarding,
   DadosIdentidade,
   DadosServico,
   ModuloPlataforma,
@@ -17,6 +22,8 @@ interface EtapaConfiguracaoProps {
   onChange: (dados: DadosConfiguracao) => void;
   servicos: DadosServico[];
   onChangeServicos: (servicos: DadosServico[]) => void;
+  disponibilidade: DadosDisponibilidadeOnboarding;
+  onChangeDisponibilidade: (d: DadosDisponibilidadeOnboarding) => void;
   onAvancar: () => void;
   onVoltar: () => void;
   rotuloAvancar?: string;
@@ -31,6 +38,8 @@ export function EtapaConfiguracao({
   onChange,
   servicos,
   onChangeServicos,
+  disponibilidade,
+  onChangeDisponibilidade,
   onAvancar,
   onVoltar,
   rotuloAvancar,
@@ -50,6 +59,11 @@ export function EtapaConfiguracao({
         toast.error("Cadastre pelo menos um serviço com nome e preço.");
         return false;
       }
+      const blocos = diasParaBlocosPlanos(disponibilidade.dias);
+      if (blocos.length === 0) {
+        toast.error("Defina ao menos um dia de atendimento na agenda.");
+        return false;
+      }
     }
     return true;
   };
@@ -64,7 +78,7 @@ export function EtapaConfiguracao({
         <h2 className="text-xl font-semibold text-foreground">Configuração inicial</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {temServicos && !temMobilidade
-            ? "Defina os serviços que você oferece e a forma de cobrança."
+            ? "Defina os serviços que você oferece e seus horários de atendimento."
             : temServicos && temMobilidade
               ? "Defina como corridas e serviços serão cobrados."
               : "Defina como as corridas serão distribuídas e precificadas."}
@@ -76,7 +90,33 @@ export function EtapaConfiguracao({
       )}
 
       {temServicos && (
-        <SecaoConfiguracaoServicos servicos={servicos} onChange={onChangeServicos} />
+        <>
+          <SecaoConfiguracaoServicos servicos={servicos} onChange={onChangeServicos} />
+
+          <div className="space-y-2">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Sua agenda</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Configure quando você atende. Você pode ajustar a qualquer momento depois.
+              </p>
+            </div>
+            <EditorDisponibilidadeSemanal
+              dias={disponibilidade.dias}
+              onChangeDias={(dias) =>
+                onChangeDisponibilidade({ ...disponibilidade, dias })
+              }
+              slotMin={disponibilidade.slotMin}
+              onChangeSlotMin={(slotMin) =>
+                onChangeDisponibilidade({ ...disponibilidade, slotMin })
+              }
+              bufferMin={disponibilidade.bufferMin}
+              onChangeBufferMin={(bufferMin) =>
+                onChangeDisponibilidade({ ...disponibilidade, bufferMin })
+              }
+              ocultarSalvar
+            />
+          </div>
+        </>
       )}
 
       <SecaoComissaoCashback dados={dados} onChange={onChange} />
