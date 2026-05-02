@@ -10,6 +10,10 @@ interface DadosDriverServico {
   professional_type: TipoProfissional;
   full_name: string;
   avatar_url: string | null;
+  cover_url: string | null;
+  bio: string | null;
+  is_verified: boolean;
+  service_categories: string[];
   credential_verified: boolean;
   credential_type: string | null;
   credential_number: string | null;
@@ -27,6 +31,10 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
     professional_type: "driver",
     full_name: "",
     avatar_url: null,
+    cover_url: null,
+    bio: null,
+    is_verified: false,
+    service_categories: [],
     credential_verified: false,
     credential_type: null,
     credential_number: null,
@@ -45,7 +53,9 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
     async function carregar() {
       const { data: driver } = await supabase
         .from("drivers")
-        .select("professional_type, credential_verified, credential_type, credential_number")
+        .select(
+          "professional_type, credential_verified, credential_type, credential_number, cover_url, bio, is_verified, service_categories",
+        )
         .eq("id", driverId!)
         .maybeSingle();
 
@@ -85,6 +95,10 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
         professional_type: tipo,
         full_name: usuario?.full_name ?? "Profissional",
         avatar_url: usuario?.avatar_url ?? null,
+        cover_url: ((driver as any)?.cover_url as string) ?? null,
+        bio: ((driver as any)?.bio as string) ?? null,
+        is_verified: !!(driver as any)?.is_verified,
+        service_categories: ((driver as any)?.service_categories as string[]) ?? [],
         credential_verified: !!(driver as any)?.credential_verified,
         credential_type: ((driver as any)?.credential_type as string) ?? null,
         credential_number: ((driver as any)?.credential_number as string) ?? null,

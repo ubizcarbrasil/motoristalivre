@@ -147,12 +147,12 @@ export default function PaginaPerfilProfissionalServicos() {
         <CabecalhoPerfilProfissional
           nome={dados.full_name}
           avatarUrl={dados.avatar_url}
-          coverUrl={null}
-          bio={null}
-          isVerified={false}
+          coverUrl={dados.cover_url}
+          bio={dados.bio}
+          isVerified={dados.is_verified}
           credentialVerified={dados.credential_verified}
           credentialType={dados.credential_type}
-          serviceCategories={[]}
+          serviceCategories={dados.service_categories}
           cidade={tenant.branding?.city ?? null}
         />
 
