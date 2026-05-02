@@ -114,13 +114,15 @@ export default function PaginaServicosMotorista() {
   };
 
   return (
-    <AgendamentoServico
-      driver={driverInfo}
-      tenantId={resolucao.tenantId}
-      serviceTypes={dados.serviceTypes}
-      availability={dados.availability}
-      preSelectedServiceId={searchParams.get("servico")}
-      onVoltar={() => navigate(`/${resolucao.tenantSlug}/servicos`)}
-    />
+    <TemaServicos>
+      <AgendamentoServico
+        driver={driverInfo}
+        tenantId={resolucao.tenantId}
+        serviceTypes={dados.serviceTypes}
+        availability={dados.availability}
+        preSelectedServiceId={searchParams.get("servico")}
+        onVoltar={() => navigate(`/${resolucao.tenantSlug}/servicos`)}
+      />
+    </TemaServicos>
   );
 }
