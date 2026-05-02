@@ -17,13 +17,24 @@ interface Corrida {
   criadaEm: string;
   transbordo: boolean;
   origemLink: string | null;
+  /** Em modo serviços: nome do serviço contratado */
+  servico?: string | null;
+  /** Em modo serviços: data agendada do serviço */
+  agendadoEm?: string | null;
 }
+
+type Modo = "mobilidade" | "servicos";
 
 export function SecaoCorridas() {
   const { usuario } = useAutenticacao();
   const [corridas, setCorridas] = useState<Corrida[]>([]);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [carregando, setCarregando] = useState(true);
+  const [modo, setModo] = useState<Modo>("mobilidade");
+
+  const ehServicos = modo === "servicos";
+  const labelTitulo = ehServicos ? "agendamento" : "corrida";
+  const labelTituloPlural = ehServicos ? "agendamentos" : "corridas";
 
   useEffect(() => {
     if (!usuario) return;
