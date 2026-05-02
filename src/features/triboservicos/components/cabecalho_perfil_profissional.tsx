@@ -73,7 +73,7 @@ export function CabecalhoPerfilProfissional({
 
           {serviceCategories.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {serviceCategories.map((cat) => (
+              {ordenarCategoriasServico(serviceCategories).map((cat) => (
                 <Badge key={cat} variant="secondary" className="text-xs">
                   {resolverNomeCategoria(cat)}
                 </Badge>
