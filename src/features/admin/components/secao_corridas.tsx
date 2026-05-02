@@ -46,6 +46,68 @@ export function SecaoCorridas() {
       const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
       if (!perfil) return;
 
+      // Detecta modo da tribo
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("active_modules")
+        .eq("id", perfil.tenant_id)
+        .maybeSingle();
+      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+      const ehServicosTribo = modulos.includes("services") && !modulos.includes("mobility");
+      setModo(ehServicosTribo ? "servicos" : "mobilidade");
+
+      if (ehServicosTribo) {
+        const { data: bookings } = await supabase
+          .from("service_bookings" as any)
+          .select(
+            "id, customer_id, driver_id, service_type_id, price_agreed, status, scheduled_at, created_at, address",
+          )
+          .eq("tenant_id", perfil.tenant_id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        const lista = (bookings as any[] | null) ?? [];
+        const driverIds = [...new Set(lista.map((b) => b.driver_id).filter(Boolean))];
+        const customerIds = [...new Set(lista.map((b) => b.customer_id).filter(Boolean))];
+        const serviceIds = [...new Set(lista.map((b) => b.service_type_id).filter(Boolean))];
+        const allIds = [...new Set([...driverIds, ...customerIds])];
+
+        const [{ data: users }, { data: servicos }] = await Promise.all([
+          allIds.length
+            ? supabase.from("users").select("id, full_name").in("id", allIds)
+            : Promise.resolve({ data: [] as any[] }),
+          serviceIds.length
+            ? supabase
+                .from("service_types" as any)
+                .select("id, name")
+                .in("id", serviceIds)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        setCorridas(
+          lista.map((b) => {
+            const profissional = users?.find((u: any) => u.id === b.driver_id);
+            const cliente = users?.find((u: any) => u.id === b.customer_id);
+            const servico = (servicos as any[] | null)?.find((s) => s.id === b.service_type_id);
+            return {
+              id: b.id,
+              passageiro: cliente?.full_name || null,
+              motorista: profissional?.full_name || null,
+              origem: b.address || null,
+              destino: null,
+              valor: b.price_agreed != null ? Number(b.price_agreed) : null,
+              status: b.status || "scheduled",
+              criadaEm: b.created_at,
+              transbordo: false,
+              origemLink: null,
+              servico: servico?.name || null,
+              agendadoEm: b.scheduled_at || null,
+            };
+          }),
+        );
+        return;
+      }
+
       const { data: rides } = await supabase
         .from("rides")
         .select("id, passenger_id, driver_id, price_paid, is_transbordo, created_at, origin_driver_id")
