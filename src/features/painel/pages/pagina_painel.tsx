@@ -74,6 +74,12 @@ export default function PaginaPainel() {
   const activeModulesAtual =
     triboAtiva?.activeModules ?? tenant?.active_modules ?? ["mobility"];
 
+  // Modo visual resolvido considerando tipo profissional do usuário
+  const modoPainel = resolverModoPainel(
+    perfil?.professional_type,
+    activeModulesAtual,
+  );
+
   // Se a aba atual não é permitida pelos módulos ativos, volta para Início
   useEffect(() => {
     if (!abaPermitida(aba, activeModulesAtual)) {
