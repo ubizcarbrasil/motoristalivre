@@ -140,6 +140,10 @@ export function SecaoRegras() {
           </div>
         </>
       )}
+
+      <Button onClick={salvar} disabled={salvando}>
+        {salvando ? "Salvando..." : "Salvar regras"}
+      </Button>
     </div>
   );
 }
