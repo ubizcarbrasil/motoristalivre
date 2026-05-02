@@ -53,14 +53,6 @@ Fase 1 (Schema base)
 - Lançamentos em `wallet_transactions` e `commissions` com `commission_context = 'servico'`
 - Auditoria em `audit_logs` (`action = 'service_commission_processed'`)
 
-**Entregáveis**
-- Função SQL `process_service_commission(_booking_id uuid)` espelhando `process_ride_commission`, mas lendo de `commission_rules` por categoria
-- Trigger `trg_process_service_commission` em `service_bookings` (dispara quando `status` muda para `completed`)
-- Edge function `process-commission-services` (fallback manual + webhook de pagamento)
-- Estender `commission_type` enum com `service_coverage` e `service_referral`
-- Lançamentos em `wallet_transactions` e `commissions` com `commission_context = 'servico'`
-- Testes: booking com cobertura, booking com indicador, booking simples
-
 **Depende de:** Fase 1.
 
 ---
