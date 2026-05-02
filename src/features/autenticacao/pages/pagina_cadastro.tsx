@@ -26,6 +26,13 @@ export default function PaginaCadastro() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const tipoInicial = resolverTipoInicial(searchParams.get("tipo"));
+
+  // Profissional autônomo NÃO usa o cadastro misto: tem fluxo dedicado em /s/cadastro/profissional
+  // (sem opções de motorista/passageiro/afiliado, sem mensagens de corridas).
+  if (tipoInicial === "profissional") {
+    return <Navigate to="/s/cadastro/profissional" replace />;
+  }
+
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
