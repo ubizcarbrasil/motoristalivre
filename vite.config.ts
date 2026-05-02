@@ -53,6 +53,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // Rotas que NUNCA devem ser servidas pelo SW.
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
         // HTML sempre tenta a rede antes — evita travar usuários em build antigo.
