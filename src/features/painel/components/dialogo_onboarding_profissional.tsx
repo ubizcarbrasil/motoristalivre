@@ -29,7 +29,7 @@ import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profi
 import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
 import { IndicadorAutoSave } from "./indicador_autosave";
 import { SeletorCategoriasServico } from "./seletor_categorias_servico";
-import { iconePorSlug, nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+import { iconePorSlug, nomePorSlug, slugValido } from "@/compartilhados/constants/constantes_categorias_servico";
 
 function SeletorCategoriasServicoInline({
   selecionadas,
