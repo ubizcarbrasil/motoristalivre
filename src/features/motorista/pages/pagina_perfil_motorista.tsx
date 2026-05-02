@@ -1,21 +1,23 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarPlus, Loader2, MessageCircle, Share2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { usePerfilMotorista } from "../hooks/hook_perfil_motorista";
 import { SecaoBio } from "../components/secao_bio";
 import { SecaoServicosPublica } from "../components/secao_servicos_publica";
 import { SecaoEquipePublica } from "../components/secao_equipe_publica";
 import { VitrineEspecialidades } from "@/compartilhados/components/vitrine_especialidades";
 import { imagemDeCapa } from "@/compartilhados/utils/imagens_categorias";
-import { nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+import { HeroPerfil } from "../components/perfil_publico/hero_perfil";
+import { IdentidadePerfil } from "../components/perfil_publico/identidade_perfil";
+import { ChipsCategorias } from "../components/perfil_publico/chips_categorias";
+import { BlocoConfianca } from "../components/perfil_publico/bloco_confianca";
+import { BarraAcaoFixa } from "../components/perfil_publico/barra_acao_fixa";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
   const {
     perfil,
+    metricas,
     servicos,
     portfolio,
     equipe,
@@ -49,8 +51,17 @@ export default function PaginaPerfilMotorista() {
   const temServicosVendaveis = servicos.length > 0;
   const temEspecialidades = perfil.service_categories.length > 0;
   const coverUrl = perfil.cover_url ?? imagemDeCapa(perfil.service_categories);
-  const inicial = perfil.nome.charAt(0).toUpperCase();
-  const categoriasTopo = perfil.service_categories.slice(0, 5);
+
+  const tipoBarra: "agendar" | "orcamento" | "corrida" | "ambos" | "indisponivel" =
+    perfil.professional_type === "both"
+      ? "ambos"
+      : ofereceServico
+        ? temServicosVendaveis
+          ? "agendar"
+          : "orcamento"
+        : ofereceCorrida
+          ? "corrida"
+          : "indisponivel";
 
   const compartilhar = () => {
     const url = window.location.href;
@@ -84,69 +95,35 @@ export default function PaginaPerfilMotorista() {
 
   return (
     <main className="min-h-screen bg-background pb-32">
-      {/* Botões flutuantes sobre a cover */}
-      <div className="fixed top-3 inset-x-0 z-30 flex items-center justify-between px-3 pointer-events-none">
-        <button
-          onClick={() => navigate(-1)}
-          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <button
-          onClick={compartilhar}
-          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
-          aria-label="Compartilhar"
-        >
-          <Share2 className="h-4 w-4" />
-        </button>
-      </div>
+      <HeroPerfil
+        nome={perfil.nome}
+        avatarUrl={perfil.avatar_url}
+        coverUrl={coverUrl}
+        onVoltar={() => navigate(-1)}
+        onCompartilhar={compartilhar}
+      />
 
-      {/* Cover */}
-      <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-secondary">
-        <img
-          src={coverUrl}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-      </div>
+      <IdentidadePerfil
+        nome={perfil.nome}
+        tenantNome={perfil.tenant_nome}
+        cidade={null}
+        isVerified={perfil.is_verified}
+        credentialVerified={perfil.credential_verified}
+        credentialType={perfil.credential_type}
+        notaMedia={metricas.nota_media}
+        totalAvaliacoes={metricas.total_avaliacoes}
+      />
 
-      {/* Identidade */}
-      <section className="max-w-3xl mx-auto px-4 -mt-12 relative">
-        <Avatar className="w-20 h-20 sm:w-24 sm:h-24 ring-4 ring-background shadow-xl">
-          <AvatarImage src={perfil.avatar_url ?? undefined} alt={perfil.nome} />
-          <AvatarFallback className="text-xl bg-primary/10 text-primary">
-            {inicial}
-          </AvatarFallback>
-        </Avatar>
+      <ChipsCategorias categorias={perfil.service_categories} />
 
-        <div className="mt-3 space-y-2">
-          <h1 className="text-2xl font-semibold text-foreground leading-tight">
-            {perfil.nome}
-          </h1>
-          {perfil.tenant_nome && (
-            <p className="text-sm text-muted-foreground">{perfil.tenant_nome}</p>
-          )}
-          {categoriasTopo.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {categoriasTopo.map((cat) => (
-                <Badge key={cat} variant="secondary" className="text-xs">
-                  {nomePorSlug(cat)}
-                </Badge>
-              ))}
-              {perfil.service_categories.length > 5 && (
-                <Badge variant="outline" className="text-xs">
-                  +{perfil.service_categories.length - 5}
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+      <BlocoConfianca
+        isVerified={perfil.is_verified}
+        mesesAtuacao={metricas.meses_atuacao}
+        taxaAceite={metricas.taxa_aceite}
+        totalAvaliacoes={metricas.total_avaliacoes}
+      />
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-8 space-y-6">
         <SecaoBio bio={perfil.bio} />
 
         {ofereceServico && (
@@ -172,43 +149,13 @@ export default function PaginaPerfilMotorista() {
         )}
       </div>
 
-      {/* Bottom action bar */}
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur p-4">
-        <div className="max-w-3xl mx-auto">
-          {perfil.professional_type === "both" ? (
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="h-12" onClick={irCorrida}>
-                Solicitar corrida
-              </Button>
-              <Button className="h-12 gap-2" onClick={irAgendar}>
-                <CalendarPlus className="w-4 h-4" />
-                Agendar
-              </Button>
-            </div>
-          ) : ofereceServico ? (
-            temServicosVendaveis ? (
-              <Button size="lg" className="w-full gap-2" onClick={irAgendar}>
-                <CalendarPlus className="w-4 h-4" />
-                Agendar agora
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                className="w-full gap-2"
-                disabled={!perfil.whatsapp}
-                onClick={abrirOrcamentoWhatsapp}
-              >
-                <MessageCircle className="w-4 h-4" />
-                {perfil.whatsapp ? "Solicitar orçamento" : "WhatsApp não cadastrado"}
-              </Button>
-            )
-          ) : ofereceCorrida ? (
-            <Button size="lg" className="w-full" onClick={irCorrida}>
-              Solicitar corrida
-            </Button>
-          ) : null}
-        </div>
-      </div>
+      <BarraAcaoFixa
+        tipo={tipoBarra}
+        whatsappDisponivel={!!perfil.whatsapp}
+        onAgendar={irAgendar}
+        onOrcamento={abrirOrcamentoWhatsapp}
+        onCorrida={irCorrida}
+      />
     </main>
   );
 }
