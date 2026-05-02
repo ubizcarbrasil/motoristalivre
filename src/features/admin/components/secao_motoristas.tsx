@@ -188,7 +188,7 @@ export function SecaoMotoristas() {
           ))}
           {motoristas.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">Nenhum motorista cadastrado</TableCell>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">Nenhum {labelEntidade} cadastrado</TableCell>
             </TableRow>
           )}
         </TableBody>
