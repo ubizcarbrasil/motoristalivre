@@ -91,10 +91,10 @@ export default function PaginaServicosMotorista() {
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-3 max-w-sm">
           <p className="text-base font-medium text-foreground">
-            Este profissional não oferece serviços
+            Este profissional ainda não oferece serviços
           </p>
           <p className="text-sm text-muted-foreground">
-            Você pode acessar o link de corrida normalmente.
+            Tente novamente mais tarde ou entre em contato com a tribo.
           </p>
         </div>
       </div>
