@@ -1,7 +1,10 @@
 import { BadgeCheck, ShieldCheck, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { resolverNomeCategoria } from "../utils/resolver_nome_categoria";
+import {
+  resolverNomeCategoria,
+  ordenarCategoriasServico,
+} from "../utils/resolver_nome_categoria";
 
 interface Props {
   nome: string;
