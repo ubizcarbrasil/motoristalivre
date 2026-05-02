@@ -12,10 +12,13 @@ import { SELOS_MOTORISTA } from "../constants/constantes_painel";
 import { CampoUploadImagem } from "@/features/onboarding/components/campo_upload_imagem";
 import { EditorHandleProfissional } from "@/features/triboservicos/components/editor_handle_profissional";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
+import { ChecklistPublicacao } from "./checklist_publicacao";
+import type { AbaPainel } from "../types/tipos_painel";
 
 interface AbaPerfilProps {
   perfil: PerfilMotorista;
   onAtualizar: (p: PerfilMotorista) => void;
+  onMudarAba?: (aba: AbaPainel) => void;
 }
 
 function BarraDistribuicao({ distribuicao, total }: { distribuicao: number[]; total: number }) {
@@ -38,7 +41,7 @@ function BarraDistribuicao({ distribuicao, total }: { distribuicao: number[]; to
   );
 }
 
-export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
+export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
   const { usuario } = useAutenticacao();
   const [avatar, setAvatar] = useState(perfil.avatar_url ?? "");
   const [cover, setCover] = useState(perfil.cover_url ?? "");
