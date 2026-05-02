@@ -76,9 +76,21 @@ export function NavegacaoInferior({
       ? [ITENS_BASE[0], ITEM_TRIBO, ...ITENS_BASE.slice(1)]
       : ITENS_BASE;
 
-  // Em modo serviços, troca "Links" (mobility) por "Orçamento" customizável
-  if (modo === "servicos" && !modoSomenteDono && cfgOrcamento.enabled) {
-    itensBrutos = itensBrutos.map((i) => (i.id === "meus_links" ? itemOrcamento : i));
+  // Em modo serviços ou híbrido, garante o atalho de "Orçamento" no menu inferior.
+  // - serviços puro: troca "Links" (mobility) pelo orçamento.
+  // - híbrido: mantém "Links" e adiciona orçamento ao lado.
+  if (!modoSomenteDono && cfgOrcamento.enabled) {
+    if (modo === "servicos") {
+      itensBrutos = itensBrutos.map((i) => (i.id === "meus_links" ? itemOrcamento : i));
+    } else if (modo === "hibrido") {
+      const idxLinks = itensBrutos.findIndex((i) => i.id === "meus_links");
+      const indice = idxLinks >= 0 ? idxLinks + 1 : 1;
+      itensBrutos = [
+        ...itensBrutos.slice(0, indice),
+        itemOrcamento,
+        ...itensBrutos.slice(indice),
+      ];
+    }
   }
 
   const itens = itensBrutos.filter((i) =>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { FileText } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TemaServicos } from "../components/tema_servicos";
@@ -21,6 +22,7 @@ import {
 
 export default function PaginaVitrineTenantServicos() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [tenant, setTenant] = useState<TenantPublicoServicos | null>(null);
   const [profissionais, setProfissionais] = useState<ProfissionalVitrine[]>([]);
   const [preview, setPreview] = useState<ItemPreviewPortfolioTenant[]>([]);
@@ -102,7 +104,7 @@ export default function PaginaVitrineTenantServicos() {
       <main className="min-h-screen bg-background pb-16">
         <CabecalhoVitrineTenant tenant={tenant} />
 
-        <section className="max-w-3xl mx-auto px-4 mt-6">
+        <section className="max-w-3xl mx-auto px-4 mt-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between rounded-2xl border border-border bg-card/40 p-4">
             <div className="space-y-0.5">
               <p className="text-sm font-medium text-foreground">
@@ -122,6 +124,22 @@ export default function PaginaVitrineTenantServicos() {
               Ver profissionais
             </Button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/orcamento/novo")}
+            className="w-full flex items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors p-4 text-left"
+          >
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-primary">
+                Solicitar orçamento
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Conte o que precisa e receba propostas dos profissionais.
+              </p>
+            </div>
+            <FileText className="w-5 h-5 text-primary shrink-0" />
+          </button>
         </section>
 
         <SecaoPreviewPortfolioTenant itens={preview} tenantSlug={tenant.slug} />
