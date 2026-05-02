@@ -19,6 +19,7 @@ export interface PerfilPublicoMotorista {
   credential_type: string | null;
   credential_number: string | null;
   service_categories: string[];
+  whatsapp: string | null;
 }
 
 export interface MetricasMotorista {
