@@ -208,8 +208,9 @@ BEGIN
     RAISE NOTICE '  (tenant_settings>0 detectado: usando rule pct=0 para isolar o cenário)';
   END IF;
 
-  UPDATE public.wallets SET balance = _saldo_a_ini, blocked_balance = 0 WHERE id = _wallet_a;
-  UPDATE public.wallets SET balance = _saldo_b_ini, blocked_balance = 0 WHERE id = _wallet_b;
+  -- Captura saldos atuais (sem resetar — RLS pode bloquear UPDATE direto)
+  SELECT balance INTO _saldo_a_pos FROM public.wallets WHERE id = _wallet_a;
+  SELECT balance INTO _saldo_b_pos FROM public.wallets WHERE id = _wallet_b;
 
   INSERT INTO public.service_bookings (
     tenant_id, driver_id, service_type_id, scheduled_at,
@@ -231,12 +232,11 @@ BEGIN
   ASSERT _qtd_wallet_tx = 0,
     format('N4: esperava 0 wallet_tx (pct=0), obtido %s', _qtd_wallet_tx);
 
-  SELECT balance INTO _saldo_a_pos FROM public.wallets WHERE id = _wallet_a;
-  SELECT balance INTO _saldo_b_pos FROM public.wallets WHERE id = _wallet_b;
-  ASSERT _saldo_a_pos = _saldo_a_ini,
-    format('N4: saldo A mudou (%s → %s)', _saldo_a_ini, _saldo_a_pos);
-  ASSERT _saldo_b_pos = _saldo_b_ini,
-    format('N4: saldo B mudou (%s → %s)', _saldo_b_ini, _saldo_b_pos);
+  -- Saldos não podem ter mudado (compara com snapshot pré-booking)
+  ASSERT (SELECT balance FROM public.wallets WHERE id = _wallet_a) = _saldo_a_pos,
+    'N4: saldo A não deveria ter mudado';
+  ASSERT (SELECT balance FROM public.wallets WHERE id = _wallet_b) = _saldo_b_pos,
+    'N4: saldo B não deveria ter mudado';
   RAISE NOTICE '  ✓ N4 ok (saldos preservados)';
 
   -- =========================================================
