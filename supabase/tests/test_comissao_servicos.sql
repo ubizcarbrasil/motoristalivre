@@ -75,18 +75,22 @@ BEGIN
     _tenant_id, _category_id, _pct_cobertura, _pct_indicacao, 0, true
   );
 
-  -- Carteiras (upsert: cria se não houver, ajusta saldo controlado para o teste)
-  INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
-  VALUES (_driver_a, 'driver', _tenant_id, _saldo_a_inicial, 0)
-  ON CONFLICT (owner_id, owner_type) DO UPDATE
-    SET balance = _saldo_a_inicial, blocked_balance = 0
-  RETURNING id INTO _wallet_a;
+  -- Carteiras: pega existente ou cria, e força saldo controlado para o teste
+  SELECT id INTO _wallet_a FROM public.wallets WHERE owner_id = _driver_a AND owner_type = 'driver';
+  IF _wallet_a IS NULL THEN
+    INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
+    VALUES (_driver_a, 'driver', _tenant_id, _saldo_a_inicial, 0) RETURNING id INTO _wallet_a;
+  ELSE
+    UPDATE public.wallets SET balance = _saldo_a_inicial, blocked_balance = 0 WHERE id = _wallet_a;
+  END IF;
 
-  INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
-  VALUES (_driver_b, 'driver', _tenant_id, _saldo_b_inicial, 0)
-  ON CONFLICT (owner_id, owner_type) DO UPDATE
-    SET balance = _saldo_b_inicial, blocked_balance = 0
-  RETURNING id INTO _wallet_b;
+  SELECT id INTO _wallet_b FROM public.wallets WHERE owner_id = _driver_b AND owner_type = 'driver';
+  IF _wallet_b IS NULL THEN
+    INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
+    VALUES (_driver_b, 'driver', _tenant_id, _saldo_b_inicial, 0) RETURNING id INTO _wallet_b;
+  ELSE
+    UPDATE public.wallets SET balance = _saldo_b_inicial, blocked_balance = 0 WHERE id = _wallet_b;
+  END IF;
 
   -- Tipo de serviço vinculado à categoria
   INSERT INTO public.service_types (
