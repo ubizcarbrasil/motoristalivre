@@ -1,97 +1,164 @@
-# Plano: Disponibilidade simples, em massa e obrigatória
+# Plano — Endereço do atendimento + cálculo dinâmico do valor
 
-Três frentes: (1) cadastrar horários em massa de forma fácil, (2) tornar isso obrigatório no onboarding solo do profissional, (3) permitir desligar disponibilidade ou bloquear datas/horários pontuais.
+## Objetivo
+Permitir que o cliente, no momento de agendar um serviço, informe:
+1. **Endereço** onde o serviço será prestado (com possibilidade do profissional cobrar deslocamento).
+2. **Fatores variáveis** (tamanho, quantidade, horas/dias) que ajustam o **preço final** conforme o tipo de serviço.
 
-## 1. Editor de disponibilidade em massa (UX nova)
+Hoje a tela de agendamento mostra apenas slot, dados do cliente, observações e pagamento (ver imagem enviada). Não existe campo de endereço nem cálculo dinâmico — o preço é sempre o `service_types.price` fixo.
 
-Substituir o `secao_minha_disponibilidade.tsx` atual (que pede um bloco por vez) por um editor estilo grade semanal com presets.
+---
 
-**Novo componente** `editor_disponibilidade_semanal.tsx`:
-- Linha por dia da semana (Dom–Sáb) com toggle "Atende neste dia".
-- Cada dia tem 1+ faixas (início → fim). Botão "+ adicionar faixa" para split (ex.: 9–12 e 14–18).
-- Campo único global de duração de slot e buffer (aplicado a todos os blocos). Ninguém quer configurar slot por dia.
-- **Presets rápidos** (chips no topo):
-  - "Comercial seg–sex 9h–18h"
-  - "Estendido seg–sáb 8h–20h"
-  - "Final de semana sáb–dom 9h–17h"
-  - "24/7"
-  - "Copiar segunda para todos os dias úteis"
-- Botão "Salvar" persiste tudo de uma vez (delete-then-insert por driver).
+## 1. Modelagem de preço por serviço (profissional configura)
 
-**Service novo** `salvarDisponibilidadeEmMassa(driverId, tenantId, blocos[])`:
-- Apaga blocos atuais do driver e insere os novos em uma transação (via RPC `replace_provider_availability`).
+A tabela `service_types` já tem `pricing_mode` (`fixed | hourly | daily`) e `price`. Vamos expandir para um modelo flexível por **fator de cobrança**:
 
-## 2. Obrigatório no onboarding (fluxo solo profissional)
+Nova tabela `service_pricing_factors`:
+- `id`, `service_type_id`, `tenant_id`
+- `key` (ex.: `metros_quadrados`, `quantidade_comodos`, `horas`, `dias`, `quantidade_pets`)
+- `label` (ex.: "Quantos metros quadrados?")
+- `input_type` (`number` | `select`)
+- `options` (jsonb — para select: `[{valor, rotulo, multiplicador}]`)
+- `unit_price` (numérico — preço por unidade)
+- `min_value`, `max_value`, `step`, `default_value`
+- `required` (bool)
+- `ordem`
 
-Adicionar uma sub-seção "Sua agenda" dentro de `etapa_configuracao.tsx`, exibida quando `temServicos` for true.
-
-- Reusa `editor_disponibilidade_semanal.tsx` (modo "configuração inicial", sem persistir ainda — guarda no estado do hook).
-- Pré-preenche com preset "Comercial seg–sex 9h–18h" para reduzir fricção.
-- Validação na função `validar()` da etapa: pelo menos um dia ativo com faixa válida.
-- Mensagem se vazio: "Defina ao menos um dia de atendimento para receber agendamentos."
-- No `criarGrupo()` em `servico_onboarding.ts`, após criar tenant, inserir os blocos em `professional_availability`.
-
-Tipos novos em `tipos_onboarding.ts`:
-```ts
-interface FaixaHorario { inicio: string; fim: string }
-interface DiaDisponibilidade { diaSemana: 0..6; ativo: boolean; faixas: FaixaHorario[] }
-DadosOnboarding.disponibilidade: { dias: DiaDisponibilidade[]; slotMin: number; bufferMin: number }
+Fórmula final:
+```
+total = preco_base
+      + soma(unit_price * valor_informado) por fator numérico
+      + soma(multiplicador) por fator select
+      + taxa_deslocamento (se aplicável)
 ```
 
-## 3. Pausar agenda + bloqueios pontuais
+Mantemos `price` como **preço base / mínimo** e `pricing_mode` como dica visual.
 
-**Pausar tudo (kill switch)**: novo campo `accepting_bookings` (boolean default true) em `drivers`. Toggle no painel: "Aceitando agendamentos". Quando off:
-- Vitrine pública mostra badge "Agenda pausada — não está aceitando agendamentos no momento".
-- `book-service` retorna 423 com mensagem amigável.
-- Não apaga blocos cadastrados.
+## 2. Endereço de atendimento
 
-**Bloqueios pontuais**: nova tabela `provider_time_off`:
+Nova tabela `service_booking_addresses` (1:1 com `service_bookings`):
+- `booking_id`, `tenant_id`
+- `cep`, `logradouro`, `numero`, `complemento`, `bairro`, `cidade`, `uf`
+- `latitude`, `longitude` (opcional, preenchido por geocoding)
+- `referencia` (texto livre)
+
+Configuração no `service_types`:
+- `requires_address` (bool, default true para serviços presenciais)
+- `service_radius_km` (raio de atendimento)
+- `travel_fee_per_km` (numérico, opcional)
+- `travel_fee_base` (numérico, opcional)
+
+Coluna nova em `service_bookings`:
+- `travel_fee` (numérico)
+- `factors_snapshot` (jsonb — guarda o que o cliente preencheu e como foi calculado, p/ auditoria)
+- `total_price` (numérico — preço final efetivo, separado de `price_agreed`)
+
+## 3. UI — onde o profissional configura
+
+Em `src/features/servicos/` (gestão dos `service_types` do profissional), adicionar nova aba/seção dentro do editor do tipo de serviço:
+
+- **`editor_fatores_preco.tsx`** — lista de fatores com adicionar/editar/remover, campo de label, tipo, unidade, preço por unidade, opções.
+- **`editor_endereco_servico.tsx`** — toggle "exige endereço", raio em km, taxa base, taxa por km.
+- Pré-visualização do cálculo (exemplo: "Casa de 80m² · 4h → R$ 240,00").
+
+## 4. UI — onde o cliente preenche (tela de agendamento)
+
+Em `src/features/passageiro/components/agendamento_servico.tsx`, adicionar **antes** dos "Seus dados" duas novas seções, renderizadas só se o serviço atual exigir:
+
+### 4.1 `secao_endereco_atendimento.tsx`
+- Campo CEP com auto-preenchimento via ViaCEP (já há `campo_endereco.tsx` no projeto — reaproveitar).
+- Logradouro / número / complemento / bairro / cidade / UF.
+- Campo "ponto de referência".
+- Aviso de fora-de-raio: se distância > `service_radius_km`, bloqueia confirmação com mensagem clara.
+
+### 4.2 `secao_fatores_servico.tsx`
+- Renderiza dinamicamente cada `pricing_factor` configurado pelo profissional (similar ao `formulario_briefing.tsx` que já existe).
+- Inputs `number` com stepper, `select` com opções.
+- Atualiza em tempo real um **resumo de cálculo** no `resumo_servico_sticky.tsx`:
+  ```
+  Base: R$ 80,00
+  + 80m² × R$ 1,50 = R$ 120,00
+  + Deslocamento (3km): R$ 9,00
+  Total: R$ 209,00
+  ```
+
+### 4.3 Botão "Confirmar"
+Passa a mostrar o **total calculado** em vez de `service.price`.
+
+## 5. Backend — Edge Function `book-service`
+
+Em `supabase/functions/book-service/index.ts`:
+1. Aceitar `address` e `factors` no payload.
+2. **Recalcular o total no servidor** (nunca confiar no cliente) usando `service_pricing_factors` + `travel_fee_*` + distância.
+3. Persistir endereço em `service_booking_addresses` na mesma transação do booking.
+4. Salvar `factors_snapshot`, `travel_fee`, `total_price` no booking.
+5. Validar raio de atendimento; rejeitar com `OUT_OF_RANGE` se fora.
+
+## 6. Migrations (SQL)
+
+```sql
+-- service_types: campos de endereço/deslocamento
+alter table service_types
+  add column requires_address boolean not null default false,
+  add column service_radius_km numeric,
+  add column travel_fee_base numeric default 0,
+  add column travel_fee_per_km numeric default 0;
+
+-- fatores de preço dinâmicos
+create table service_pricing_factors (
+  id uuid primary key default gen_random_uuid(),
+  service_type_id uuid not null references service_types(id) on delete cascade,
+  tenant_id uuid not null,
+  key text not null,
+  label text not null,
+  input_type text not null check (input_type in ('number','select')),
+  options jsonb,
+  unit_price numeric default 0,
+  min_value numeric,
+  max_value numeric,
+  step numeric default 1,
+  default_value numeric,
+  required boolean default false,
+  ordem int default 0,
+  created_at timestamptz default now()
+);
+
+-- endereço do atendimento
+create table service_booking_addresses (
+  booking_id uuid primary key references service_bookings(id) on delete cascade,
+  tenant_id uuid not null,
+  cep text, logradouro text, numero text, complemento text,
+  bairro text, cidade text, uf text,
+  latitude numeric, longitude numeric, referencia text,
+  created_at timestamptz default now()
+);
+
+-- snapshot do cálculo
+alter table service_bookings
+  add column travel_fee numeric default 0,
+  add column factors_snapshot jsonb,
+  add column total_price numeric;
 ```
-id, driver_id, tenant_id, starts_at timestamptz, ends_at timestamptz,
-reason text, all_day bool, created_at
-```
-RLS: driver gerencia próprio; público pode ler (para o cálculo de slots).
 
-Componente `bloqueios_agenda.tsx` no painel:
-- Lista bloqueios futuros com data/hora e motivo opcional.
-- "Bloquear dia inteiro" e "Bloquear intervalo".
-- Apagar bloqueio.
+Mais policies de RLS espelhando as existentes em `service_types` / `service_bookings`.
 
-Integração:
-- `calcular_slots_disponiveis.ts`: receber `bloqueios[]` e descartar slots que se sobreponham com qualquer bloqueio.
-- `book-service` (edge): rejeitar (409 BLOCKED) se o `scheduled_at` cair em bloqueio ou se driver estiver com `accepting_bookings = false`.
+## 7. Arquivos a criar/editar
 
-## Arquivos afetados
+**Criar**
+- `src/features/servicos/components/editor_fatores_preco.tsx`
+- `src/features/servicos/components/editor_endereco_servico.tsx`
+- `src/features/servicos/utils/calculadora_preco_servico.ts` (função pura usada no front e portada como TS para edge function)
+- `src/features/passageiro/components/secao_endereco_atendimento.tsx`
+- `src/features/passageiro/components/secao_fatores_servico.tsx`
+- `supabase/migrations/<timestamp>_pricing_factors_e_endereco.sql`
 
-```text
-NOVOS
-  src/features/painel/components/editor_disponibilidade_semanal.tsx
-  src/features/painel/components/bloqueios_agenda.tsx
-  src/features/onboarding/components/secao_disponibilidade_onboarding.tsx
-  supabase/migrations/<timestamp>_disponibilidade_em_massa.sql
+**Editar**
+- `src/features/passageiro/components/agendamento_servico.tsx` — integra as duas novas seções e o total dinâmico.
+- `src/features/passageiro/components/resumo_servico_sticky.tsx` — mostra breakdown.
+- `src/features/servicos/types/tipos_servicos.ts` — novos tipos.
+- `src/features/servicos/services/servico_servicos.ts` — CRUD de fatores + envio do payload.
+- `supabase/functions/book-service/index.ts` — recálculo seguro + persistência do endereço.
 
-ALTERADOS
-  src/features/painel/components/secao_minha_disponibilidade.tsx (substitui editor antigo)
-  src/features/painel/components/aba_perfil.tsx (adiciona toggle "Aceitando agendamentos" + bloqueios)
-  src/features/onboarding/components/etapa_configuracao.tsx (inclui agenda + validação)
-  src/features/onboarding/services/servico_onboarding.ts (insere availability)
-  src/features/onboarding/types/tipos_onboarding.ts (tipos de agenda)
-  src/features/onboarding/hooks/hook_onboarding.ts (estado + preset default)
-  src/features/passageiro/utils/calcular_slots_disponiveis.ts (considera bloqueios)
-  src/features/passageiro/hooks/hook_dados_servico_motorista.ts (carrega bloqueios + flag accepting)
-  src/features/servicos/services/servico_servicos.ts (RPC replace + CRUD bloqueios)
-  src/features/servicos/types/tipos_servicos.ts
-  supabase/functions/book-service/index.ts (valida bloqueios + accepting_bookings)
-```
-
-## Migração SQL (resumo)
-
-- `ALTER TABLE drivers ADD COLUMN accepting_bookings boolean NOT NULL DEFAULT true;`
-- `CREATE TABLE provider_time_off (...)` com RLS (owner CRUD, público SELECT).
-- `CREATE FUNCTION replace_provider_availability(_driver_id uuid, _tenant_id uuid, _slot_min int, _buffer_min int, _blocos jsonb)` — apaga blocos do driver e insere os novos atomicamente, validando ownership via auth.uid().
-
-## Pontos de atenção
-
-- Manter retrocompatibilidade: blocos já cadastrados continuam válidos; o novo editor lê `professional_availability` e renderiza no modelo de faixas por dia.
-- Preset default no onboarding já cria pelo menos um bloco — evita o problema atual em que o profissional finaliza sem horários.
-- O fix de "serviço imediato sem disponibilidade" segue ativo como fallback, mas deixa de ser o caminho principal.
+## 8. Fora de escopo (sugiro tratar depois)
+- Geocoding real (Google/Mapbox) e cálculo de distância — entregamos preparado, mas no MVP a distância pode ser informada pelo cliente ou estimada via CEP.
+- Pagamento online proporcional ao total dinâmico (ajustar quando o gateway estiver ativo).

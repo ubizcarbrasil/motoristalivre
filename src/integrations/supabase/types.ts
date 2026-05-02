@@ -1319,6 +1319,54 @@ export type Database = {
           },
         ]
       }
+      service_booking_addresses: {
+        Row: {
+          bairro: string | null
+          booking_id: string
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          created_at: string
+          latitude: number | null
+          logradouro: string | null
+          longitude: number | null
+          numero: string | null
+          referencia: string | null
+          tenant_id: string
+          uf: string | null
+        }
+        Insert: {
+          bairro?: string | null
+          booking_id: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          latitude?: number | null
+          logradouro?: string | null
+          longitude?: number | null
+          numero?: string | null
+          referencia?: string | null
+          tenant_id: string
+          uf?: string | null
+        }
+        Update: {
+          bairro?: string | null
+          booking_id?: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          latitude?: number | null
+          logradouro?: string | null
+          longitude?: number | null
+          numero?: string | null
+          referencia?: string | null
+          tenant_id?: string
+          uf?: string | null
+        }
+        Relationships: []
+      }
       service_bookings: {
         Row: {
           briefing: Json
@@ -1326,6 +1374,7 @@ export type Database = {
           created_at: string
           driver_id: string
           duration_minutes: number
+          factors_snapshot: Json | null
           guest_passenger_id: string | null
           id: string
           is_coverage: boolean
@@ -1342,6 +1391,8 @@ export type Database = {
           service_type_id: string
           status: string
           tenant_id: string
+          total_price: number | null
+          travel_fee: number
           updated_at: string
         }
         Insert: {
@@ -1350,6 +1401,7 @@ export type Database = {
           created_at?: string
           driver_id: string
           duration_minutes: number
+          factors_snapshot?: Json | null
           guest_passenger_id?: string | null
           id?: string
           is_coverage?: boolean
@@ -1366,6 +1418,8 @@ export type Database = {
           service_type_id: string
           status?: string
           tenant_id: string
+          total_price?: number | null
+          travel_fee?: number
           updated_at?: string
         }
         Update: {
@@ -1374,6 +1428,7 @@ export type Database = {
           created_at?: string
           driver_id?: string
           duration_minutes?: number
+          factors_snapshot?: Json | null
           guest_passenger_id?: string | null
           id?: string
           is_coverage?: boolean
@@ -1390,6 +1445,8 @@ export type Database = {
           service_type_id?: string
           status?: string
           tenant_id?: string
+          total_price?: number | null
+          travel_fee?: number
           updated_at?: string
         }
         Relationships: [
@@ -1561,6 +1618,69 @@ export type Database = {
         }
         Relationships: []
       }
+      service_pricing_factors: {
+        Row: {
+          created_at: string
+          default_value: number | null
+          driver_id: string
+          id: string
+          input_type: string
+          key: string
+          label: string
+          max_value: number | null
+          min_value: number | null
+          options: Json | null
+          ordem: number
+          required: boolean
+          service_type_id: string
+          step: number
+          tenant_id: string
+          unit: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: number | null
+          driver_id: string
+          id?: string
+          input_type: string
+          key: string
+          label: string
+          max_value?: number | null
+          min_value?: number | null
+          options?: Json | null
+          ordem?: number
+          required?: boolean
+          service_type_id: string
+          step?: number
+          tenant_id: string
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: number | null
+          driver_id?: string
+          id?: string
+          input_type?: string
+          key?: string
+          label?: string
+          max_value?: number | null
+          min_value?: number | null
+          options?: Json | null
+          ordem?: number
+          required?: boolean
+          service_type_id?: string
+          step?: number
+          tenant_id?: string
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_reminders: {
         Row: {
           booking_id: string | null
@@ -1635,7 +1755,11 @@ export type Database = {
           name: string
           price: number
           pricing_mode: Database["public"]["Enums"]["service_pricing_mode"]
+          requires_address: boolean
+          service_radius_km: number | null
           tenant_id: string
+          travel_fee_base: number
+          travel_fee_per_km: number
           updated_at: string
         }
         Insert: {
@@ -1653,7 +1777,11 @@ export type Database = {
           name: string
           price: number
           pricing_mode?: Database["public"]["Enums"]["service_pricing_mode"]
+          requires_address?: boolean
+          service_radius_km?: number | null
           tenant_id: string
+          travel_fee_base?: number
+          travel_fee_per_km?: number
           updated_at?: string
         }
         Update: {
@@ -1671,7 +1799,11 @@ export type Database = {
           name?: string
           price?: number
           pricing_mode?: Database["public"]["Enums"]["service_pricing_mode"]
+          requires_address?: boolean
+          service_radius_km?: number | null
           tenant_id?: string
+          travel_fee_base?: number
+          travel_fee_per_km?: number
           updated_at?: string
         }
         Relationships: [
