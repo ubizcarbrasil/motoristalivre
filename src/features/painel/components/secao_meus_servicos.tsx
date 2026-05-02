@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Briefcase } from "lucide-react";
+import { Plus, Trash2, Briefcase, MapPin } from "lucide-react";
+import { EditorEnderecoServico } from "@/features/servicos/components/editor_endereco_servico";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
