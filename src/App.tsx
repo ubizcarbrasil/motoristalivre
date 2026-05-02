@@ -39,6 +39,7 @@ import { ResolverPublicoTenant } from "@/features/passageiro/components/resolver
 import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pagina_perfil_profissional_servicos";
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import PaginaIndicacaoServicos from "@/features/triboservicos/pages/pagina_indicacao_servicos";
+import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
 
             <Route path="/s/:slug/a/:driver_slug" element={<PaginaIndicacaoServicos />} />
+            <Route path="/s/:slug/:driver_slug/rede" element={<PaginaRedePublica />} />
             <Route path="/s/:slug/:driver_slug" element={<PaginaPerfilProfissionalServicos />} />
             <Route path="/s/:slug/:driver_slug/agendar" element={<PaginaAgendamentoServicos />} />
 
