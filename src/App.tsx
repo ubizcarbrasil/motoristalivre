@@ -35,6 +35,7 @@ import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_ca
 import PaginaVitrineTenantServicos from "@/features/triboservicos/pages/pagina_vitrine_tenant_servicos";
 import PaginaPublicaTenant from "@/features/triboservicos/pages/pagina_publica_tenant";
 import PaginaPublicaMobilidade from "@/features/passageiro/pages/pagina_publica_mobilidade";
+import { ResolverPublicoTenant } from "@/features/passageiro/components/resolver_publico_tenant";
 import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pagina_perfil_profissional_servicos";
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import NotFound from "./pages/NotFound";
