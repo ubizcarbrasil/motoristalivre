@@ -266,6 +266,18 @@ export function AgendamentoServico({
     if (nome.trim().length < 2) return toast.error("Informe seu nome completo");
     if (!validarWhatsapp(whatsapp)) return toast.error("WhatsApp inválido. Use formato +55…");
 
+    // Endereço obrigatório quando o serviço exigir
+    if (servicoAtual.requires_address) {
+      const e = endereco;
+      if (!e.cep || !e.logradouro || !e.numero || !e.bairro || !e.cidade || !e.uf) {
+        return toast.error("Preencha o endereço completo do atendimento");
+      }
+    }
+
+    // Fatores obrigatórios
+    const erroFator = validarFatoresObrigatorios(fatores, valoresFatores);
+    if (erroFator) return toast.error(erroFator);
+
     // Valida e sanitiza briefing conforme schema da categoria selecionada
     let briefingValidado: Record<string, unknown> | null = null;
     try {
@@ -277,8 +289,6 @@ export function AgendamentoServico({
     salvarGuestStorage({ nome: nome.trim(), whatsapp: whatsapp.trim() });
     setEnviando(true);
     try {
-      // Lê origem de indicação (driver que indicou via /s/:slug/a/:driver_slug)
-      // e ignora se a origem for o próprio profissional do agendamento.
       const origemIndicacao = lerOrigemIndicacao(
         (typeof window !== "undefined" && window.location.pathname.split("/")[2]) || "",
       );
@@ -295,6 +305,8 @@ export function AgendamentoServico({
         briefing: briefingValidado ?? undefined,
         guest: { full_name: nome.trim(), whatsapp: whatsapp.trim() },
         origin_driver_id: originDriverId,
+        address: servicoAtual.requires_address ? endereco : undefined,
+        factors: Object.keys(valoresFatores).length > 0 ? valoresFatores : undefined,
       });
       if (originDriverId) limparOrigemIndicacao();
       setConfirmado({ quando: new Date(slotSelecionado.iso), servico: servicoAtual });
