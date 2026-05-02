@@ -261,7 +261,7 @@ export function DialogoOnboardingProfissional({
             <PassoDadosBasicos form={form} onChange={atualizar} />
           )}
           {passo === 1 && (
-            <PassoTipoCategorias form={form} onChange={atualizar} />
+            <PassoTipoCategorias form={form} onChange={atualizar} modoServicos={modoServicos} />
           )}
           {passo === 2 && <PassoBio form={form} onChange={atualizar} />}
           {passo === 3 && (
