@@ -88,7 +88,13 @@ export function DialogoEditorRegra({
       toast.error(validacao.error.issues[0]?.message ?? "Valores inválidos");
       return;
     }
-    await onSalvar(validacao.data);
+    await onSalvar({
+      category_id: categoryId,
+      comissao_cobertura_pct: cobertura,
+      comissao_indicacao_pct: indicacao,
+      comissao_fixa_brl: fixa,
+      ativo,
+    });
     onFechar();
   }
 
