@@ -59,7 +59,7 @@ export function SecaoCorridas() {
         const { data: bookings } = await supabase
           .from("service_bookings" as any)
           .select(
-            "id, customer_id, driver_id, service_type_id, price_agreed, status, scheduled_at, created_at, address",
+            "id, client_id, guest_passenger_id, driver_id, service_type_id, price_agreed, status, scheduled_at, created_at, notes",
           )
           .eq("tenant_id", perfil.tenant_id)
           .order("created_at", { ascending: false })
@@ -67,13 +67,22 @@ export function SecaoCorridas() {
 
         const lista = (bookings as any[] | null) ?? [];
         const driverIds = [...new Set(lista.map((b) => b.driver_id).filter(Boolean))];
-        const customerIds = [...new Set(lista.map((b) => b.customer_id).filter(Boolean))];
+        const clientIds = [...new Set(lista.map((b) => b.client_id).filter(Boolean))];
+        const guestIds = [...new Set(lista.map((b) => b.guest_passenger_id).filter(Boolean))];
         const serviceIds = [...new Set(lista.map((b) => b.service_type_id).filter(Boolean))];
-        const allIds = [...new Set([...driverIds, ...customerIds])];
 
-        const [{ data: users }, { data: servicos }] = await Promise.all([
-          allIds.length
-            ? supabase.from("users").select("id, full_name").in("id", allIds)
+        const [{ data: drivers }, { data: passengers }, { data: guests }, { data: servicos }] = await Promise.all([
+          driverIds.length
+            ? supabase.from("users").select("id, full_name").in("id", driverIds)
+            : Promise.resolve({ data: [] as any[] }),
+          clientIds.length
+            ? supabase.from("passengers" as any).select("id, full_name").in("id", clientIds)
+            : Promise.resolve({ data: [] as any[] }),
+          guestIds.length
+            ? supabase
+                .from("guest_passengers" as any)
+                .select("id, full_name")
+                .in("id", guestIds)
             : Promise.resolve({ data: [] as any[] }),
           serviceIds.length
             ? supabase
@@ -85,17 +94,18 @@ export function SecaoCorridas() {
 
         setCorridas(
           lista.map((b) => {
-            const profissional = users?.find((u: any) => u.id === b.driver_id);
-            const cliente = users?.find((u: any) => u.id === b.customer_id);
+            const profissional = (drivers as any[] | null)?.find((u) => u.id === b.driver_id);
+            const cliente = (passengers as any[] | null)?.find((p) => p.id === b.client_id);
+            const guest = (guests as any[] | null)?.find((g) => g.id === b.guest_passenger_id);
             const servico = (servicos as any[] | null)?.find((s) => s.id === b.service_type_id);
             return {
               id: b.id,
-              passageiro: cliente?.full_name || null,
+              passageiro: cliente?.full_name || guest?.full_name || null,
               motorista: profissional?.full_name || null,
-              origem: b.address || null,
+              origem: b.notes || null,
               destino: null,
               valor: b.price_agreed != null ? Number(b.price_agreed) : null,
-              status: b.status || "scheduled",
+              status: b.status || "pending",
               criadaEm: b.created_at,
               transbordo: false,
               origemLink: null,
