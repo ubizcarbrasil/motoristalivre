@@ -93,9 +93,9 @@ const App = () => (
             {/* Mobilidade — link público exclusivo */}
             <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
 
-            {/* Friendly URL via @handle — resolve para o perfil canônico */}
-            <Route path="/@:handle" element={<PaginaResolverHandle />} />
-            <Route path="/%40:handle" element={<PaginaResolverHandle />} />
+            {/* Friendly URL via @handle — captura é feita pela rota /:slug abaixo,
+                que detecta o prefixo "@" e delega para PaginaResolverHandle.
+                React Router v6 não suporta segmentos dinâmicos parciais (ex: /@:handle). */}
 
 
             <Route path="/s/:slug/a/:driver_slug" element={<PaginaIndicacaoServicos />} />
