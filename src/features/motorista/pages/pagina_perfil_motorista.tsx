@@ -72,16 +72,14 @@ export default function PaginaPerfilMotorista() {
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
-      <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <span className="text-sm font-medium text-foreground truncate">{perfil.nome}</span>
-      </div>
+      {/* Botão de voltar flutuante sobre a cover image */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-3 left-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
+        aria-label="Voltar"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </button>
 
       <div className="space-y-5 pb-32">
         <HeaderPerfil perfil={perfil} />
