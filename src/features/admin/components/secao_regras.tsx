@@ -21,6 +21,7 @@ export function SecaoRegras() {
   const [permitirOfertas, setPermitirOfertas] = useState(false);
   const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [salvando, setSalvando] = useState(false);
+  const [modoServicos, setModoServicos] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
