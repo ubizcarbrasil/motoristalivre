@@ -5,6 +5,7 @@ import {
   resolverNomeCategoria,
   ordenarCategoriasServico,
 } from "../utils/resolver_nome_categoria";
+import { imagemDeCapa } from "@/compartilhados/utils/imagens_categorias";
 
 interface Props {
   nome: string;
@@ -18,28 +19,35 @@ interface Props {
   cidade?: string | null;
 }
 
+/**
+ * Cabeçalho estilo "app de serviço" — cover hero (Unsplash provisório
+ * baseado na categoria principal quando não houver cover própria),
+ * avatar circular sobreposto e identidade compacta.
+ */
 export function CabecalhoPerfilProfissional({
   nome,
   avatarUrl,
   coverUrl,
-  bio,
+  bio: _bio,
   isVerified,
   credentialVerified,
   credentialType,
   serviceCategories,
   cidade,
 }: Props) {
+  const coverFinal = coverUrl ?? imagemDeCapa(serviceCategories);
+  const categoriasOrdenadas = ordenarCategoriasServico(serviceCategories);
+
   return (
     <header className="relative w-full">
-      <div className="relative h-40 sm:h-52 w-full overflow-hidden bg-gradient-to-br from-primary/40 via-primary/15 to-background">
-        {coverUrl && (
-          <img
-            src={coverUrl}
-            alt={nome}
-            className="absolute inset-0 w-full h-full object-cover opacity-70"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+      <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-secondary">
+        <img
+          src={coverFinal}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 -mt-14 relative">
@@ -52,9 +60,14 @@ export function CabecalhoPerfilProfissional({
 
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <h1 className="text-2xl font-semibold text-foreground">{nome}</h1>
+            <h1 className="text-2xl font-semibold text-foreground leading-tight">
+              {nome}
+            </h1>
             {isVerified && (
-              <BadgeCheck className="w-5 h-5 text-primary" aria-label="Perfil verificado" />
+              <BadgeCheck
+                className="w-5 h-5 text-primary"
+                aria-label="Perfil verificado"
+              />
             )}
             {credentialVerified && (
               <ShieldCheck
@@ -71,18 +84,19 @@ export function CabecalhoPerfilProfissional({
             </div>
           )}
 
-          {serviceCategories.length > 0 && (
+          {categoriasOrdenadas.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {ordenarCategoriasServico(serviceCategories).map((cat) => (
+              {categoriasOrdenadas.slice(0, 5).map((cat) => (
                 <Badge key={cat} variant="secondary" className="text-xs">
                   {resolverNomeCategoria(cat)}
                 </Badge>
               ))}
+              {categoriasOrdenadas.length > 5 && (
+                <Badge variant="outline" className="text-xs">
+                  +{categoriasOrdenadas.length - 5}
+                </Badge>
+              )}
             </div>
-          )}
-
-          {bio && (
-            <p className="text-sm text-muted-foreground leading-relaxed pt-1">{bio}</p>
           )}
         </div>
       </div>
