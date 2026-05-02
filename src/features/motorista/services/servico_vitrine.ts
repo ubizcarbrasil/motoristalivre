@@ -25,7 +25,7 @@ export async function listarEquipeDoMotorista(ownerDriverId: string): Promise<Me
   const [{ data: drivers }, { data: users }] = await Promise.all([
     supabase
       .from("drivers")
-      .select("id, slug, is_verified, credential_verified, service_categories, professional_type")
+      .select("id, slug, handle, is_verified, credential_verified, service_categories, professional_type")
       .in("id", ids),
     supabase.from("users").select("id, full_name, avatar_url").in("id", ids),
   ]);
@@ -47,6 +47,7 @@ export async function listarEquipeDoMotorista(ownerDriverId: string): Promise<Me
         nome: u?.full_name ?? "Profissional",
         avatar_url: u?.avatar_url ?? null,
         slug: d.slug,
+        handle: d.handle ?? null,
         is_verified: d.is_verified,
         credential_verified: !!d.credential_verified,
         service_categories: d.service_categories ?? [],
