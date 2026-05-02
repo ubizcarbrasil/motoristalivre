@@ -212,6 +212,14 @@ export function AgendamentoServico({
     if (nome.trim().length < 2) return toast.error("Informe seu nome completo");
     if (!validarWhatsapp(whatsapp)) return toast.error("WhatsApp inválido. Use formato +55…");
 
+    // Valida e sanitiza briefing conforme schema da categoria selecionada
+    let briefingValidado: Record<string, unknown> | null = null;
+    try {
+      briefingValidado = validarBriefing(slugCategoriaAtual, briefing);
+    } catch (err: any) {
+      return toast.error(err?.message ?? "Briefing inválido");
+    }
+
     salvarGuestStorage({ nome: nome.trim(), whatsapp: whatsapp.trim() });
     setEnviando(true);
     try {
@@ -230,6 +238,7 @@ export function AgendamentoServico({
         scheduled_at: slotSelecionado.iso,
         payment_method: pagamento,
         notes: observacoes.trim() || undefined,
+        briefing: briefingValidado ?? undefined,
         guest: { full_name: nome.trim(), whatsapp: whatsapp.trim() },
         origin_driver_id: originDriverId,
       });
