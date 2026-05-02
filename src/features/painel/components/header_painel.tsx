@@ -120,11 +120,11 @@ export function HeaderPainel({
               </span>
               <Switch checked={perfil.is_online} onCheckedChange={onToggleOnline} />
             </>
-          ) : (
+          ) : modo === "servicos" ? (
             <span className="text-[11px] font-medium text-primary bg-primary/10 border border-primary/30 rounded-full px-2.5 py-1">
               Aceitando agendamentos
             </span>
-          )}
+          ) : null}
         </div>
       </div>
 
