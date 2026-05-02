@@ -93,6 +93,9 @@ interface DialogoOnboardingProfissionalProps {
   driverId: string;
   tenantId: string;
   dadosIniciais: DadosOnboardingProfissional | null;
+  /** Quando true, força modo serviços puro: tipo profissional fica fixo em "service_provider"
+   *  e a etapa de tipo/categorias só permite escolher categorias. */
+  modoServicos?: boolean;
   onConcluido: () => void;
   onFechar?: () => void;
 }
@@ -115,12 +118,13 @@ export function DialogoOnboardingProfissional({
   driverId,
   tenantId,
   dadosIniciais,
+  modoServicos = false,
   onConcluido,
   onFechar,
 }: DialogoOnboardingProfissionalProps) {
   const [passo, setPasso] = useState(0);
   const [salvando, setSalvando] = useState(false);
-  const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais));
+  const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais, modoServicos));
 
   useEffect(() => {
     if (aberto) {
