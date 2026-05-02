@@ -123,16 +123,17 @@ Fase 1 (Schema base)
 
 ---
 
-## Fase 7 — Recrutamento e recorrência (Semana 7)
+## Fase 7 — Recrutamento e recorrência (Semana 7) ✅
 
 **Objetivo:** automatizar a comissão de 10% no cadastro + 5% mensal recorrente sobre profissionais recrutados.
 
 **Entregáveis**
-- Trigger em `subscriptions` (insert): credita 10% ao `referred_by` em `wallet_transactions`
-- Edge function agendada (cron diário) que percorre `referrals.monthly_commission_active = true` e credita 5% da mensalidade ativa
-- Tela "Minha rede" no painel do profissional com KPIs (recrutados, MRR gerado, próxima recorrência)
-- Notificação ao recrutador a cada repasse
-- Auditoria em `audit_logs` (`action = 'recruitment_commission'`)
+- ✅ Trigger `trg_recruitment_signup` em `subscriptions` (10% credita ao `referred_by`)
+- ✅ Função `process_recruitment_monthly()` idempotente por `(referral_id, ano_mes)`
+- ✅ Tabela `recruitment_monthly_payouts` com unique mensal e RLS por recrutador
+- ✅ Edge function `cron-recruitment-commissions` agendada via `pg_cron` (03h diário)
+- ✅ Feature `minha_rede`: KPIs (recrutados, MRR estimado, total acumulado, próxima recorrência) + lista de recrutados + histórico de repasses, plugada em `AbaCarteira`
+- ✅ Auditoria em `audit_logs` (`action = 'recruitment_commission'`)
 
 **Depende de:** Fases 1, 2 e 4 (infra de carteira e regras estáveis).
 
