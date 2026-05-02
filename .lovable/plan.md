@@ -1,95 +1,90 @@
+## Diagnóstico — por que está feio
 
-## Diagnóstico do que está aparecendo
+Olhei o código e o banco. Os problemas são reais e cumulativos:
 
-A tela do print é a rota `/@handle` (perfil público), renderizada por `pagina_perfil_motorista.tsx`. Três problemas concretos:
+**1. A foto do perfil até pode aparecer, mas o banner é praticamente impossível de aparecer hoje.**
+- `avatar_url` vem da tabela `users` (existe e é populado pelo Google OAuth).
+- `cover_url` está na tabela `drivers`, mas **não existe NENHUMA tela no app que permita ao profissional fazer upload de banner**. Resultado: `cover_url` é sempre `null` e o app cai no fallback Unsplash genérico.
+- Também não existe tela de troca de avatar dentro do app — o avatar só existe se veio do Google.
 
-1. **Bloco fantasma no topo** ("Adicionar serviço" / "Comissões e fidelidade" desfocado + um "P" gigante) — é o `HeaderPerfil` desta página: a cover não está carregando bem e o avatar entra como fallback enorme (`h-24 w-24` com inicial). Visualmente parece um card de onboarding sobrando.
-2. **Especialidades como chips de texto** ("Marido de aluguel", "Pequenos reparos"…) — vêm de `ChipsCategorias` + `SecaoSobreProfissional`. Está duplicado (aparece no header e de novo no card "Sobre Profissional"). Não tem nada do visual de "app de serviço" com foto que já existe em `VitrineEspecialidadesVisuais` / `SecaoEspecialidadesPublica`.
-3. **Footer institucional poluindo** (segundo print, riscado pelo usuário) — `FooterServicos` mostra "Tribo Serviços / Produto: Sou profissional / Sou operadora / Entrar / Suporte". Isso não é footer de página pública de prestador, é footer de site institucional. Está sendo usado dentro do perfil.
+**2. O visual realmente não tem cara de app de serviço.**
+- Cover de só 176px, com gradiente preto cobrindo metade — a foto vira um borrão.
+- Avatar pequeno (80px) jogado no canto esquerdo, sem destaque.
+- Nome em peso médio, badges cinza pequenos — hierarquia fraca.
+- Bio, serviços e equipe empilhados em cards genéricos do shadcn, sem personalidade.
+- Sem rating em destaque, sem chip "Verificado", sem cidade visível em destaque.
+- Footer fixo de CTA isolado, sem reforço de confiança acima.
 
-A rota `/@handle` cai em `pagina_perfil_motorista`, mas a versão visualmente correta (cover + vitrine de especialidades com foto + bottom bar) já existe em `pagina_perfil_profissional_servicos`. As duas estão divergindo.
+**3. Tokens fora do design system em pontos pontuais** (ex.: `bg-secondary` cinza no placeholder de cover e `bg-primary/10` no fallback de avatar não casam com o accent verde TriboCar #1db865 sobre preto puro).
 
-## Objetivo
+## O que vou fazer
 
-Deixar a página pública do profissional (`/@handle` e `/s/:slug/:driver_slug`) com cara de app de serviço de verdade: **cover → avatar normal → nome + cidade → grid visual de especialidades com foto → portfólio → bottom bar com CTA**. Sem footer institucional, sem chips duplicados, sem "P" gigante.
+### Etapa 1 — Permitir que o profissional realmente tenha foto e banner
 
-## Mudanças
+1. Criar bucket `perfis-profissionais` no storage (público, com RLS de upload restrito ao próprio profissional).
+2. Adicionar coluna `avatar_url` em `drivers` (override do avatar do Google quando o profissional escolher uma foto profissional dedicada).
+3. Criar tela **"Editar perfil público"** dentro de `src/features/configuracoes` (feature nova) com:
+   - Upload de **foto de perfil** (crop circular 1:1, máx 2MB).
+   - Upload de **banner** (16:9, máx 5MB, sugestão de imagem horizontal).
+   - Edição de bio, cidade, categorias.
+   - Preview ao vivo de como vai aparecer na página pública.
+4. Atualizar `hook_perfil_motorista` para priorizar `drivers.avatar_url` sobre `users.avatar_url`.
 
-### 1. `pagina_perfil_motorista.tsx` (rota `/@handle`)
+### Etapa 2 — Refazer a página pública estilo iFood/Rappi
 
-- **Remover** o uso de `HeaderPerfil` antigo (que produz o avatar gigante centralizado e a cover frouxa).
-- **Substituir** pelo mesmo `CabecalhoPerfilProfissional` já usado em `pagina_perfil_profissional_servicos` — cover hero + avatar `w-24 h-24` alinhado à esquerda + nome + cidade + chips compactos (máx 5).
-- **Remover a duplicação** de "Sobre Profissional" + chips de Especialidades. Manter um único bloco "Sobre" curto (bio + verificado + cidade), sem repetir a lista de especialidades como chips de texto.
-- **Remover do meio da página** as seções que não são de cliente: "Distribuição de notas", "Lista de avaliações", "Grid Métricas", "Info veículo" (quando o tipo é `service_provider`), "Disponibilidade pública", e o card "Grupo / tenant slug". Esses elementos pertencem ao painel interno, não à página de venda.
-- **Manter visível**, em ordem:
-  1. Cover + identidade
-  2. Bio curta (se houver)
-  3. **Vitrine visual de especialidades** (`SecaoEspecialidadesPublica` já existe, com foto Unsplash por categoria — usar como bloco principal quando não há serviços precificados; quando há, mostrar `SecaoServicosPublica`)
-  4. Portfólio (se houver imagens)
-  5. Equipe (se houver)
-- **Bottom bar fixa** com um único CTA forte: "Agendar agora" (se há serviços) ou "Solicitar orçamento" via WhatsApp.
+Refatorar `pagina_perfil_motorista.tsx` em componentes próprios, todos em `src/features/motorista/components/perfil_publico/`:
 
-### 2. `FooterServicos` na página pública
-
-- **Remover** `<FooterServicos />` de `pagina_perfil_profissional_servicos.tsx`. Página de prestador não leva footer de site corporativo.
-- O footer institucional continua existindo, mas só é usado em landing/marketing (`pagina_landing`, vitrine `/s/:slug`).
-
-### 3. Avatar fallback gigante ("P")
-
-- Reduzir o avatar em `CabecalhoPerfilProfissional` para `w-20 h-20` em mobile (`<= 430px`), `w-24 h-24` em telas maiores. Tamanho da inicial cai junto.
-- Quando não há `avatar_url`, em vez de letra solta, usar inicial sobre fundo `bg-primary/10` com a cor da marca — o que já existe, mas hoje a letra está com `text-2xl` e parece desproporcional em mobile.
-
-### 4. Topo do scroll (o "card desfocado" do print)
-
-- O efeito do print ("Comissões e fidelidade" aparecendo desfocado atrás) é o gradiente `from-background via-background/50 to-transparent` aplicado por cima de uma imagem que falhou ao carregar, com o avatar gigante por cima. Ao trocar pelo `CabecalhoPerfilProfissional` (que já tem fallback de cover por categoria via `imagemDeCapa`) e reduzir o avatar, esse "fantasma" desaparece naturalmente.
-
-### 5. Vitrine de especialidades — paridade visual
-
-- Garantir que `SecaoEspecialidadesPublica` (usada na rota `/@handle`) e `VitrineEspecialidadesVisuais` (usada em `/s/:slug/:driver_slug`) tenham **exatamente o mesmo layout**: grid `grid-cols-2` em mobile, `aspect-[4/3]`, foto Unsplash por categoria, título sobreposto com gradiente, tap → WhatsApp com a especialidade no texto.
-- Hoje as duas já existem e são quase idênticas — vou consolidar em um único componente em `compartilhados/components/` para evitar drift futuro.
-
-## Resultado esperado (mobile 430px)
-
-```text
-┌─────────────────────────────┐
-│ [<]                     [⤴] │  ← botões flutuantes
-│   ░░░ cover (foto categ.) ░░│
-│                             │
-│  ◯ Profissional ✓           │  ← avatar 80px, alinhado esq.
-│    📍 Águas Claras           │
-│    [Marido] [Reparos] +3     │  ← chips compactos
-│                             │
-│  Sobre                      │
-│  Ksjsjajahahxhncnznzn       │
-│                             │
-│  ✨ Serviços oferecidos      │
-│  ┌──────┐ ┌──────┐          │
-│  │ foto │ │ foto │          │  ← vitrine visual
-│  │Marido│ │Reparo│          │
-│  └──────┘ └──────┘          │
-│  ┌──────┐ ┌──────┐          │
-│  │ foto │ │ foto │          │
-│  └──────┘ └──────┘          │
-│                             │
-│  📷 Portfólio (se houver)   │
-│                             │
-├─────────────────────────────┤
-│  [📅 Agendar agora]          │  ← bottom bar fixa
-└─────────────────────────────┘
+```
+hero_perfil.tsx          — banner 240px + avatar 96px sobreposto
+identidade_perfil.tsx    — nome XL + verified + cidade + rating destaque
+chips_categorias.tsx     — pílulas de categoria com ícone
+bloco_confianca.tsx      — "X anos no app", "Y atendimentos", "Z avaliações"
+secao_bio_premium.tsx    — bio com tipografia editorial
+barra_acao_fixa.tsx      — CTA + botão WhatsApp secundário
 ```
 
-Sem footer "Tribo Serviços / Produto / Suporte". Sem "P" gigante. Sem chips repetidos.
+Mudanças visuais concretas (vibe iFood/Rappi):
+- **Banner cheio** (240px mobile / 320px desktop), foto cobrindo 100%, gradiente sutil só na base.
+- **Avatar grande** (96px mobile / 128px desktop) com ring verde accent.
+- **Nome em XL bold** com ícone de verificado verde ao lado.
+- **Rating em destaque** ao lado do nome (★ 4.9 · 127 avaliações) — quando houver.
+- **Chips de categoria coloridos** (verde claro sobre fundo escuro), não badges cinza.
+- **Linha de confiança** logo abaixo: "Verificado · X meses no app · Y atendimentos".
+- **Cards com bordas arredondadas 16px**, fundo `#0a0a0a` (não `bg-card` shadcn padrão), sombra interna sutil.
+- **Footer CTA** com botão verde pulsante e botão WhatsApp secundário lado a lado.
 
-## Arquivos afetados
+### Etapa 3 — Fallbacks dignos quando não há foto
 
-- `src/features/motorista/pages/pagina_perfil_motorista.tsx` (refatorado)
-- `src/features/triboservicos/pages/pagina_perfil_profissional_servicos.tsx` (remover footer)
-- `src/features/triboservicos/components/cabecalho_perfil_profissional.tsx` (avatar menor em mobile)
-- `src/features/motorista/components/secao_especialidades_publica.tsx` e `src/features/triboservicos/components/vitrine_especialidades_visuais.tsx` (consolidar em um componente compartilhado)
-- (não tocar) `FooterServicos` continua existindo, só deixa de ser usado nas páginas de prestador
+- Avatar sem foto: gerar avatar gradiente verde→preto com inicial em IBM Plex tamanho grande, em vez do cinza atual.
+- Banner sem foto: continuar com Unsplash por categoria, mas com **overlay verde sutil + textura sutil** para parecer intencional, não um stock genérico solto.
 
-## Fora do escopo desta rodada
+## Detalhes técnicos
 
-- Reativar avaliações/distribuição de notas em formato "app" (cards minimalistas) — pode entrar depois.
-- Botão de "Adicionar serviço" — esse só faz sentido no painel logado, e ele já está lá; nada a fazer na página pública.
-- PWA, offline, ícones — já configurado em rodada anterior.
+**Migrations necessárias:**
+- `ALTER TABLE drivers ADD COLUMN avatar_url text;`
+- Criar bucket `perfis-profissionais` público.
+- RLS: insert/update/delete só pelo próprio driver (`auth.uid() = (storage.foldername(name))[1]::uuid`).
+
+**Padrão de path no bucket:** `{driver_id}/avatar.jpg` e `{driver_id}/cover.jpg`.
+
+**Upload:** usar `supabase.storage.from('perfis-profissionais').upload()` com `upsert: true`. Após upload, salvar a public URL na coluna correspondente em `drivers`.
+
+**Crop:** usar `react-easy-crop` (já é prática comum em apps tipo iFood) para garantir proporção certa.
+
+**Componentização:** seguir feature-based como manda o workspace, em snake_case pt-BR, com hook próprio `hook_editar_perfil_publico.ts` e service `servico_perfil_publico.ts`.
+
+## Ordem de implementação
+
+1. Migration + bucket + RLS.
+2. Tela de edição de perfil (upload de avatar + banner + bio + cidade).
+3. Refatoração visual da página pública em componentes pequenos.
+4. Fallbacks bonitos.
+5. Teste end-to-end: subo uma foto real, vejo o resultado na rota pública.
+
+## O que não vou fazer agora
+
+- Reviews/rating real (a UI já mostra quando existe; integração real fica pra depois).
+- Edição de portfólio (já existe componente separado).
+- Gestão de equipe (já existe).
+
+Posso começar?

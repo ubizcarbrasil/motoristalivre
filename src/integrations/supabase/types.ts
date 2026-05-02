@@ -349,6 +349,7 @@ export type Database = {
       drivers: {
         Row: {
           alert_sound: string
+          avatar_url: string | null
           bio: string | null
           cashback_pct: number | null
           cover_url: string | null
@@ -377,6 +378,7 @@ export type Database = {
         }
         Insert: {
           alert_sound?: string
+          avatar_url?: string | null
           bio?: string | null
           cashback_pct?: number | null
           cover_url?: string | null
@@ -405,6 +407,7 @@ export type Database = {
         }
         Update: {
           alert_sound?: string
+          avatar_url?: string | null
           bio?: string | null
           cashback_pct?: number | null
           cover_url?: string | null
