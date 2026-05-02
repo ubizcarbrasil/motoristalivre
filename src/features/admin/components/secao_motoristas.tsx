@@ -152,7 +152,7 @@ export function SecaoMotoristas() {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Link</TableHead>
-            <TableHead>Corridas</TableHead>
+            <TableHead>{labelMetrica}</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Acoes</TableHead>
           </TableRow>
