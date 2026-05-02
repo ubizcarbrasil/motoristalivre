@@ -481,7 +481,7 @@ function montarFormInicial(
         ? tipo
         : "",
     bio: dados.bio ?? "",
-    service_categories: dados.service_categories ?? [],
+    service_categories: (dados.service_categories ?? []).filter((s) => slugValido(s)),
     avatar_url: dados.avatar_url ?? "",
     cover_url: dados.cover_url ?? "",
   };
