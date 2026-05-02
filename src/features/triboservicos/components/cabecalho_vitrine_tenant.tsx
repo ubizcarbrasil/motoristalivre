@@ -14,14 +14,28 @@ export function CabecalhoVitrineTenant({ tenant }: Props) {
   return (
     <header className="relative w-full">
       <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-gradient-to-br from-primary/30 via-primary/10 to-background">
-        {cover && (
+        {cover ? (
           <img
             src={cover}
             alt={tenant.name}
             className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center px-6">
+            <div className="text-center space-y-1">
+              <p className="text-xs uppercase tracking-widest text-primary/80 font-semibold">
+                TriboServiços
+              </p>
+              <p className="text-base sm:text-lg font-semibold text-foreground">
+                Profissionais de confiança, prontos para te atender
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Agende online ou solicite um orçamento em minutos
+              </p>
+            </div>
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 -mt-12 relative">
