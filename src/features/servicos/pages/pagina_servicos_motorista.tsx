@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AgendamentoServico } from "@/features/passageiro/components/agendamento_servico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
+import { TemaServicos } from "@/features/triboservicos/components/tema_servicos";
 
 interface ResolucaoMotorista {
   driverId: string;
@@ -91,10 +92,10 @@ export default function PaginaServicosMotorista() {
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-3 max-w-sm">
           <p className="text-base font-medium text-foreground">
-            Este profissional não oferece serviços
+            Este profissional ainda não oferece serviços
           </p>
           <p className="text-sm text-muted-foreground">
-            Você pode acessar o link de corrida normalmente.
+            Tente novamente mais tarde ou entre em contato com a tribo.
           </p>
         </div>
       </div>
@@ -113,13 +114,15 @@ export default function PaginaServicosMotorista() {
   };
 
   return (
-    <AgendamentoServico
-      driver={driverInfo}
-      tenantId={resolucao.tenantId}
-      serviceTypes={dados.serviceTypes}
-      availability={dados.availability}
-      preSelectedServiceId={searchParams.get("servico")}
-      onVoltar={() => navigate(`/${resolucao.tenantSlug}/servicos`)}
-    />
+    <TemaServicos>
+      <AgendamentoServico
+        driver={driverInfo}
+        tenantId={resolucao.tenantId}
+        serviceTypes={dados.serviceTypes}
+        availability={dados.availability}
+        preSelectedServiceId={searchParams.get("servico")}
+        onVoltar={() => navigate(`/${resolucao.tenantSlug}/servicos`)}
+      />
+    </TemaServicos>
   );
 }

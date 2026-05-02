@@ -36,11 +36,11 @@ export function FooterServicos() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Família TriboCar</h3>
+            <h3 className="text-sm font-semibold text-foreground">Suporte</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/" className="hover:text-foreground transition-colors">
-                  TriboCar Mobilidade
+                <Link to="/s/entrar" className="hover:text-foreground transition-colors">
+                  Acesso de profissionais
                 </Link>
               </li>
             </ul>

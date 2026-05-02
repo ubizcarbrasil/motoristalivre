@@ -19,7 +19,7 @@ export function TelaAguardandoAprovacao({ nomeGrupo }: TelaAguardandoAprovacaoPr
           <p className="text-sm text-muted-foreground">
             Sua solicitação para entrar no grupo{" "}
             <strong className="text-foreground">{nomeGrupo}</strong> foi enviada.
-            O dono do grupo precisa aprovar antes de você começar a receber corridas.
+            O dono da tribo precisa aprovar antes de você começar a atender.
           </p>
         </div>
         <Button variant="outline" className="w-full" onClick={sair}>

@@ -74,7 +74,7 @@ export function AbaMeusLinks({ perfil, tenant, ehAdminGrupo }: AbaMeusLinksProps
         <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Não compartilhe links que comecem com <span className="font-mono">/cadastro</span>.
-          Esses são para criar conta de profissional, não para clientes ou passageiros.
+          Esses são para criar conta de profissional, não para clientes finais.
         </p>
       </div>
 

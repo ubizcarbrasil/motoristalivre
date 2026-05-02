@@ -40,12 +40,14 @@ import type {
   ConviteGrupo,
 } from "../types/tipos_configuracoes";
 import type { TipoSomChamada } from "../utils/audio_alerta";
+import type { ModoPainel } from "../utils/modo_painel";
 
 interface AbaConfiguracoesProps {
   driverId: string;
   tenantId: string;
   ehAdmin: boolean;
   activeModules: string[];
+  modo?: ModoPainel;
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
   onTestarAlerta?: () => void | Promise<void>;
@@ -56,6 +58,7 @@ export function AbaConfiguracoes({
   tenantId,
   ehAdmin,
   activeModules,
+  modo,
   tipoSom,
   onMudarSom,
   onTestarAlerta,
@@ -148,9 +151,11 @@ export function AbaConfiguracoes({
     temServicos &&
     (professionalType === "service_provider" || professionalType === "both");
 
-  // Modo "serviços puros": esconde toda a UI de mobilidade
+  // Modo serviços puros: usa o modo resolvido (vem do painel) ou
+  // calcula localmente como fallback.
   const modoServicosPuro =
-    temServicos && professionalType === "service_provider";
+    modo === "servicos" ||
+    (temServicos && professionalType === "service_provider");
 
   const exibirSecoesMobilidade = temMobilidade && !modoServicosPuro;
 

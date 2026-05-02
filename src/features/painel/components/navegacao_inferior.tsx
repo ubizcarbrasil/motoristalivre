@@ -1,6 +1,7 @@
 import { Home, Link2, Wallet, User, Settings, Crown } from "lucide-react";
 import type { AbaPainel } from "../types/tipos_painel";
 import { abaPermitida } from "../utils/abas_por_modulo";
+import type { ModoPainel } from "../utils/modo_painel";
 
 interface NavegacaoInferiorProps {
   abaAtiva: AbaPainel;
@@ -8,6 +9,7 @@ interface NavegacaoInferiorProps {
   mostrarTribo?: boolean;
   modoSomenteDono?: boolean;
   activeModules?: string[];
+  modo?: ModoPainel;
 }
 
 const ITEM_TRIBO = { id: "tribo" as AbaPainel, label: "Tribo", icone: Crown };

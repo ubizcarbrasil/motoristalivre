@@ -17,6 +17,7 @@ import { useAlertaDispatch } from "../hooks/hook_alerta_dispatch";
 import { usePublicarPresencaMotorista } from "../hooks/hook_publicar_presenca";
 import { useTribosMotorista } from "../hooks/hook_tribos_motorista";
 import { abaPermitida } from "../utils/abas_por_modulo";
+import { resolverModoPainel } from "../utils/modo_painel";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PaginaPainel() {
@@ -72,6 +73,12 @@ export default function PaginaPainel() {
   // Módulos da tribo ativa (fonte da verdade da UI)
   const activeModulesAtual =
     triboAtiva?.activeModules ?? tenant?.active_modules ?? ["mobility"];
+
+  // Modo visual resolvido considerando tipo profissional do usuário
+  const modoPainel = resolverModoPainel(
+    perfil?.professional_type,
+    activeModulesAtual,
+  );
 
   // Se a aba atual não é permitida pelos módulos ativos, volta para Início
   useEffect(() => {
@@ -164,6 +171,7 @@ export default function PaginaPainel() {
               tenantId={triboAtiva.id}
               ehAdmin={true}
               activeModules={activeModulesAtual}
+              modo={modoPainel}
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
@@ -175,6 +183,7 @@ export default function PaginaPainel() {
             mostrarTribo={true}
             modoSomenteDono
             activeModules={activeModulesAtual}
+            modo={modoPainel}
           />
         </div>
       );
@@ -255,6 +264,7 @@ export default function PaginaPainel() {
           tenantId={tenant.id}
           ehAdmin={ehAdmin}
           activeModules={activeModulesAtual}
+          modo={modoPainel}
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}
@@ -266,6 +276,7 @@ export default function PaginaPainel() {
         onMudar={setAba}
         mostrarTribo={mostrarAbaTribo}
         activeModules={activeModulesAtual}
+        modo={modoPainel}
       />
 
       {mostraChat && corridaAtiva && (
