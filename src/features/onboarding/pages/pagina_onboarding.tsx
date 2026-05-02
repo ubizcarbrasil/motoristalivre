@@ -170,6 +170,7 @@ export default function PaginaOnboarding() {
             subdominio={identidade.subdominio}
             onFinalizar={finalizar}
             enviando={enviando}
+            modulos={modulosSelecionados}
           />
         )}
       </div>

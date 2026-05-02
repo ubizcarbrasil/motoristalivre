@@ -154,6 +154,7 @@ export default function PaginaPainel() {
               tribo={triboAtiva}
               semPerfilDriver={!perfil}
               onAtivarMotorista={recarregar}
+              professionalType={perfil?.professional_type ?? null}
             />
           )}
           {aba === "carteira" && <AbaCarteira userId={userId} />}
@@ -232,7 +233,12 @@ export default function PaginaPainel() {
       )}
 
       {aba === "tribo" && triboAtiva && (
-        <AbaTribo tribo={triboAtiva} semPerfilDriver={!perfil} onAtivarMotorista={recarregar} />
+        <AbaTribo
+          tribo={triboAtiva}
+          semPerfilDriver={!perfil}
+          onAtivarMotorista={recarregar}
+          professionalType={perfil?.professional_type ?? null}
+        />
       )}
 
       {aba === "meus_links" && abaPermitida("meus_links", activeModulesAtual) && (

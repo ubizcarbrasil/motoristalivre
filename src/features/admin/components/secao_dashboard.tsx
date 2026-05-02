@@ -10,20 +10,24 @@ interface Stat {
   icone: React.ElementType;
 }
 
-export function SecaoDashboard() {
+interface SecaoDashboardProps {
+  modo?: "mobilidade" | "servicos" | "hibrido";
+}
+
+export function SecaoDashboard({ modo }: SecaoDashboardProps = {}) {
   const { usuario } = useAutenticacao();
   const [stats, setStats] = useState<Stat[]>([]);
   const [motoristasOnline, setMotoristasOnline] = useState<{ nome: string; corridas: number; faturamento: number }[]>([]);
   const [afiliadosAtivos, setAfiliadosAtivos] = useState<{ nome: string; corridasHoje: number }[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [modoServicos, setModoServicos] = useState(false);
+  const [modoServicos, setModoServicos] = useState(modo === "servicos");
   const [agendamentosHoje, setAgendamentosHoje] = useState(0);
   const [profissionaisAtivos, setProfissionaisAtivos] = useState(0);
 
   useEffect(() => {
     if (!usuario) return;
     carregarDados();
-  }, [usuario]);
+  }, [usuario, modo]);
 
   async function carregarDados() {
     try {
@@ -36,14 +40,19 @@ export function SecaoDashboard() {
       if (!perfil) return;
       const tenantId = perfil.tenant_id;
 
-      // Detecta módulo dominante da tribo
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("active_modules")
-        .eq("id", tenantId)
-        .maybeSingle();
-      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
-      const ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      // Detecta módulo dominante da tribo apenas se o pai não passou um modo explícito
+      let ehServicos: boolean;
+      if (modo) {
+        ehServicos = modo === "servicos";
+      } else {
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("active_modules")
+          .eq("id", tenantId)
+          .maybeSingle();
+        const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+        ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      }
       setModoServicos(ehServicos);
 
       const hoje = new Date();

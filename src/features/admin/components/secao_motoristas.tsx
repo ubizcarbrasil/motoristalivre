@@ -17,11 +17,16 @@ interface Motorista {
 
 type Modo = "mobilidade" | "servicos";
 
-export function SecaoMotoristas() {
+
+interface SecaoMotoristasProps {
+  modo?: "mobilidade" | "servicos" | "hibrido";
+}
+
+export function SecaoMotoristas({ modo: modoProp }: SecaoMotoristasProps = {}) {
   const { usuario } = useAutenticacao();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [modo, setModo] = useState<Modo>("mobilidade");
+  const [modo, setModo] = useState<Modo>(modoProp === "servicos" ? "servicos" : "mobilidade");
 
   const labelEntidade = modo === "servicos" ? "profissional" : "motorista";
   const labelMetrica = modo === "servicos" ? "Agendamentos" : "Corridas";
@@ -29,21 +34,25 @@ export function SecaoMotoristas() {
   useEffect(() => {
     if (!usuario) return;
     carregar();
-  }, [usuario]);
+  }, [usuario, modoProp]);
 
   async function carregar() {
     try {
       const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
       if (!perfil) return;
 
-      // Detecta o modo dominante da tribo
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("active_modules")
-        .eq("id", perfil.tenant_id)
-        .maybeSingle();
-      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
-      const ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      let ehServicos: boolean;
+      if (modoProp) {
+        ehServicos = modoProp === "servicos";
+      } else {
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("active_modules")
+          .eq("id", perfil.tenant_id)
+          .maybeSingle();
+        const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+        ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      }
       setModo(ehServicos ? "servicos" : "mobilidade");
 
       const { data: drivers } = await supabase

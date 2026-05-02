@@ -1,147 +1,97 @@
-## O problema real
+Você tem razão: ainda existem dois problemas reais no painel:
 
-Você está certo. O erro agora não é validação de categoria. O problema é que a conta já foi configurada como **profissional de serviços**, mas o painel continua usando a estrutura antiga de **motorista/mobilidade urbana**.
+1. O modo “serviços” ainda está sendo decidido em alguns lugares só por `active_modules` da tribo. Na sua tribo `Papa-léguas`, o banco mostra `active_modules = ["mobility", "services"]`, então o admin continua caindo em modo mobilidade, mesmo o dono estando como `professional_type = service_provider`.
+2. Alguns componentes ainda têm textos fixos de mobilidade, especialmente Perfil, Dashboard da tribo, convites do onboarding e módulos.
 
-Do I know what the issue is? Sim.
+Plano de correção:
 
-O código atual usa `activeModules` da tribo para decidir o que mostrar. Como a tribo ainda tem `mobility` ativo, várias partes continuam aparecendo mesmo quando o `professional_type` do usuário é `service_provider`:
+## 1. Centralizar o modo serviços também no admin da tribo
+Vou parar de deixar `SecaoDashboard`, `SecaoMotoristas`, `SecaoCorridas`, `SecaoCRM` e `SecaoRegras` decidirem sozinhos se é mobilidade ou serviços apenas pela tribo.
 
-- Início: “Solicitar corrida”, “Corridas”, “Nenhuma corrida recente”, status de chamada
-- Perfil: campos “Veículo”, “Ano”, “Cor”, “Placa”
-- Configurações: “Bandeira”, “Preço por km”, “Preço por minuto”, “Regras do meu link”, “ID do motorista logado”, “simulador de dispatch”
-- Gestão da tribo: “Motoristas”, “Corridas”, “Motoristas online”, “Afiliados ativos hoje”, métricas de corridas
-
-Ou seja: o painel está parcialmente modularizado, mas ainda não existe um **modo de experiência** separado para “Profissional de serviços”.
-
-## Correção proposta
-
-### 1. Criar uma decisão única de modo do painel
-Criar uma utilidade em `src/features/painel/utils/` para resolver o modo visual:
+A `AbaTribo` já recebe a tribo ativa e o perfil do usuário está disponível no painel. Vou passar um modo visual explícito para as seções admin:
 
 ```text
-professional_type = service_provider  -> modo serviços
-professional_type = driver            -> modo mobilidade
-professional_type = both              -> modo híbrido
+professional_type = service_provider -> modo serviços
+professional_type = driver -> modo mobilidade
+professional_type = both -> modo híbrido
+tribo só services -> modo serviços
+tribo só mobility -> modo mobilidade
 ```
 
-A regra principal será: se o usuário é `service_provider`, a tela dele deve priorizar serviços mesmo que a tribo tenha mobilidade ativa.
+Na sua situação, mesmo com a tribo tendo `mobility + services`, o painel de gestão vai usar serviços porque o usuário é `service_provider`.
 
-### 2. Ajustar a tela inicial do profissional
-Arquivos principais:
-- `src/features/painel/components/aba_inicio.tsx`
-- `src/features/painel/components/acesso_rapido.tsx`
-- `src/features/painel/components/grid_stats.tsx`
-- `src/features/painel/components/lista_corridas.tsx`
+## 2. Corrigir a aba Perfil para esconder veículo/ano/cor/placa no modo serviços de verdade
+O componente já tenta esconder esses campos, mas ele depende do `perfil.professional_type` carregado no estado. Vou reforçar isso usando o modo visual resolvido no painel e passar esse modo para `AbaPerfil`.
 
-Mudanças:
-- Trocar “Solicitar corrida” por ação de serviços, como “Ver minha vitrine” ou “Novo agendamento”
-- Remover cards de “Corridas” quando for modo serviços
-- Trocar estatísticas para contexto de serviços:
-  - Faturamento
-  - Agendamentos
-  - Serviços ativos
-  - Avaliação
-- Trocar “Nenhuma corrida recente” por “Nenhum agendamento recente”
-- Não mostrar dispatch/corrida/localização para profissional só de serviços
+Resultado esperado:
 
-### 3. Corrigir aba Perfil
-Arquivo:
-- `src/features/painel/components/aba_perfil.tsx`
+- não aparece “Veículo”
+- não aparece “Ano”
+- não aparece “Cor”
+- não aparece “Placa”
+- o salvamento do perfil em modo serviços não fica tentando persistir dados de veículo
 
-Mudanças:
-- Se `professional_type === service_provider`, esconder completamente:
-  - Veículo
-  - Ano
-  - Cor
-  - Placa
-- Ajustar placeholder da Bio para serviços: “Descreva seus serviços, experiência e diferenciais...”
-- Manter esses campos apenas para motorista ou ambos
+## 3. Corrigir Dashboard da tribo em modo serviços/híbrido priorizado
+Na tela mostrada nos prints, vou trocar/ocultar:
 
-### 4. Corrigir aba Configurações
-Arquivo:
-- `src/features/painel/components/aba_configuracoes.tsx`
+- “Corridas hoje” -> “Agendamentos hoje”
+- ícone de carro -> ícone de calendário/serviços
+- “Motoristas online” -> “Profissionais ativos” ou “Profissionais disponíveis”
+- “0 corridas” -> “0 agendamentos”
+- seção “Afiliados ativos hoje” será ocultada quando a experiência for serviços
+- “Comissões hoje” será removido do resumo de serviços, mantendo foco em Receita, Agendamentos, Serviços ativos, Profissionais e Clientes/Tribo
 
-Mudanças para modo serviços:
-- Remover seções de mobilidade:
-  - `SecaoMeuPreco` com bandeira/km/minuto
-  - `SecaoRegrasLink` de corrida/despacho
-  - Som de chamada de corrida quando não fizer sentido
-  - Botão “Testar alerta de chamada” com texto de corrida
-  - “ID do motorista logado” e texto de simulador de dispatch
-- Priorizar blocos de serviços no topo:
-  - Meus serviços
-  - Disponibilidade
-  - Categorias visíveis
-  - Portfólio
-  - Equipe
-  - Preview da vitrine
-- Trocar textos de “chamadas” para “agendamentos” onde for serviço
-- Trocar “Grupos e rede / corridas/mês” por “Tribo e rede / agendamentos/mês” quando estiver em modo serviços
+## 4. Corrigir abas da gestão da tribo
+Na barra superior da gestão da tribo:
 
-### 5. Corrigir navegação inferior e atalhos
-Arquivos:
-- `src/features/painel/components/navegacao_inferior.tsx`
-- `src/features/painel/components/acesso_rapido.tsx`
-- `src/features/painel/utils/abas_por_modulo.ts`
+- “Motoristas” -> “Profissionais”
+- ícone de carro -> ícone de maleta/serviços
+- “Corridas” -> “Agendamentos”
+- ícone de rota -> ícone de calendário
+- “Afiliados” e “Comissões” não aparecem quando a experiência for serviços, mesmo se o módulo mobility ainda existir na tribo
 
-Mudanças:
-- Em modo serviços, “Links” continua disponível, mas com foco em link de serviços
-- Atalhos passam a ser:
-  - Vitrine
-  - Serviços
-  - Agenda
-  - Perfil
-  - Instalar app
-- Remover atalho de corrida para profissional de serviços
+Isso corrige exatamente os prints onde aparecem “Motoristas” e “Corridas”.
 
-### 6. Corrigir painel de gestão da tribo
-Arquivos:
-- `src/features/painel/components/aba_tribo.tsx`
-- `src/features/admin/components/secao_dashboard.tsx`
-- Possivelmente `src/features/admin/components/secao_motoristas.tsx`
-- `src/features/admin/types/tipos_admin.ts`
+## 5. Corrigir seções admin internas
+Vou atualizar as seções para aceitarem o modo resolvido pela `AbaTribo`:
 
-Mudanças:
-- Para tribo/módulo serviços, trocar linguagem:
-  - “Motoristas” -> “Profissionais”
-  - “Corridas” -> “Agendamentos” ou esconder se ainda não houver seção pronta
-  - “Motoristas online” -> “Profissionais ativos” ou “Profissionais disponíveis”
-  - “Afiliados ativos hoje / corridas” -> texto neutro ou ocultar se for exclusivo de mobilidade
-- Esconder subabas exclusivamente de mobilidade quando a experiência for serviços
-- Garantir que a tela “Gerir tribo” de serviços não pareça um painel de transporte
+- `secao_motoristas.tsx`: título/empty/table/mobile sempre “Profissionais” e “Agendamentos” em modo serviços
+- `secao_corridas.tsx`: sempre buscar e renderizar `service_bookings` quando o modo visual for serviços
+- `secao_crm.tsx`: usar “Agendamentos/Atendimentos” sem herdar texto de corrida
+- `secao_regras.tsx`: esconder despacho, raio, motorista responder, preços por motorista e ofertas de passageiros quando modo serviços
 
-### 7. Ajustar labels antigos sem quebrar banco
-Importante: tecnicamente a tabela ainda chama `drivers`, porque o sistema começou com motoristas. Não vou mexer no schema agora para evitar risco. A correção será na camada de produto/UI:
+## 6. Corrigir onboarding de convites para tribo de serviços
+No print de convites ainda aparece:
+
+- “adicionar motoristas e afiliados”
+- “Link para motoristas”
+- “Envie para motoristas...”
+- “Link para afiliados”/“passageiros”
+
+Vou passar os módulos selecionados para `EtapaConvites` e, quando for serviços:
+
+- “Convide sua equipe” continua
+- texto vira “adicione profissionais ao seu grupo”
+- “Link para motoristas” -> “Link para profissionais”
+- descrição -> “Envie para profissionais/prestadores que desejam se cadastrar no grupo”
+- link usa tipo profissional, não motorista
+- esconder afiliados quando não houver mobilidade
+
+## 7. Corrigir botão/card de ativação de motorista para donos em modo serviços
+`CardAtivarMotorista` ainda é 100% mobilidade (“Receber corridas”, “modo motorista”, ícone de carro). Vou garantir que ele não apareça em experiência de serviços, ou adaptar para “Completar perfil profissional” se fizer sentido no contexto.
+
+## 8. Corrigir dados existentes da sua tribo se necessário
+Pelo banco, sua tribo `Papa-léguas` está com os dois módulos ativos: `mobility` e `services`. Isso é a causa de muita UI cair em mobilidade.
+
+Vou implementar a correção de UI para não depender apenas disso. Além disso, se for apropriado, vou ajustar a criação/fluxo para tribos de serviços não manterem `mobility` ativo por padrão quando o onboarding veio de serviços.
+
+Não vou renomear tabelas internas como `drivers` porque isso é schema legado. A correção será na experiência visual e nos dados de módulo/tipo profissional.
+
+## Validação final
+Depois da implementação, vou auditar com busca textual nos arquivos de painel/admin/onboarding para garantir que ocorrências de:
 
 ```text
-Banco: drivers
-UI em modo serviços: profissionais / prestadores / equipe
-UI em modo mobilidade: motoristas / corridas
+Motoristas, motoristas, Corridas, corridas, Veículo, Placa, despacho, motorista online, corridas hoje
 ```
 
-### 8. Segurança e dados
-Não será necessário abrir dados públicos nem alterar RLS. As queries atuais continuam respeitando as políticas existentes. A correção é de apresentação/experiência e filtragem de telas, não de permissão.
-
-## Resultado esperado
-
-Quando você entrar como profissional/prestador de serviços:
-
-- Não aparece mais “Solicitar corrida”
-- Não aparece mais “Corridas” como métrica principal
-- Não aparece mais formulário de veículo/placa
-- Não aparece mais preço por km, bandeira ou minuto
-- Não aparece “ID do motorista logado”
-- Não aparece “simulador de dispatch”
-- A gestão da tribo deixa de parecer app de transporte e passa a parecer painel de serviços/agendamentos
-
-Quando entrar como motorista de mobilidade, a experiência antiga continua funcionando.
-
-Quando o profissional for `both`, mantenho uma experiência híbrida mostrando os dois contextos, mas separados por seção para não misturar.
-
-<lov-actions>
-  <lov-open-history>View History</lov-open-history>
-</lov-actions>
-
-<lov-actions>
-<lov-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</lov-link>
-</lov-actions>
+não aparecem mais em telas de modo serviços, ficando apenas em código ou telas exclusivas de mobilidade.
