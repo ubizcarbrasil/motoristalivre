@@ -78,6 +78,28 @@ async function statsServicos(driverId: string): Promise<StatsCanalMes> {
   return { corridas, ganhos, conversao };
 }
 
+async function statsIndicacaoServicos(driverId: string): Promise<StatsCanalMes> {
+  const desde = inicioDoMes();
+
+  const { data: bookings } = await supabase
+    .from("service_bookings" as any)
+    .select("price_agreed, status")
+    .eq("origin_driver_id", driverId)
+    .gte("created_at", desde);
+
+  const lista = ((bookings ?? []) as unknown) as Array<{
+    price_agreed: number | null;
+    status: string;
+  }>;
+  const concluidos = lista.filter((b) => b.status === "completed");
+  const agendamentos = concluidos.length;
+  const ganhos = concluidos.reduce((a, b) => a + Number(b.price_agreed ?? 0), 0);
+  const total = lista.length;
+  const conversao = total > 0 ? (agendamentos / total) * 100 : 0;
+
+  return { corridas: agendamentos, ganhos, conversao };
+}
+
 interface BuscarCanaisParams {
   driverId: string;
   driverSlug: string;
