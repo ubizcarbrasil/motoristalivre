@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AgendamentoServico } from "@/features/passageiro/components/agendamento_servico";
 import { useDadosServicoMotorista } from "@/features/passageiro/hooks/hook_dados_servico_motorista";
+import { TemaServicos } from "@/features/triboservicos/components/tema_servicos";
 
 interface ResolucaoMotorista {
   driverId: string;
