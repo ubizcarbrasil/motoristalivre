@@ -35,6 +35,38 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
   const [buscando, setBuscando] = useState(false);
   const [headlineMap, setHeadlineMap] = useState<Record<string, string>>({});
   const [espelhamento, setEspelhamento] = useState<{ id: string; nome: string } | null>(null);
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    supabase
+      .from("tenants")
+      .select("slug")
+      .eq("id", tenantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (ativo) setTenantSlug((data as any)?.slug ?? null);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [tenantId]);
+
+  const copiarLinkIndicacao = async (m: MembroEquipe) => {
+    if (!tenantSlug) {
+      toast.error("Aguarde, carregando dados do grupo...");
+      return;
+    }
+    const url = `${window.location.origin}/s/${tenantSlug}/a/${m.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link de indicação copiado!", {
+        description: `Compartilhe este link para indicar ${m.nome}.`,
+      });
+    } catch {
+      toast.error("Não foi possível copiar o link");
+    }
+  };
 
   const carregar = async () => {
     setCarregando(true);
