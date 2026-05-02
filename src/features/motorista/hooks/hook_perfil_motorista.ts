@@ -102,6 +102,7 @@ export function usePerfilMotorista() {
           credential_type: ((driver as any).credential_type as string) ?? null,
           credential_number: ((driver as any).credential_number as string) ?? null,
           service_categories: ((driver as any).service_categories as string[]) ?? [],
+          whatsapp: whatsappPerfil,
         });
 
         // Reviews
