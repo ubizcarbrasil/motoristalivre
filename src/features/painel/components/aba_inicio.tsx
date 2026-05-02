@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import type { PerfilMotorista, EstatisticasHoje, CorridaRecente, DispatchAtivo, AbaPainel } from "../types/tipos_painel";
 import type { TriboMotorista } from "../types/tipos_tribos";
+import { resolverModoPainel, mostraMobilidade, mostraServicos } from "../utils/modo_painel";
 
 interface AbaInicioProps {
   perfil: PerfilMotorista;
@@ -63,18 +64,17 @@ export function AbaInicio({
   onSelecionarTribo,
 }: AbaInicioProps) {
   const servico = useHookPerfilServico(perfil.id);
-  const temMobilidade = activeModules.includes("mobility");
-  const temServicos = activeModules.includes("services");
-  const ehProfissional =
-    temServicos &&
-    (servico.professionalType === "service_provider" || servico.professionalType === "both");
+  const modo = resolverModoPainel(perfil.professional_type, activeModules);
+  const exibirMobilidade = mostraMobilidade(modo);
+  const exibirServicos = mostraServicos(modo);
 
   return (
     <div className="pb-20 space-y-4">
       <HeaderPainel
         perfil={perfil}
         tenantSlug={tenantSlug}
-        mostrarToggleOnline={temMobilidade}
+        mostrarToggleOnline={exibirMobilidade}
+        modo={modo}
         realtimeAtivo={realtimeAtivo}
         audioDestravado={audioDestravado}
         onToggleOnline={onToggleOnline}
@@ -83,7 +83,7 @@ export function AbaInicio({
         onSelecionarTribo={onSelecionarTribo}
       />
 
-      {temMobilidade && temCorridaAtiva && (
+      {exibirMobilidade && temCorridaAtiva && (
         <div className="px-4 flex items-center gap-2">
           <ToggleLocalizacao ativo={localizacaoAtiva} onToggle={onToggleLocalizacao} />
           <Button variant="outline" size="sm" className="gap-2" onClick={onAbrirChat}>
@@ -93,9 +93,9 @@ export function AbaInicio({
         </div>
       )}
 
-      {ehProfissional && <SecaoAgendaHoje agendamentos={servico.agendaHoje} />}
+      {exibirServicos && <SecaoAgendaHoje agendamentos={servico.agendaHoje} />}
 
-      {temMobilidade && dispatch && (
+      {exibirMobilidade && dispatch && (
         <CardDispatch
           dispatch={dispatch}
           timeoutSec={timeoutSec}
@@ -107,9 +107,14 @@ export function AbaInicio({
         />
       )}
 
-      {temMobilidade && <GridStats stats={stats} />}
-      <AcessoRapido onNavegar={onNavegar} tenantSlug={tenantSlug} />
-      {temMobilidade && <ListaCorridas corridas={corridas} />}
+      <GridStats
+        stats={stats}
+        modo={modo}
+        agendamentosHoje={servico.agendaHoje.length}
+        servicosAtivos={servico.servicos.filter((s) => s.is_active).length}
+      />
+      <AcessoRapido onNavegar={onNavegar} tenantSlug={tenantSlug} modo={modo} driverSlug={perfil.slug} />
+      {exibirMobilidade && <ListaCorridas corridas={corridas} />}
     </div>
   );
 }

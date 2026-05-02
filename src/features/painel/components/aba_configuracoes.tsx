@@ -148,6 +148,12 @@ export function AbaConfiguracoes({
     temServicos &&
     (professionalType === "service_provider" || professionalType === "both");
 
+  // Modo "serviços puros": esconde toda a UI de mobilidade
+  const modoServicosPuro =
+    temServicos && professionalType === "service_provider";
+
+  const exibirSecoesMobilidade = temMobilidade && !modoServicosPuro;
+
   return (
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
@@ -159,7 +165,7 @@ export function AbaConfiguracoes({
         />
       )}
 
-      {temMobilidade && (
+      {exibirSecoesMobilidade && (
         <>
           <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
           <Separator />
@@ -173,7 +179,7 @@ export function AbaConfiguracoes({
       {/* Tipo de profissional — só faz sentido quando a tribo tem mobilidade
           (define se atende corrida, serviço ou ambos). Em tribo só de serviços
           o tipo é fixo em service_provider. */}
-      {temMobilidade && (
+      {exibirSecoesMobilidade && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Briefcase className="w-4 h-4 text-primary" />
@@ -287,7 +293,7 @@ export function AbaConfiguracoes({
         </Button>
       </div>
 
-      {onTestarAlerta && (
+      {onTestarAlerta && exibirSecoesMobilidade && (
         <Button
           variant="outline"
           className="w-full h-12 gap-2"
@@ -298,34 +304,38 @@ export function AbaConfiguracoes({
         </Button>
       )}
 
-      <div className="rounded-xl bg-card border border-border p-3 space-y-1">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-          ID do motorista logado
-        </p>
-        <button
-          type="button"
-          onClick={copiarId}
-          className="w-full flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 hover:bg-secondary transition-colors"
-        >
-          <span className="text-sm font-mono text-foreground">{idCurto}…</span>
-          {idCopiado ? (
-            <Check className="w-4 h-4 text-primary" />
-          ) : (
-            <Copy className="w-4 h-4 text-muted-foreground" />
-          )}
-        </button>
-        <p className="text-[11px] text-muted-foreground">
-          Use este ID no simulador de dispatch para testar.
-        </p>
-      </div>
+      {exibirSecoesMobilidade && (
+        <div className="rounded-xl bg-card border border-border p-3 space-y-1">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            ID do motorista logado
+          </p>
+          <button
+            type="button"
+            onClick={copiarId}
+            className="w-full flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 hover:bg-secondary transition-colors"
+          >
+            <span className="text-sm font-mono text-foreground">{idCurto}…</span>
+            {idCopiado ? (
+              <Check className="w-4 h-4 text-primary" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+          <p className="text-[11px] text-muted-foreground">
+            Use este ID no simulador de dispatch para testar.
+          </p>
+        </div>
+      )}
 
       <Separator />
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Grupos e rede</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            {modoServicosPuro ? "Tribo e rede" : "Grupos e rede"}
+          </h3>
           <p className="text-[11px] text-muted-foreground">
-            Seus grupos ativos, convites e busca de novos grupos.
+            Suas tribos ativas, convites e busca de novas tribos.
           </p>
         </div>
 
@@ -360,7 +370,7 @@ export function AbaConfiguracoes({
                           : "Membro"}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {g.corridas_mes} corridas/mês
+                        {g.corridas_mes} {modoServicosPuro ? "agendamentos/mês" : "corridas/mês"}
                       </span>
                     </div>
                   </div>

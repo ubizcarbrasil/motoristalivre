@@ -5,12 +5,15 @@ import type { PerfilMotorista } from "../types/tipos_painel";
 import type { TriboMotorista } from "../types/tipos_tribos";
 import { SeletorTribo } from "./seletor_tribo";
 
+import type { ModoPainel } from "../utils/modo_painel";
+
 interface HeaderPainelProps {
   perfil: PerfilMotorista;
   tenantSlug: string;
   realtimeAtivo?: boolean;
   audioDestravado?: boolean;
   mostrarToggleOnline?: boolean;
+  modo?: ModoPainel;
   onToggleOnline: () => void;
   tribos?: TriboMotorista[];
   triboAtivaId?: string | null;
@@ -73,6 +76,7 @@ export function HeaderPainel({
   realtimeAtivo = false,
   audioDestravado = false,
   mostrarToggleOnline = true,
+  modo,
   onToggleOnline,
   tribos,
   triboAtivaId,
@@ -116,11 +120,11 @@ export function HeaderPainel({
               </span>
               <Switch checked={perfil.is_online} onCheckedChange={onToggleOnline} />
             </>
-          ) : (
+          ) : modo === "servicos" ? (
             <span className="text-[11px] font-medium text-primary bg-primary/10 border border-primary/30 rounded-full px-2.5 py-1">
               Aceitando agendamentos
             </span>
-          )}
+          ) : null}
         </div>
       </div>
 
