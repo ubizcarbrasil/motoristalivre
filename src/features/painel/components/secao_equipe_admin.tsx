@@ -18,6 +18,7 @@ import {
   removerMembroEquipe,
   type CandidatoEquipe,
 } from "../services/servico_vitrine_admin";
+import { DialogoEspelhamento } from "./dialogo_espelhamento";
 
 interface Props {
   driverId: string;
