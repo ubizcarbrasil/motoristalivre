@@ -122,7 +122,7 @@ BEGIN
 
   SELECT count(*), max(commission_type::text) INTO _qtd_commissions, _commission_type
   FROM public.commissions
-  WHERE ride_id = _booking_cobertura AND commission_context = 'servico';
+  WHERE booking_id = _booking_cobertura AND commission_context = 'servico';
 
   ASSERT _qtd_commissions = 1,
     format('Cobertura: esperado 1 commission, obtido %s', _qtd_commissions);
@@ -157,7 +157,7 @@ BEGIN
 
   SELECT count(*), max(commission_type::text) INTO _qtd_commissions, _commission_type
   FROM public.commissions
-  WHERE ride_id = _booking_indicacao AND commission_context = 'servico';
+  WHERE booking_id = _booking_indicacao AND commission_context = 'servico';
 
   ASSERT _qtd_commissions = 1,
     format('Indicação: esperado 1 commission, obtido %s', _qtd_commissions);
@@ -190,7 +190,7 @@ BEGIN
 
   SELECT count(*) INTO _qtd_commissions
   FROM public.commissions
-  WHERE ride_id = _booking_simples AND commission_context = 'servico';
+  WHERE booking_id = _booking_simples AND commission_context = 'servico';
 
   ASSERT _qtd_commissions = 0,
     format('Simples: esperado 0 commission, obtido %s', _qtd_commissions);
@@ -220,7 +220,7 @@ BEGIN
 
   SELECT count(*) INTO _qtd_commissions
   FROM public.commissions
-  WHERE ride_id = _booking_cobertura AND commission_context = 'servico';
+  WHERE booking_id = _booking_cobertura AND commission_context = 'servico';
 
   ASSERT _qtd_commissions = 1,
     format('Idempotência: esperado 1 commission após reprocesso, obtido %s', _qtd_commissions);
