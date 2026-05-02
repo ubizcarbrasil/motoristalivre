@@ -176,12 +176,22 @@ export function SecaoDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-border bg-card">
           <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-medium text-foreground">Motoristas online</h3>
+            <h3 className="mb-3 text-sm font-medium text-foreground">
+              {modoServicos ? "Profissionais online" : "Motoristas online"}
+            </h3>
             {motoristasOnline.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
                 <Wifi className="h-8 w-8 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">Nenhum motorista online no momento</p>
-                <p className="text-xs text-muted-foreground/60">Motoristas aparecem aqui quando ficam online</p>
+                <p className="text-sm text-muted-foreground">
+                  {modoServicos
+                    ? "Nenhum profissional online no momento"
+                    : "Nenhum motorista online no momento"}
+                </p>
+                <p className="text-xs text-muted-foreground/60">
+                  {modoServicos
+                    ? "Profissionais aparecem aqui quando ficam online"
+                    : "Motoristas aparecem aqui quando ficam online"}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -189,7 +199,7 @@ export function SecaoDashboard() {
                   <div key={m.nome} className="flex items-center justify-between rounded-md bg-secondary/50 px-3 py-2">
                     <span className="text-sm text-foreground">{m.nome}</span>
                     <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>{m.corridas} corridas</span>
+                      <span>{m.corridas} {modoServicos ? "agendamentos" : "corridas"}</span>
                       <span>R$ {m.faturamento.toFixed(2)}</span>
                     </div>
                   </div>
@@ -199,27 +209,29 @@ export function SecaoDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-medium text-foreground">Afiliados ativos hoje</h3>
-            {afiliadosAtivos.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <Users className="h-8 w-8 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">Nenhum afiliado cadastrado</p>
-                <p className="text-xs text-muted-foreground/60">Convide estabelecimentos para gerar corridas</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {afiliadosAtivos.map((a) => (
-                  <div key={a.nome} className="flex items-center justify-between rounded-md bg-secondary/50 px-3 py-2">
-                    <span className="text-sm text-foreground">{a.nome}</span>
-                    <span className="text-xs text-muted-foreground">{a.corridasHoje} corridas</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {!modoServicos && (
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <h3 className="mb-3 text-sm font-medium text-foreground">Afiliados ativos hoje</h3>
+              {afiliadosAtivos.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-6 text-center">
+                  <Users className="h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">Nenhum afiliado cadastrado</p>
+                  <p className="text-xs text-muted-foreground/60">Convide estabelecimentos para gerar corridas</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {afiliadosAtivos.map((a) => (
+                    <div key={a.nome} className="flex items-center justify-between rounded-md bg-secondary/50 px-3 py-2">
+                      <span className="text-sm text-foreground">{a.nome}</span>
+                      <span className="text-xs text-muted-foreground">{a.corridasHoje} corridas</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
