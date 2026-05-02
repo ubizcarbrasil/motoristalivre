@@ -129,7 +129,7 @@ export function SecaoCRM() {
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Corridas</p>
+                <p className="text-xs text-muted-foreground">{labelMetrica}</p>
                 <p className="text-foreground font-medium">{c.totalCorridas}</p>
               </div>
               <div>
@@ -159,7 +159,7 @@ export function SecaoCRM() {
           <TableRow>
             <TableHead>Cliente</TableHead>
             <TableHead>Frequencia</TableHead>
-            <TableHead>Corridas</TableHead>
+            <TableHead>{labelMetrica}</TableHead>
             <TableHead>Gasto total</TableHead>
             <TableHead>Cashback</TableHead>
             <TableHead>Origem</TableHead>
