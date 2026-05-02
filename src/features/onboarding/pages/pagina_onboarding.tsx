@@ -100,18 +100,25 @@ export default function PaginaOnboarding() {
   const acaoAvancarConfiguracao = fluxoSolo && etapaAtual === 4 ? finalizar : avancarFluxo;
 
   const conteudo = (
-    <div className="flex min-h-screen flex-col items-center px-4 py-10">
-      <div className="mb-6">
-        {fluxoSolo || moduloUrl === "services" ? (
-          <LogoTriboServicos className="text-2xl text-center" />
-        ) : (
-          <h1 className="text-2xl font-bold text-foreground text-center tracking-tight">TriboCar</h1>
-        )}
-      </div>
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Header sticky com logo + indicador de progresso */}
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto w-full max-w-3xl px-4 pt-5 pb-3">
+          <div className="flex items-center justify-center mb-4">
+            {fluxoSolo || moduloUrl === "services" ? (
+              <LogoTriboServicos className="text-xl" />
+            ) : (
+              <h1 className="text-xl font-bold text-foreground tracking-tight">TriboCar</h1>
+            )}
+          </div>
+          <IndicadorProgresso etapaAtual={etapaAtual} etapasHabilitadas={etapasHabilitadas} />
+        </div>
+      </header>
 
-      <IndicadorProgresso etapaAtual={etapaAtual} etapasHabilitadas={etapasHabilitadas} />
+      {/* Conteúdo das etapas */}
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-12">
+        <div className="w-full">
 
-      <div className="w-full max-w-3xl">
         {etapaAtual === 0 && (
           <EtapaIdentidade
             dados={identidade}
@@ -173,7 +180,8 @@ export default function PaginaOnboarding() {
             modulos={modulosSelecionados}
           />
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 
