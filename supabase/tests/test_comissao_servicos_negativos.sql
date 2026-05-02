@@ -53,10 +53,10 @@ BEGIN
 
   RAISE NOTICE '=== Setup: tenant=% drv_a=% drv_b=% ===', _tenant_id, _driver_a, _driver_b;
 
-  -- Zera tenant_settings para garantir fallback = 0 nos cenários sem regra
+  -- Garante linha em tenant_settings (sem alterar valores existentes — psql não tem grant de UPDATE)
   INSERT INTO public.tenant_settings (tenant_id, transbordo_commission, affiliate_commission)
   VALUES (_tenant_id, 0, 0)
-  ON CONFLICT (tenant_id) DO UPDATE SET transbordo_commission = 0, affiliate_commission = 0;
+  ON CONFLICT (tenant_id) DO NOTHING;
 
   -- Categoria SEM regra
   INSERT INTO public.service_categories (slug, nome, ordem)
