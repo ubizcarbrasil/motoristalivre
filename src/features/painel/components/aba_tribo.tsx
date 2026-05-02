@@ -82,6 +82,10 @@ const SUB_ABAS: SubAbaConfig[] = [
 export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTriboProps) {
   const [secao, setSecao] = useState<SecaoAdmin>("dashboard");
 
+  const temMobilidade = tribo.activeModules.includes("mobility");
+  const temServicos = tribo.activeModules.includes("services");
+  const modoServicos = temServicos && !temMobilidade;
+
   const subAbasVisiveis = SUB_ABAS.filter((s) => {
     if (s.modulos === null) return true;
     return s.modulos.some((m) => tribo.activeModules.includes(m));
@@ -95,9 +99,21 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
           <p className="text-xs text-muted-foreground">Você é membro deste grupo</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-          Apenas o dono do grupo pode gerenciar motoristas, afiliados, regras e comissões.
-          Você recebe corridas e comissões deste grupo na sua aba <strong className="text-foreground">Início</strong> e{" "}
-          <strong className="text-foreground">Carteira</strong>.
+          {modoServicos ? (
+            <>
+              Apenas o dono do grupo pode gerenciar profissionais, regras e configurações.
+              Você gerencia seus agendamentos e ganhos na aba{" "}
+              <strong className="text-foreground">Início</strong> e{" "}
+              <strong className="text-foreground">Carteira</strong>.
+            </>
+          ) : (
+            <>
+              Apenas o dono do grupo pode gerenciar motoristas, afiliados, regras e comissões.
+              Você recebe corridas e comissões deste grupo na sua aba{" "}
+              <strong className="text-foreground">Início</strong> e{" "}
+              <strong className="text-foreground">Carteira</strong>.
+            </>
+          )}
         </div>
       </div>
     );
