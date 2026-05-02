@@ -67,12 +67,7 @@ BEGIN
     _tenant_id, _category_id, _pct_cobertura, _pct_indicacao, 0, true
   );
 
-  -- Cria users + drivers fake (auth.users não, só public)
-  INSERT INTO public.users (id, tenant_id, role, full_name, email)
-  VALUES
-    (_driver_a, _tenant_id, 'driver', 'Driver A (atendente)', 'a-' || _driver_a || '@test.local'),
-    (_driver_b, _tenant_id, 'driver', 'Driver B (origem)',    'b-' || _driver_b || '@test.local');
-
+  -- drivers fake (não criamos linhas em public.users porque ela tem FK para auth.users)
   INSERT INTO public.drivers (id, tenant_id, slug, is_verified)
   VALUES
     (_driver_a, _tenant_id, 'a-' || substr(_driver_a::text, 1, 8), true),
