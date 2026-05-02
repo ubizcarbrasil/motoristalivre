@@ -25,6 +25,12 @@ import { PassoContato } from "../components/passo_contato";
 import { PassoResumo } from "../components/passo_resumo";
 import { schemaContato, schemaEndereco } from "../schemas/schema_orcamento";
 import { validarRespostasObrigatorias } from "../utils/utilitario_renderer_pergunta";
+import {
+  carregarRascunho,
+  limparRascunho,
+  useAutoSalvarRascunho,
+} from "../hooks/hook_rascunho_orcamento";
+import { BannerRascunho } from "../components/banner_rascunho";
 
 type Passo = 1 | 2 | 3 | 4 | 5;
 
@@ -49,6 +55,58 @@ export default function PaginaSolicitarOrcamento() {
   const [observacao, setObservacao] = useState("");
   const [passo, setPasso] = useState<Passo>(1);
   const [enviando, setEnviando] = useState(false);
+  const [rascunhoEm, setRascunhoEm] = useState<number | null>(null);
+  const [bannerVisivel, setBannerVisivel] = useState(false);
+  const [hidratado, setHidratado] = useState(false);
+
+  // Carrega rascunho ao montar
+  useEffect(() => {
+    const r = carregarRascunho(tenant?.id);
+    if (r) {
+      setRascunhoEm(r.atualizadoEm);
+      setBannerVisivel(true);
+    }
+    setHidratado(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.id]);
+
+  const continuarRascunho = () => {
+    const r = carregarRascunho(tenant?.id);
+    if (!r) return;
+    setCategoriaId(r.categoriaId);
+    setRespostas(r.respostas ?? {});
+    setEndereco(r.endereco ?? {});
+    setUrgencia(r.urgencia ?? "esta_semana");
+    setDataDesejada(r.dataDesejada ?? null);
+    setContato(r.contato ?? { nome: "", whatsapp: "" });
+    setMaxPropostas(r.maxPropostas ?? 4);
+    setObservacao(r.observacao ?? "");
+    setPasso(((Math.min(5, Math.max(1, r.passo ?? 1))) as Passo));
+    setBannerVisivel(false);
+  };
+
+  const descartarRascunho = () => {
+    limparRascunho(tenant?.id);
+    setBannerVisivel(false);
+    setRascunhoEm(null);
+  };
+
+  // Auto-salva rascunho a cada alteração (após hidratado e fora do banner)
+  useAutoSalvarRascunho({
+    tenantId: tenant?.id,
+    habilitado: hidratado && !bannerVisivel,
+    dados: {
+      categoriaId,
+      respostas,
+      endereco,
+      urgencia,
+      dataDesejada,
+      contato,
+      maxPropostas,
+      observacao,
+      passo,
+    },
+  });
 
   useEffect(() => {
     listarCategoriasAtivas()
@@ -63,7 +121,6 @@ export default function PaginaSolicitarOrcamento() {
     buscarTemplatePorCategoria(categoriaId)
       .then((tpl) => {
         setTemplate(tpl);
-        if (tpl) setRespostas({});
       })
       .catch(() => toast.error("Não foi possível carregar o formulário"))
       .finally(() => setCarregandoTpl(false));
@@ -140,6 +197,7 @@ export default function PaginaSolicitarOrcamento() {
         contato,
       });
       toast.success("Pedido enviado! Aguarde as propostas.");
+      limparRascunho(tenant?.id);
       navigate(`/orcamento/${resp.id}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erro ao enviar";
@@ -177,6 +235,13 @@ export default function PaginaSolicitarOrcamento() {
       </header>
 
       <main className="max-w-md mx-auto px-4 py-6">
+        {bannerVisivel && rascunhoEm && (
+          <BannerRascunho
+            atualizadoEm={rascunhoEm}
+            onContinuar={continuarRascunho}
+            onDescartar={descartarRascunho}
+          />
+        )}
         {passo === 1 && (
           <PassoCategoria
             categorias={categorias}
