@@ -11,6 +11,17 @@ const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+interface EnderecoPayload {
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  referencia?: string;
+}
+
 interface Payload {
   tenant_id: string;
   driver_id: string;
@@ -24,6 +35,8 @@ interface Payload {
   client_id?: string | null;
   guest?: { full_name: string; whatsapp: string } | null;
   briefing?: Record<string, unknown> | null;
+  address?: EnderecoPayload | null;
+  factors?: Record<string, string | number | undefined> | null;
 }
 
 function json(body: unknown, status = 200) {
