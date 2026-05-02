@@ -196,8 +196,12 @@ export function DialogoOnboardingProfissional({
 
   const concluir = async () => {
     let dadosValidados: DadosOnboarding;
+    const formSaneado = {
+      ...form,
+      service_categories: form.service_categories.filter((s) => slugValido(s)),
+    };
     try {
-      dadosValidados = schemaOnboardingProfissional.parse(form);
+      dadosValidados = schemaOnboardingProfissional.parse(formSaneado);
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast.error(err.errors[0]?.message ?? "Preencha todos os campos");
@@ -399,8 +403,8 @@ function PassoTipoCategorias({ form, onChange }: PropsPasso) {
           Selecione até 10. Aparecem como filtros no seu perfil público.
         </p>
         <SeletorCategoriasServicoInline
-          selecionadas={form.service_categories}
-          onChange={(lista) => onChange("service_categories", lista)}
+          selecionadas={form.service_categories.filter((s) => slugValido(s))}
+          onChange={(lista) => onChange("service_categories", lista.filter((s) => slugValido(s)))}
         />
       </div>
     </div>
