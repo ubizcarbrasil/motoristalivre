@@ -154,6 +154,7 @@ export default function PaginaPainel() {
               tribo={triboAtiva}
               semPerfilDriver={!perfil}
               onAtivarMotorista={recarregar}
+              professionalType={perfil?.professional_type ?? null}
             />
           )}
           {aba === "carteira" && <AbaCarteira userId={userId} />}
