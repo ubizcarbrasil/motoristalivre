@@ -713,7 +713,7 @@ export function AgendamentoServico({
           {enviando ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : servicoAtual && slotSelecionado ? (
-            `Confirmar · R$ ${Number(servicoAtual.price).toFixed(2)}`
+            `Confirmar · R$ ${(calculo?.total ?? Number(servicoAtual.price)).toFixed(2)}`
           ) : (
             "Confirmar agendamento"
           )}
