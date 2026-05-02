@@ -9,6 +9,8 @@ import {
   Palette,
   Settings,
   Percent,
+  Briefcase,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 import { SecaoDashboard } from "@/features/admin/components/secao_dashboard";
