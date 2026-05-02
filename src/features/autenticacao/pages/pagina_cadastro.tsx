@@ -26,13 +26,6 @@ export default function PaginaCadastro() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const tipoInicial = resolverTipoInicial(searchParams.get("tipo"));
-
-  // Profissional autônomo NÃO usa o cadastro misto: tem fluxo dedicado em /s/cadastro/profissional
-  // (sem opções de motorista/passageiro/afiliado, sem mensagens de corridas).
-  if (tipoInicial === "profissional") {
-    return <Navigate to="/s/cadastro/profissional" replace />;
-  }
-
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -41,6 +34,13 @@ export default function PaginaCadastro() {
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
+
+  // Profissional autônomo usa o fluxo dedicado de serviços (sem mistura de motorista/passageiro/afiliado).
+  useEffect(() => {
+    if (tipoInicial === "profissional") {
+      navigate("/s/cadastro/profissional", { replace: true });
+    }
+  }, [tipoInicial, navigate]);
 
   if (carregandoAuth) {
     return (
