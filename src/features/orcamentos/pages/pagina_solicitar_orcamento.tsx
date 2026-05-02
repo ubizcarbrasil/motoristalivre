@@ -109,14 +109,14 @@ export default function PaginaSolicitarOrcamento() {
 
   const avancar = () => {
     if (!podeAvancar()) return;
-    setPasso((p) => Math.min(5, (p + 1) as Passo));
+    setPasso((p) => (Math.min(5, p + 1) as Passo));
   };
   const voltar = () => {
     if (passo === 1) {
       navigate(-1);
       return;
     }
-    setPasso((p) => Math.max(1, (p - 1) as Passo));
+    setPasso((p) => (Math.max(1, p - 1) as Passo));
   };
 
   const enviar = async () => {
