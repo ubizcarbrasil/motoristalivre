@@ -1,5 +1,4 @@
 import { BadgeCheck, ShieldCheck, MapPin, Sparkles, Award } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   resolverNomeCategoria,
@@ -50,28 +49,27 @@ export function SecaoSobreProfissional({
 
   return (
     <section className="max-w-3xl mx-auto px-4 mt-8">
-      <Card className="border-border bg-card">
-        <CardContent className="p-5 space-y-4">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-elegant)] space-y-5">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="text-base font-semibold text-foreground">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">
               Sobre {nome.split(" ")[0]}
             </h2>
           </div>
 
           {bio && (
-            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+            <p className="text-base text-foreground/90 leading-relaxed whitespace-pre-line">
               {bio}
             </p>
           )}
 
-          <div className="flex flex-col gap-2">
+          <div className="grid gap-3">
             {isVerified && (
-              <div className="flex items-start gap-2 text-sm">
-                <BadgeCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                <BadgeCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Perfil verificado</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">Perfil verificado</p>
+                  <p className="text-sm text-muted-foreground">
                     Identidade confirmada pela plataforma.
                   </p>
                 </div>
@@ -79,14 +77,14 @@ export function SecaoSobreProfissional({
             )}
 
             {temCredencial && (
-              <div className="flex items-start gap-2 text-sm">
-                <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                <ShieldCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">
+                  <p className="text-base font-semibold text-foreground">
                     {rotuloCred} verificado
                     {credentialNumber ? ` · ${credentialNumber}` : ""}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Credencial profissional validada.
                   </p>
                 </div>
@@ -94,34 +92,33 @@ export function SecaoSobreProfissional({
             )}
 
             {cidade && (
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Atende em {cidade}</p>
+                  <p className="text-base font-semibold text-foreground">Atende em {cidade}</p>
                 </div>
               </div>
             )}
           </div>
 
           {categoriasOrdenadas.length > 0 && (
-            <div className="space-y-2 pt-1">
+            <div className="space-y-3 pt-1">
               <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-medium text-foreground">
+                <Award className="w-5 h-5 text-primary" />
+                <h3 className="text-base font-semibold text-foreground">
                   Especialidades
                 </h3>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {categoriasOrdenadas.map((cat) => (
-                  <Badge key={cat} variant="secondary" className="text-xs">
+                  <Badge key={cat} variant="secondary" className="rounded-full px-3 py-1 text-sm font-semibold">
                     {resolverNomeCategoria(cat)}
                   </Badge>
                 ))}
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </section>
   );
 }
