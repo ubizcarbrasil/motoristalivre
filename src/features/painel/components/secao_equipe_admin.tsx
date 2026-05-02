@@ -83,6 +83,8 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
       setTermo("");
       setHeadlineMap({});
       await carregar();
+      // Após adicionar, oferece envio do convite de espelhamento
+      setEspelhamento({ id: cand.id, nome: cand.nome });
     } catch (err: any) {
       toast.error(err?.message ?? "Erro ao adicionar");
     }
