@@ -88,16 +88,19 @@ Fase 1 (Schema base)
 
 ---
 
-## Fase 5 — Página pública /rede (Semana 5)
+## Fase 5 — Página pública /rede (Semana 5) ✅ CONCLUÍDA
 
-**Objetivo:** entregar a vitrine pública da rede de associados, conforme memorial.
+**Entregue:**
+- Rota `/s/:slug/:driver_slug/rede` com listagem da rede de associados
+- Feature `src/features/rede_publica/`: page, hook, service, types e componentes próprios
+- `pagina_rede_publica.tsx` com cabeçalho fixo, contador e estado vazio
+- `filtros_rede_publica.tsx` com busca por nome, filtro por status (todos/disponíveis/ocupados/sem agenda) e por categoria
+- `card_membro_rede.tsx` exibindo avatar, headline, status pulsante, badge de credencial e até 3 categorias com contador "+N"
+- `lista_rede_publica.tsx` em grid responsivo (1 col mobile, 2 col ≥sm)
+- SEO: title, meta description e canonical via `useSeoBasico` com nome do dono da rede
+- Botão "Ver rede completa" em `secao_equipe_servicos` quando há ≥3 membros
 
-**Entregáveis**
-- Rota `/s/:slug/:driver_slug/rede` com listagem completa de associados
-- Componente `pagina_rede_publica.tsx` reutilizando `secao_equipe_servicos` em modo expandido
-- Filtros: categoria, status (livre/ocupado), distância
-- SEO: meta tags, OG image dinâmica
-- Botão "ver rede completa" no perfil do profissional
+**Pendente para fases futuras:** filtro de distância (depende de geolocalização) e OG image dinâmica.
 
 **Depende de:** infraestrutura de equipe já existente (concluída em loops anteriores).
 

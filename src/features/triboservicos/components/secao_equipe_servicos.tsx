@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, ShieldCheck, Loader2 } from "lucide-react";
+import { Users, ShieldCheck, Loader2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { MembroEquipe } from "@/features/motorista/types/tipos_vitrine";
 import {
@@ -11,6 +11,7 @@ import {
 interface Props {
   ownerDriverId: string;
   tenantSlug: string;
+  driverSlug?: string;
 }
 
 const ROTULOS_STATUS: Record<StatusDisponibilidade, { texto: string; cor: string; pulse: boolean }> = {
@@ -19,7 +20,7 @@ const ROTULOS_STATUS: Record<StatusDisponibilidade, { texto: string; cor: string
   sem_agenda: { texto: "Sem agenda hoje", cor: "bg-muted-foreground", pulse: false },
 };
 
-export function SecaoEquipeServicos({ ownerDriverId, tenantSlug }: Props) {
+export function SecaoEquipeServicos({ ownerDriverId, tenantSlug, driverSlug }: Props) {
   const navigate = useNavigate();
   const [membros, setMembros] = useState<MembroEquipe[]>([]);
   const [statusMap, setStatusMap] = useState<Record<string, StatusDisponibilidade>>({});
@@ -113,6 +114,17 @@ export function SecaoEquipeServicos({ ownerDriverId, tenantSlug }: Props) {
           );
         })}
       </div>
+
+      {driverSlug && membros.length >= 3 && (
+        <button
+          type="button"
+          onClick={() => navigate(`/s/${tenantSlug}/${driverSlug}/rede`)}
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors py-3 text-xs font-medium text-foreground"
+        >
+          Ver rede completa
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      )}
     </section>
   );
 }

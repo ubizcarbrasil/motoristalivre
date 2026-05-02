@@ -229,7 +229,11 @@ export default function PaginaPerfilProfissionalServicos() {
         )}
 
         {driverId && (
-          <SecaoEquipeServicos ownerDriverId={driverId} tenantSlug={tenant.slug} />
+          <SecaoEquipeServicos
+            ownerDriverId={driverId}
+            tenantSlug={tenant.slug}
+            driverSlug={driver_slug}
+          />
         )}
       </main>
 
