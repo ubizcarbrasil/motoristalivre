@@ -264,6 +264,7 @@ export default function PaginaPainel() {
           tenantId={tenant.id}
           ehAdmin={ehAdmin}
           activeModules={activeModulesAtual}
+          modo={modoPainel}
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}
@@ -275,6 +276,7 @@ export default function PaginaPainel() {
         onMudar={setAba}
         mostrarTribo={mostrarAbaTribo}
         activeModules={activeModulesAtual}
+        modo={modoPainel}
       />
 
       {mostraChat && corridaAtiva && (
