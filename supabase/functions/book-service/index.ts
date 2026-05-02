@@ -178,12 +178,79 @@ Deno.serve(async (req) => {
     guestId = guest.id;
   }
 
-  // 4.5) Validação de endereço + recálculo seguro do preço total
-  if (serviceType.requires_address) {
-    const a = body.address;
-    if (!a || !a.cep || !a.logradouro || !a.numero || !a.bairro || !a.cidade || !a.uf) {
-      return json({ error: "Endereço de atendimento obrigatório" }, 400);
+  // 4.5) Validação + normalização de endereço
+  const UFS_VALIDAS = new Set([
+    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+    "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+  ]);
+
+  const normStr = (v: unknown, max: number): string | null => {
+    if (typeof v !== "string") return null;
+    const t = v.trim().replace(/\s+/g, " ");
+    if (!t) return null;
+    return t.slice(0, max);
+  };
+
+  let enderecoNormalizado: Required<EnderecoPayload> | null = null;
+  if (body.address || serviceType.requires_address) {
+    const a = body.address ?? {};
+    const cepDigits = (a.cep ?? "").replace(/\D/g, "");
+    const logradouro = normStr(a.logradouro, 200);
+    const numero = normStr(a.numero, 20);
+    const complemento = normStr(a.complemento, 100);
+    const bairro = normStr(a.bairro, 120);
+    const cidade = normStr(a.cidade, 120);
+    const uf = (a.uf ?? "").trim().toUpperCase().slice(0, 2);
+    const referencia = normStr(a.referencia, 200);
+
+    if (serviceType.requires_address) {
+      if (cepDigits.length !== 8) return json({ error: "CEP inválido (8 dígitos)" }, 400);
+      if (!logradouro) return json({ error: "Logradouro obrigatório" }, 400);
+      if (!numero) return json({ error: "Número obrigatório" }, 400);
+      if (!bairro) return json({ error: "Bairro obrigatório" }, 400);
+      if (!cidade) return json({ error: "Cidade obrigatória" }, 400);
+      if (!UFS_VALIDAS.has(uf)) return json({ error: "UF inválida" }, 400);
+    } else if (cepDigits && cepDigits.length !== 8) {
+      return json({ error: "CEP inválido (8 dígitos)" }, 400);
     }
+
+    // Confirma CEP via ViaCEP e cross-check de cidade/UF (best-effort)
+    if (cepDigits.length === 8) {
+      try {
+        const r = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`, {
+          signal: AbortSignal.timeout(3500),
+        });
+        if (r.ok) {
+          const via = await r.json();
+          if (via?.erro) {
+            return json({ error: "CEP não encontrado" }, 400);
+          }
+          if (uf && via.uf && String(via.uf).toUpperCase() !== uf) {
+            return json({ error: `UF não confere com o CEP (esperado ${via.uf})` }, 400);
+          }
+          if (
+            cidade && via.localidade &&
+            cidade.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() !==
+              String(via.localidade).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+          ) {
+            return json({ error: `Cidade não confere com o CEP (esperado ${via.localidade})` }, 400);
+          }
+        }
+      } catch {
+        // Falha de rede não bloqueia o agendamento
+      }
+    }
+
+    enderecoNormalizado = {
+      cep: cepDigits ? `${cepDigits.slice(0, 5)}-${cepDigits.slice(5)}` : "",
+      logradouro: logradouro ?? "",
+      numero: numero ?? "",
+      complemento: complemento ?? "",
+      bairro: bairro ?? "",
+      cidade: cidade ?? "",
+      uf: uf ?? "",
+      referencia: referencia ?? "",
+    };
   }
 
   // Carrega fatores e recalcula
@@ -257,20 +324,19 @@ Deno.serve(async (req) => {
     .single();
   if (errBook) return json({ error: errBook.message }, 500);
 
-  // 5.1) Persiste endereço se enviado
-  if (body.address) {
-    const a = body.address;
+  // 5.1) Persiste endereço normalizado
+  if (enderecoNormalizado) {
     await supabase.from("service_booking_addresses").insert({
       booking_id: booking.id,
       tenant_id: body.tenant_id,
-      cep: a.cep ?? null,
-      logradouro: a.logradouro ?? null,
-      numero: a.numero ?? null,
-      complemento: a.complemento ?? null,
-      bairro: a.bairro ?? null,
-      cidade: a.cidade ?? null,
-      uf: a.uf ?? null,
-      referencia: a.referencia ?? null,
+      cep: enderecoNormalizado.cep || null,
+      logradouro: enderecoNormalizado.logradouro || null,
+      numero: enderecoNormalizado.numero || null,
+      complemento: enderecoNormalizado.complemento || null,
+      bairro: enderecoNormalizado.bairro || null,
+      cidade: enderecoNormalizado.cidade || null,
+      uf: enderecoNormalizado.uf || null,
+      referencia: enderecoNormalizado.referencia || null,
     });
   }
 
