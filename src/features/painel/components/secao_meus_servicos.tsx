@@ -30,6 +30,7 @@ interface SecaoMeusServicosProps {
 
 export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }: SecaoMeusServicosProps) {
   const [aberto, setAberto] = useState(false);
+  const [servicoEnderecoEdicao, setServicoEnderecoEdicao] = useState<TipoServico | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [form, setForm] = useState({
     name: "",
