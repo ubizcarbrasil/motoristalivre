@@ -180,7 +180,8 @@ export default function PaginaOnboarding() {
             modulos={modulosSelecionados}
           />
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 
