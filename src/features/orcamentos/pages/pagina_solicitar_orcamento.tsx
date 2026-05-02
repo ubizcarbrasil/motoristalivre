@@ -121,7 +121,6 @@ export default function PaginaSolicitarOrcamento() {
     buscarTemplatePorCategoria(categoriaId)
       .then((tpl) => {
         setTemplate(tpl);
-        if (tpl) setRespostas({});
       })
       .catch(() => toast.error("Não foi possível carregar o formulário"))
       .finally(() => setCarregandoTpl(false));
@@ -198,6 +197,7 @@ export default function PaginaSolicitarOrcamento() {
         contato,
       });
       toast.success("Pedido enviado! Aguarde as propostas.");
+      limparRascunho(tenant?.id);
       navigate(`/orcamento/${resp.id}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erro ao enviar";
