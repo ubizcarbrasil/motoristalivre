@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAutenticacao } from "@/features/autenticacao/contexts/contexto_autenticacao";
-import { useTenant } from "@/features/tenant/contexts/contexto_tenant";
+import { ContextoAutenticacao } from "@/features/autenticacao/contexts/contexto_autenticacao";
+import { ContextoTenant } from "@/features/tenant/contexts/contexto_tenant";
 import {
   buscarTemplatePorCategoria,
   listarCategoriasAtivas,
