@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Briefcase } from "lucide-react";
+import { Plus, Trash2, Briefcase, MapPin } from "lucide-react";
+import { EditorEnderecoServico } from "@/features/servicos/components/editor_endereco_servico";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -29,6 +30,7 @@ interface SecaoMeusServicosProps {
 
 export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }: SecaoMeusServicosProps) {
   const [aberto, setAberto] = useState(false);
+  const [servicoEnderecoEdicao, setServicoEnderecoEdicao] = useState<TipoServico | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -130,8 +132,17 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
                 <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {s.duration_minutes} min · R$ {Number(s.price).toFixed(2)}
+                  {s.requires_address ? " · presencial" : ""}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setServicoEnderecoEdicao(s)}
+                className={`transition-colors ${s.requires_address ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                aria-label="Configurar endereço e deslocamento"
+              >
+                <MapPin className="w-4 h-4" />
+              </button>
               <Switch checked={s.is_active} onCheckedChange={() => alternarAtivo(s)} />
               <button
                 type="button"
@@ -145,6 +156,13 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
           ))}
         </div>
       )}
+
+      <EditorEnderecoServico
+        servico={servicoEnderecoEdicao}
+        aberto={!!servicoEnderecoEdicao}
+        onFechar={() => setServicoEnderecoEdicao(null)}
+        onSalvo={onAtualizar}
+      />
 
       <Dialog open={aberto} onOpenChange={(o) => { setAberto(o); if (!o) resetar(); }}>
         <DialogContent className="max-w-md">
