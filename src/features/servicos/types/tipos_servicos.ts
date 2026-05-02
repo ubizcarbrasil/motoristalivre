@@ -36,6 +36,28 @@ export interface DisponibilidadeProfissional {
   is_active: boolean;
 }
 
+export interface BloqueioAgenda {
+  id: string;
+  driver_id: string;
+  tenant_id: string;
+  starts_at: string;
+  ends_at: string;
+  reason: string | null;
+  all_day: boolean;
+  created_at: string;
+}
+
+export interface FaixaHorarioOnboarding {
+  inicio: string; // "HH:MM"
+  fim: string;
+}
+
+export interface DiaDisponibilidadeOnboarding {
+  dia_semana: number; // 0 = dom
+  ativo: boolean;
+  faixas: FaixaHorarioOnboarding[];
+}
+
 export interface AgendamentoServico {
   id: string;
   tenant_id: string;
