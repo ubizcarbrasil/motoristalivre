@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TemaServicos } from "../components/tema_servicos";
 import { CabecalhoPerfilProfissional } from "../components/cabecalho_perfil_profissional";
+import { SecaoSobreProfissional } from "../components/secao_sobre_profissional";
 import { GaleriaPortfolio } from "../components/galeria_portfolio";
 import { FiltrosPortfolio } from "../components/filtros_portfolio";
 import { PaginacaoPortfolio } from "../components/paginacao_portfolio";
