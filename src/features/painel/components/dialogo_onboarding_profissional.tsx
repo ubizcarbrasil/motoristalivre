@@ -196,8 +196,12 @@ export function DialogoOnboardingProfissional({
 
   const concluir = async () => {
     let dadosValidados: DadosOnboarding;
+    const formSaneado = {
+      ...form,
+      service_categories: form.service_categories.filter((s) => slugValido(s)),
+    };
     try {
-      dadosValidados = schemaOnboardingProfissional.parse(form);
+      dadosValidados = schemaOnboardingProfissional.parse(formSaneado);
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast.error(err.errors[0]?.message ?? "Preencha todos os campos");
