@@ -11,7 +11,7 @@ export async function criarTriboProfissional(nomeUsuario: string): Promise<strin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado");
 
-  // Já tem tenant? Apenas garante driver service_provider e retorna.
+  // Já tem tenant? Garante driver service_provider, força módulo services e retorna.
   const { data: usuarioExistente } = await supabase
     .from("users")
     .select("tenant_id")
@@ -19,6 +19,10 @@ export async function criarTriboProfissional(nomeUsuario: string): Promise<strin
     .maybeSingle();
 
   if (usuarioExistente?.tenant_id) {
+    await supabase
+      .from("tenants")
+      .update({ active_modules: ["services"] } as any)
+      .eq("id", usuarioExistente.tenant_id);
     await garantirDriverServiceProvider(usuarioExistente.tenant_id);
     return usuarioExistente.tenant_id;
   }
