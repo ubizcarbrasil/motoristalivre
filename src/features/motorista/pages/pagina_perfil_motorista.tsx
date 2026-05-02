@@ -152,12 +152,23 @@ export default function PaginaPerfilMotorista() {
             </Button>
           </div>
         ) : ofereceServico ? (
-          <Button
-            className="w-full h-12 text-base font-semibold"
-            onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
-          >
-            Agendar serviço
-          </Button>
+          temServicosVendaveis ? (
+            <Button
+              className="w-full h-12 text-base font-semibold"
+              onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
+            >
+              Agendar serviço
+            </Button>
+          ) : (
+            <Button
+              className="w-full h-12 text-base font-semibold gap-2"
+              disabled={!perfil.whatsapp}
+              onClick={abrirOrcamentoWhatsapp}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Solicitar orçamento
+            </Button>
+          )
         ) : (
           <Button
             className="w-full h-12 text-base font-semibold"
