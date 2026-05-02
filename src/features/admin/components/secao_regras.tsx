@@ -33,6 +33,14 @@ export function SecaoRegras() {
     if (!perfil) return;
     setTenantId(perfil.tenant_id);
 
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("active_modules")
+      .eq("id", perfil.tenant_id)
+      .maybeSingle();
+    const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+    setModoServicos(modulos.includes("services") && !modulos.includes("mobility"));
+
     const { data } = await supabase.from("tenant_settings").select("*").eq("tenant_id", perfil.tenant_id).single();
     if (data) {
       setModoDespacho(data.dispatch_mode);
