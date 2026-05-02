@@ -1,9 +1,6 @@
 import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  nomePorSlug,
-  CATEGORIAS_SERVICO,
-} from "@/compartilhados/constants/constantes_categorias_servico";
+import { nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
 import { imagemParaCategoria } from "@/compartilhados/utils/imagens_categorias";
 
 interface Props {
@@ -11,13 +8,6 @@ interface Props {
   nomeProfissional: string;
   whatsapp: string | null;
   titulo?: string;
-}
-
-function ordenar(categorias: string[]): string[] {
-  const ordem = new Map(CATEGORIAS_SERVICO.map((c, i) => [c.slug, i]));
-  return [...categorias].sort(
-    (a, b) => (ordem.get(a) ?? 999) - (ordem.get(b) ?? 999),
-  );
 }
 
 function montarLinkWhatsapp(whatsapp: string, mensagem: string): string {
