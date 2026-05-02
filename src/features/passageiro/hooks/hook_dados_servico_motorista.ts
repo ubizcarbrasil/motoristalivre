@@ -54,7 +54,7 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
       const { data: driver } = await supabase
         .from("drivers")
         .select(
-          "professional_type, credential_verified, credential_type, credential_number, cover_url, bio, is_verified, service_categories",
+          "professional_type, credential_verified, credential_type, credential_number, avatar_url, cover_url, bio, is_verified, service_categories",
         )
         .eq("id", driverId!)
         .maybeSingle();
@@ -94,7 +94,7 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
       setEstado({
         professional_type: tipo,
         full_name: usuario?.full_name ?? "Profissional",
-        avatar_url: usuario?.avatar_url ?? null,
+        avatar_url: ((driver as any)?.avatar_url as string) ?? usuario?.avatar_url ?? null,
         cover_url: ((driver as any)?.cover_url as string) ?? null,
         bio: ((driver as any)?.bio as string) ?? null,
         is_verified: !!(driver as any)?.is_verified,
