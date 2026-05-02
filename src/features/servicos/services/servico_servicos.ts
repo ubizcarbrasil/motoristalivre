@@ -81,6 +81,59 @@ export async function excluirBlocoDisponibilidade(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function salvarDisponibilidadeEmMassa(input: {
+  driver_id: string;
+  tenant_id: string;
+  slot_duration_minutes: number;
+  buffer_minutes: number;
+  blocos: Array<{ day_of_week: number; start_time: string; end_time: string }>;
+}): Promise<void> {
+  const { error } = await supabase.rpc("replace_provider_availability" as any, {
+    _driver_id: input.driver_id,
+    _tenant_id: input.tenant_id,
+    _slot_min: input.slot_duration_minutes,
+    _buffer_min: input.buffer_minutes,
+    _blocos: input.blocos as any,
+  });
+  if (error) throw error;
+}
+
+export async function listarBloqueiosAgenda(driverId: string) {
+  const { data, error } = await supabase
+    .from("provider_time_off" as any)
+    .select("*")
+    .eq("driver_id", driverId)
+    .gte("ends_at", new Date().toISOString())
+    .order("starts_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
+
+export async function criarBloqueioAgenda(input: {
+  driver_id: string;
+  tenant_id: string;
+  starts_at: string;
+  ends_at: string;
+  reason?: string | null;
+  all_day?: boolean;
+}): Promise<void> {
+  const { error } = await supabase.from("provider_time_off" as any).insert(input as any);
+  if (error) throw error;
+}
+
+export async function excluirBloqueioAgenda(id: string): Promise<void> {
+  const { error } = await supabase.from("provider_time_off" as any).delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function atualizarAceitandoAgendamentos(driverId: string, aceitando: boolean) {
+  const { error } = await supabase
+    .from("drivers")
+    .update({ accepting_bookings: aceitando } as any)
+    .eq("id", driverId);
+  if (error) throw error;
+}
+
 export async function listarAgendamentosDoDia(
   driverId: string,
   dataIso: string,
