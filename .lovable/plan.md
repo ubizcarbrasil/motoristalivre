@@ -1,59 +1,70 @@
-## Problema
+## Diagnóstico
 
-No onboarding profissional, o usuário fica preso no Passo 2 com o erro "Categoria inválida na lista" ao clicar em **Avançar**, mesmo que as categorias visíveis pareçam corretas.
+Confirmei via busca global no código:
 
-### Causa raiz
+- A string **"Categoria inválida na lista"** NÃO existe em nenhum arquivo de `src/`
+- O banco de dados está limpo (`SELECT ... WHERE 'Limpeza' = ANY(service_categories)` retorna 0 linhas)
+- Mas o screenshot do usuário mostra o chip "Limpeza" (slug que não existe no catálogo) e o toast com essa mensagem
 
-O perfil do profissional (`drivers.service_categories` no banco) contém uma entrada legada `"Limpeza"` (com L maiúsculo, texto livre) que **não corresponde a nenhum id de categoria válido**. Os ids válidos do catálogo são tipo `"encanador"`, `"limpeza-pos-obra"`, `"troca-registro"`, etc.
+Isso significa duas coisas:
+1. **O navegador está executando código antigo em cache** (service worker / Vite HMR / cache do Lovable preview) — a mensagem foi removida em iteração anterior mas continua sendo entregue
+2. **O estado do formulário ainda contém "Limpeza"** mesmo após a limpeza no banco — provavelmente o `dadosIniciais` foi capturado antes do reload e o autosave reescreveu
 
-Como o chip mostra o `nomePorSlug(slug)` que faz fallback para o próprio slug quando ele não é encontrado, a string `"Limpeza"` aparece como se fosse uma categoria normal, mas o schema (`schemaOnboardingProfissional`) rejeita no `.refine(slugValido)`.
+A sanitização atual existe em 3 pontos (`montarFormInicial`, `concluir`, `SeletorCategoriasServicoInline.onChange`), mas não na origem (hook `useHookOnboardingProfissional`) nem antes do autosave gravar.
 
-### Confirmação no banco
+## Plano de correção
 
+### 1. Sanitizar na origem (hook que lê do banco)
+`src/features/painel/hooks/hook_onboarding_profissional.ts`
+- Importar `slugValido`
+- Filtrar `service_categories` no `setDados` antes de propagar para o resto do app
+- Garante que mesmo se houver lixo no banco, ele NUNCA chega ao formulário
+
+### 2. Sanitizar antes do autosave gravar
+`src/features/painel/services/servico_autosave_onboarding.ts`
+- Filtrar `service_categories` por `slugValido` antes do `update`
+- Bloqueia a regravação de slug inválido como "Limpeza"
+
+### 3. Reset forçado dos slugs ao abrir o diálogo
+`src/features/painel/components/dialogo_onboarding_profissional.tsx`
+- No `useEffect` que reage a `aberto`, garantir reaplicação de `slugValido` no estado já existente
+- Se o saneamento removeu chips, mostrar toast neutro: "Atualizamos sua lista. Refaça a seleção." (sem usar a palavra "inválida")
+
+### 4. Remover/substituir definitivamente a mensagem do schema
+`src/features/painel/schemas/schema_onboarding_profissional.ts`
+- Trocar a mensagem do `.refine()` para uma neutra que NUNCA contenha "Categoria inválida na lista" — por exemplo: "Refaça a seleção tocando em Editar"
+- Como há sanitização nas camadas anteriores, a refine na prática nunca dispara, mas se o cache do usuário ainda exibir a mensagem antiga, ao recarregar a versão nova vai sobrescrever
+
+### 5. Forçar invalidação de cache do PWA / service worker
+- Adicionar um log único `console.log("[onboarding] versão sanitização v3")` na inicialização do hook
+- Permite confirmar no console do usuário se ele está rodando a versão nova ou cacheada
+- Se ainda aparecer "Categoria inválida na lista" após o log aparecer, é prova definitiva de cache no navegador e instruímos `Ctrl+Shift+R`
+
+### 6. Migration de saneamento adicional (defensiva)
+Mesmo que a query anterior mostre 0 linhas, vou rodar UPDATE filtrando QUALQUER slug que não esteja no catálogo (não só por regex):
+```sql
+-- Esse cleanup é feito via lista hardcoded de slugs válidos
+-- (mais defensivo que só regex de slug)
 ```
-service_categories: ["Limpeza", "encanador", "troca-vaso-sanitario",
-                     "instalacao-filtro", "troca-registro", "desentupimento"]
-```
+Vou listar os slugs válidos no SQL e remover do array tudo que não esteja na lista.
 
-Apenas `"Limpeza"` é inválido — os outros 5 estão certos.
+## Detalhe técnico
 
-### Origem provável
+Arquivos editados:
+- `src/features/painel/hooks/hook_onboarding_profissional.ts` (sanitização na leitura)
+- `src/features/painel/services/servico_autosave_onboarding.ts` (sanitização na escrita)
+- `src/features/painel/components/dialogo_onboarding_profissional.tsx` (log + toast neutro)
+- `src/features/painel/schemas/schema_onboarding_profissional.ts` (mensagem neutra)
 
-A função `adicionarCategoria` no `dialogo_onboarding_profissional.tsx` (linhas 144-161) aceita texto livre via `novaCategoria` e salva sem normalizar para slug. Esse fluxo está obsoleto desde que o `SeletorCategoriasServico` foi adotado, mas ainda existe e gerou o lixo legado.
+Nenhuma migration de schema; apenas um `UPDATE` defensivo via insert tool.
 
-## Solução
+## Resultado esperado
 
-### 1. Sanitizar `service_categories` ao carregar o formulário
+- Após approve: o usuário recarrega a página (Ctrl+Shift+R no desktop, ou puxar para baixo no mobile) e o erro some
+- Mesmo que slugs antigos cheguem do servidor, são filtrados antes de virar chip
+- O autosave nunca mais regrava lixo
+- O console mostra a versão nova carregada, confirmando cache
 
-Em `montarFormInicial` (final do `dialogo_onboarding_profissional.tsx`), filtrar a lista usando `slugValido()` antes de popular o estado. Categorias antigas inválidas são descartadas silenciosamente — o usuário simplesmente não vê o item quebrado.
+## Observação importante
 
-### 2. Remover o adicionar de categoria por texto livre
-
-Apagar `novaCategoria`, `setNovaCategoria`, `adicionarCategoria`, `removerCategoria` e os props relacionados de `PassoTipoCategorias`. O único caminho oficial passa a ser o `SeletorCategoriasServicoInline`, que já só emite ids válidos do catálogo. Isso impede que novos profissionais voltem a salvar slugs inválidos.
-
-### 3. Mensagem de erro mais clara no schema
-
-Trocar `"Categoria inválida na lista"` por algo direcionado ao usuário, por exemplo:
-
-```
-"Algumas categorias antigas não são mais suportadas. Toque em Editar e refaça a seleção."
-```
-
-Mesmo com a sanitização do passo 1, manter uma mensagem útil caso ainda apareça o erro em outros pontos.
-
-### 4. (Opcional) Migration de saneamento
-
-Como há registros antigos com slugs inválidos espalhados no banco, posso opcionalmente rodar uma migration que remove entradas inválidas de `drivers.service_categories`. Sem essa migration, cada perfil é limpo no primeiro `salvar` após reabrir o dialog (via passo 1).
-
-## Arquivos afetados
-
-```text
-src/features/painel/components/dialogo_onboarding_profissional.tsx   (sanitização + remover entrada livre)
-src/features/painel/schemas/schema_onboarding_profissional.ts        (mensagem clara)
-supabase/migrations/<novo>.sql                                       (opcional — saneamento)
-```
-
-## Confirmar antes de executar
-
-- [ ] Quer que eu inclua a migration de saneamento para limpar todos os perfis legados de uma vez?  
-- [ ] Posso remover o campo de "categoria livre" sem reservar fallback (ele não é mais usado pela UI atual)?
+Se mesmo após approve + reload forçado o erro persistir com a mensagem exata "Categoria inválida na lista", o problema é 100% cache do navegador/preview do Lovable, não código. Nesse caso a solução é abrir em aba anônima ou usar a opção "Visualizar histórico" para confirmar que a versão correta está deployada.

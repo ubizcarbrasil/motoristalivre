@@ -124,7 +124,12 @@ export function DialogoOnboardingProfissional({
 
   useEffect(() => {
     if (aberto) {
-      setForm(montarFormInicial(dadosIniciais));
+      const proximoForm = montarFormInicial(dadosIniciais);
+      const totalOriginal = dadosIniciais?.service_categories?.length ?? 0;
+      if (totalOriginal > proximoForm.service_categories.length) {
+        toast.info("Atualizamos sua lista. Refaça a seleção tocando em Editar.");
+      }
+      setForm(proximoForm);
       setPasso(0);
     }
   }, [aberto, dadosIniciais]);
