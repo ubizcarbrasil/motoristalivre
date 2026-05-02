@@ -100,16 +100,21 @@ BEGIN
     _driver_a, _tenant_id, 'Serviço teste', 60, _preco, _category_id, true
   ) RETURNING id INTO _service_type_id;
 
+  -- Cliente convidado para satisfazer check constraint client_or_guest
+  INSERT INTO public.guest_passengers (tenant_id, full_name, whatsapp)
+  VALUES (_tenant_id, 'Cliente teste', '11999999999')
+  RETURNING id INTO _guest_id;
+
   -- ============= CENÁRIO 1: COBERTURA =============
   RAISE NOTICE '--- Cenário 1: cobertura ---';
   INSERT INTO public.service_bookings (
     tenant_id, driver_id, service_type_id, scheduled_at,
     duration_minutes, price_agreed, payment_method, status,
-    is_coverage, origin_driver_id
+    is_coverage, origin_driver_id, guest_passenger_id
   ) VALUES (
     _tenant_id, _driver_a, _service_type_id, now(),
     60, _preco, 'cash', 'pending',
-    true, _driver_b
+    true, _driver_b, _guest_id
   ) RETURNING id INTO _booking_cobertura;
 
   -- Dispara o trigger
