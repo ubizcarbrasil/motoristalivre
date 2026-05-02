@@ -153,7 +153,7 @@ BEGIN
 
   PERFORM public.process_service_commission(_booking_indicacao);
 
-  UPDATE public.service_bookings SET status = 'completed' WHERE id = _booking_indicacao;
+  
 
   SELECT count(*), max(commission_type::text) INTO _qtd_commissions, _commission_type
   FROM public.commissions
