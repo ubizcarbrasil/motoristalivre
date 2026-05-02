@@ -1,4 +1,4 @@
-import { Share2, Users, DollarSign, Car, Download, Calendar, Sparkles, Briefcase } from "lucide-react";
+import { Share2, Users, DollarSign, Car, Download, Calendar, Sparkles, Briefcase, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { AbaPainel } from "../types/tipos_painel";
 import type { ModoPainel } from "../utils/modo_painel";
@@ -24,6 +24,7 @@ export function AcessoRapido({ onNavegar, tenantSlug, modo, driverSlug }: Acesso
               driverSlug ? navigate(`/s/${tenantSlug}/${driverSlug}`) : onNavegar("configuracoes"),
           },
           { label: "Serviços", icone: Briefcase, onClick: () => onNavegar("configuracoes") },
+          { label: "Solicitar orçamento", icone: FileText, onClick: () => navigate("/orcamento/novo") },
           { label: "Agenda", icone: Calendar, onClick: () => onNavegar("configuracoes") },
           { label: "Tribo", icone: Users, onClick: () => onNavegar("configuracoes") },
           { label: "Instalar app", icone: Download, onClick: () => navigate("/instalar") },
