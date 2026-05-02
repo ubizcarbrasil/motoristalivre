@@ -418,6 +418,7 @@ export function AbaConfiguracoes({
         driverId={driverId}
         tenantId={tenantId}
         dadosIniciais={dadosOnboarding}
+        modoServicos={modoServicosPuro}
         onConcluido={async () => {
           await recarregarOnboarding();
           await recarregarServico();
