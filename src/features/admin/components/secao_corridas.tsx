@@ -157,12 +157,32 @@ export function SecaoCorridas() {
 
   if (carregando) return <p className="p-6 text-muted-foreground">Carregando...</p>;
 
+  const filtrosMobilidade: { id: string; label: string }[] = [
+    { id: "todos", label: "Todos" },
+    { id: "completed", label: "Finalizadas" },
+    { id: "in_progress", label: "Em andamento" },
+    { id: "cancelled", label: "Canceladas" },
+  ];
+  const filtrosServicos: { id: string; label: string }[] = [
+    { id: "todos", label: "Todos" },
+    { id: "scheduled", label: "Agendados" },
+    { id: "in_progress", label: "Em andamento" },
+    { id: "completed", label: "Concluídos" },
+    { id: "cancelled", label: "Cancelados" },
+  ];
+  const filtros = ehServicos ? filtrosServicos : filtrosMobilidade;
+
   return (
     <div className="space-y-4 p-4 sm:p-6">
       <div className="flex flex-wrap gap-2">
-        {["todos", "completed", "in_progress", "cancelled"].map((s) => (
-          <Button key={s} size="sm" variant={filtroStatus === s ? "default" : "outline"} onClick={() => setFiltroStatus(s)}>
-            {s === "todos" ? "Todos" : s === "completed" ? "Finalizadas" : s === "in_progress" ? "Em andamento" : "Canceladas"}
+        {filtros.map((f) => (
+          <Button
+            key={f.id}
+            size="sm"
+            variant={filtroStatus === f.id ? "default" : "outline"}
+            onClick={() => setFiltroStatus(f.id)}
+          >
+            {f.label}
           </Button>
         ))}
       </div>
@@ -174,7 +194,12 @@ export function SecaoCorridas() {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">{c.passageiro || "—"}</p>
-                <p className="text-xs text-muted-foreground truncate">com {c.motorista || "—"}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {ehServicos ? "com profissional" : "com"} {c.motorista || "—"}
+                </p>
+                {ehServicos && c.servico && (
+                  <p className="text-xs text-muted-foreground truncate">Serviço: {c.servico}</p>
+                )}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className="text-sm font-semibold text-foreground">
@@ -187,18 +212,24 @@ export function SecaoCorridas() {
             </div>
             {(c.origem || c.destino) && (
               <div className="space-y-0.5 text-xs text-muted-foreground pt-1 border-t border-border">
-                {c.origem && <p className="truncate">De: {c.origem}</p>}
-                {c.destino && <p className="truncate">Para: {c.destino}</p>}
+                {c.origem && <p className="truncate">{ehServicos ? "Local" : "De"}: {c.origem}</p>}
+                {!ehServicos && c.destino && <p className="truncate">Para: {c.destino}</p>}
               </div>
             )}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{new Date(c.criadaEm).toLocaleDateString("pt-BR")}</span>
-              {c.transbordo && <Badge variant="outline" className="text-xs">Transbordo</Badge>}
+              <span>
+                {ehServicos && c.agendadoEm
+                  ? `Agendado: ${new Date(c.agendadoEm).toLocaleString("pt-BR")}`
+                  : new Date(c.criadaEm).toLocaleDateString("pt-BR")}
+              </span>
+              {!ehServicos && c.transbordo && <Badge variant="outline" className="text-xs">Transbordo</Badge>}
             </div>
           </div>
         ))}
         {filtradas.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Nenhuma corrida encontrada</p>
+          <p className="text-center text-muted-foreground py-8">
+            Nenhum {labelTitulo} encontrado
+          </p>
         )}
       </div>
 
@@ -207,14 +238,23 @@ export function SecaoCorridas() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Passageiro</TableHead>
-            <TableHead>Motorista</TableHead>
-            <TableHead>Origem</TableHead>
-            <TableHead>Destino</TableHead>
+            <TableHead>{ehServicos ? "Cliente" : "Passageiro"}</TableHead>
+            <TableHead>{ehServicos ? "Profissional" : "Motorista"}</TableHead>
+            {ehServicos ? (
+              <>
+                <TableHead>Serviço</TableHead>
+                <TableHead>Local</TableHead>
+              </>
+            ) : (
+              <>
+                <TableHead>Origem</TableHead>
+                <TableHead>Destino</TableHead>
+              </>
+            )}
             <TableHead>Valor</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Data</TableHead>
-            <TableHead>Transbordo</TableHead>
+            <TableHead>{ehServicos ? "Agendado para" : "Data"}</TableHead>
+            {!ehServicos && <TableHead>Transbordo</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -222,23 +262,38 @@ export function SecaoCorridas() {
             <TableRow key={c.id}>
               <TableCell className="text-foreground">{c.passageiro || "—"}</TableCell>
               <TableCell className="text-foreground">{c.motorista || "—"}</TableCell>
-              <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.origem || "—"}</TableCell>
-              <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.destino || "—"}</TableCell>
+              {ehServicos ? (
+                <>
+                  <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.servico || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.origem || "—"}</TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.origem || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{c.destino || "—"}</TableCell>
+                </>
+              )}
               <TableCell>{c.valor ? `R$ ${c.valor.toFixed(2)}` : "—"}</TableCell>
               <TableCell>
                 <Badge variant={c.status === "completed" ? "default" : "secondary"}>{c.status}</Badge>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
-                {new Date(c.criadaEm).toLocaleDateString("pt-BR")}
+                {ehServicos && c.agendadoEm
+                  ? new Date(c.agendadoEm).toLocaleString("pt-BR")
+                  : new Date(c.criadaEm).toLocaleDateString("pt-BR")}
               </TableCell>
-              <TableCell>
-                {c.transbordo && <Badge variant="outline" className="text-xs">Transbordo</Badge>}
-              </TableCell>
+              {!ehServicos && (
+                <TableCell>
+                  {c.transbordo && <Badge variant="outline" className="text-xs">Transbordo</Badge>}
+                </TableCell>
+              )}
             </TableRow>
           ))}
           {filtradas.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground">Nenhuma corrida encontrada</TableCell>
+              <TableCell colSpan={ehServicos ? 7 : 8} className="text-center text-muted-foreground">
+                Nenhum {labelTitulo} encontrado
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
