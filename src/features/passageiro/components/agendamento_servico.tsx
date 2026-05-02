@@ -36,6 +36,15 @@ import { baixarIcs } from "../utils/gerador_ics";
 import { BlocosDisponibilidade } from "./blocos_disponibilidade";
 import { ResumoServicoSticky } from "./resumo_servico_sticky";
 import { GradeSlotsPeriodo } from "./grade_slots_periodo";
+import { SecaoEnderecoAtendimento } from "./secao_endereco_atendimento";
+import { SecaoFatoresServico } from "./secao_fatores_servico";
+import {
+  calcularPrecoServico,
+  validarFatoresObrigatorios,
+  type FatorPrecoServico,
+} from "@/features/servicos/utils/calculadora_preco_servico";
+import type { EnderecoAtendimento } from "@/features/servicos/types/tipos_servicos";
+import { listarFatoresPreco } from "@/features/servicos/services/servico_servicos";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
@@ -114,16 +123,61 @@ export function AgendamentoServico({
   } | null>(null);
   const [briefing, setBriefing] = useState<Record<string, unknown>>({});
   const [mapaCategorias, setMapaCategorias] = useState<Map<string, string>>(new Map());
+  const [endereco, setEndereco] = useState<EnderecoAtendimento>({});
+  const [fatores, setFatores] = useState<FatorPrecoServico[]>([]);
+  const [valoresFatores, setValoresFatores] = useState<Record<string, string | number | undefined>>({});
 
   const servicoAtual = ativos.find((s) => s.id === servicoId) ?? null;
   const slugCategoriaAtual = servicoAtual?.category_id
     ? mapaCategorias.get(servicoAtual.category_id) ?? null
     : null;
 
-  // Reseta o briefing ao trocar de serviço (categorias podem ter campos diferentes)
+  // Reseta briefing/fatores ao trocar de serviço
   useEffect(() => {
     setBriefing({});
+    setValoresFatores({});
   }, [servicoId]);
+
+  // Carrega fatores de preço do serviço selecionado
+  useEffect(() => {
+    if (!servicoAtual) {
+      setFatores([]);
+      return;
+    }
+    let cancelado = false;
+    listarFatoresPreco(servicoAtual.id)
+      .then((data) => {
+        if (cancelado) return;
+        setFatores(data as FatorPrecoServico[]);
+        // pré-preenche default_value
+        const iniciais: Record<string, string | number | undefined> = {};
+        for (const f of data as FatorPrecoServico[]) {
+          if (f.default_value !== null && f.default_value !== undefined) {
+            iniciais[f.key] = f.default_value;
+          }
+        }
+        setValoresFatores(iniciais);
+      })
+      .catch(() => setFatores([]));
+    return () => {
+      cancelado = true;
+    };
+  }, [servicoAtual?.id]);
+
+  // Cálculo dinâmico de preço
+  const calculo = useMemo(() => {
+    if (!servicoAtual) return null;
+    return calcularPrecoServico({
+      preco_base: Number(servicoAtual.price),
+      fatores,
+      valores_fatores: valoresFatores,
+      config_deslocamento: {
+        travel_fee_base: servicoAtual.travel_fee_base,
+        travel_fee_per_km: servicoAtual.travel_fee_per_km,
+        service_radius_km: servicoAtual.service_radius_km,
+      },
+    });
+  }, [servicoAtual, fatores, valoresFatores]);
 
   // Carrega o mapa id → slug das categorias usadas pelos serviços ativos
   useEffect(() => {
@@ -212,6 +266,18 @@ export function AgendamentoServico({
     if (nome.trim().length < 2) return toast.error("Informe seu nome completo");
     if (!validarWhatsapp(whatsapp)) return toast.error("WhatsApp inválido. Use formato +55…");
 
+    // Endereço obrigatório quando o serviço exigir
+    if (servicoAtual.requires_address) {
+      const e = endereco;
+      if (!e.cep || !e.logradouro || !e.numero || !e.bairro || !e.cidade || !e.uf) {
+        return toast.error("Preencha o endereço completo do atendimento");
+      }
+    }
+
+    // Fatores obrigatórios
+    const erroFator = validarFatoresObrigatorios(fatores, valoresFatores);
+    if (erroFator) return toast.error(erroFator);
+
     // Valida e sanitiza briefing conforme schema da categoria selecionada
     let briefingValidado: Record<string, unknown> | null = null;
     try {
@@ -223,8 +289,6 @@ export function AgendamentoServico({
     salvarGuestStorage({ nome: nome.trim(), whatsapp: whatsapp.trim() });
     setEnviando(true);
     try {
-      // Lê origem de indicação (driver que indicou via /s/:slug/a/:driver_slug)
-      // e ignora se a origem for o próprio profissional do agendamento.
       const origemIndicacao = lerOrigemIndicacao(
         (typeof window !== "undefined" && window.location.pathname.split("/")[2]) || "",
       );
@@ -241,6 +305,8 @@ export function AgendamentoServico({
         briefing: briefingValidado ?? undefined,
         guest: { full_name: nome.trim(), whatsapp: whatsapp.trim() },
         origin_driver_id: originDriverId,
+        address: servicoAtual.requires_address ? endereco : undefined,
+        factors: Object.keys(valoresFatores).length > 0 ? valoresFatores : undefined,
       });
       if (originDriverId) limparOrigemIndicacao();
       setConfirmado({ quando: new Date(slotSelecionado.iso), servico: servicoAtual });
@@ -384,6 +450,9 @@ export function AgendamentoServico({
         servico={servicoAtual}
         slotHora={slotSelecionado?.hora ?? null}
         slotData={diaSelecionado ? formatarDataLonga(diaSelecionado) : null}
+        total={calculo?.total ?? null}
+        linhasFatores={calculo?.linhas_fatores}
+        travelFee={calculo?.travel_fee}
       />
 
       <div className="px-4 py-5 pb-32 max-w-md mx-auto space-y-6">
@@ -551,6 +620,20 @@ export function AgendamentoServico({
           </div>
         )}
 
+        {/* Fatores de preço dinâmicos */}
+        {servicoAtual && fatores.length > 0 && (
+          <SecaoFatoresServico
+            fatores={fatores}
+            valores={valoresFatores}
+            onChange={setValoresFatores}
+          />
+        )}
+
+        {/* Endereço do atendimento */}
+        {servicoAtual?.requires_address && slotSelecionado && (
+          <SecaoEnderecoAtendimento valor={endereco} onChange={setEndereco} />
+        )}
+
         {/* Identificação */}
         {slotSelecionado && (
           <div className="space-y-3">
@@ -630,7 +713,7 @@ export function AgendamentoServico({
           {enviando ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : servicoAtual && slotSelecionado ? (
-            `Confirmar · R$ ${Number(servicoAtual.price).toFixed(2)}`
+            `Confirmar · R$ ${(calculo?.total ?? Number(servicoAtual.price)).toFixed(2)}`
           ) : (
             "Confirmar agendamento"
           )}

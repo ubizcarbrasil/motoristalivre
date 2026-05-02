@@ -11,6 +11,17 @@ const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+interface EnderecoPayload {
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  referencia?: string;
+}
+
 interface Payload {
   tenant_id: string;
   driver_id: string;
@@ -24,6 +35,8 @@ interface Payload {
   client_id?: string | null;
   guest?: { full_name: string; whatsapp: string } | null;
   briefing?: Record<string, unknown> | null;
+  address?: EnderecoPayload | null;
+  factors?: Record<string, string | number | undefined> | null;
 }
 
 function json(body: unknown, status = 200) {
@@ -165,6 +178,55 @@ Deno.serve(async (req) => {
     guestId = guest.id;
   }
 
+  // 4.5) Validação de endereço + recálculo seguro do preço total
+  if (serviceType.requires_address) {
+    const a = body.address;
+    if (!a || !a.cep || !a.logradouro || !a.numero || !a.bairro || !a.cidade || !a.uf) {
+      return json({ error: "Endereço de atendimento obrigatório" }, 400);
+    }
+  }
+
+  // Carrega fatores e recalcula
+  const { data: fatoresDb } = await supabase
+    .from("service_pricing_factors")
+    .select("*")
+    .eq("service_type_id", body.service_type_id);
+
+  const linhasSnapshot: Array<{ key: string; rotulo: string; valor: number }> = [];
+  let acrescimo = 0;
+  const valoresEntrada = body.factors ?? {};
+  for (const f of (fatoresDb ?? []) as any[]) {
+    const v = valoresEntrada[f.key];
+    if (f.required && (v === undefined || v === null || v === "")) {
+      return json({ error: `Informe: ${f.label}` }, 400);
+    }
+    if (v === undefined || v === null || v === "") continue;
+    if (f.input_type === "number") {
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) continue;
+      const valor = n * (Number(f.unit_price) || 0);
+      acrescimo += valor;
+      linhasSnapshot.push({ key: f.key, rotulo: `${f.label}: ${n}${f.unit ? ` ${f.unit}` : ""}`, valor });
+    } else if (f.input_type === "select" && Array.isArray(f.options)) {
+      const op = f.options.find((o: any) => o.valor === String(v));
+      if (!op) continue;
+      const mult = Number(op.multiplicador);
+      if (Number.isFinite(mult) && mult !== 0 && mult !== 1) {
+        const v2 = Number(serviceType.price) * (mult - 1);
+        acrescimo += v2;
+        linhasSnapshot.push({ key: f.key, rotulo: `${f.label}: ${op.rotulo}`, valor: v2 });
+      }
+      const ac = Number(op.acrescimo) || 0;
+      if (ac !== 0) {
+        acrescimo += ac;
+        linhasSnapshot.push({ key: f.key, rotulo: `${f.label}: ${op.rotulo}`, valor: ac });
+      }
+    }
+  }
+
+  const travelFee = Number(serviceType.travel_fee_base) || 0;
+  const totalPrice = Math.round((Number(serviceType.price) + acrescimo + travelFee) * 100) / 100;
+
   // 5) Insere booking
   const { data: booking, error: errBook } = await supabase
     .from("service_bookings")
@@ -178,7 +240,10 @@ Deno.serve(async (req) => {
       origin_affiliate_id: body.origin_affiliate_id ?? null,
       scheduled_at: inicioIso,
       duration_minutes: duration,
-      price_agreed: serviceType.price,
+      price_agreed: totalPrice,
+      total_price: totalPrice,
+      travel_fee: travelFee,
+      factors_snapshot: { valores: valoresEntrada, linhas: linhasSnapshot, base: Number(serviceType.price) },
       payment_method: body.payment_method ?? "cash",
       status: "confirmed",
       notes: body.notes ?? null,
@@ -191,6 +256,23 @@ Deno.serve(async (req) => {
     .select("*")
     .single();
   if (errBook) return json({ error: errBook.message }, 500);
+
+  // 5.1) Persiste endereço se enviado
+  if (body.address) {
+    const a = body.address;
+    await supabase.from("service_booking_addresses").insert({
+      booking_id: booking.id,
+      tenant_id: body.tenant_id,
+      cep: a.cep ?? null,
+      logradouro: a.logradouro ?? null,
+      numero: a.numero ?? null,
+      complemento: a.complemento ?? null,
+      bairro: a.bairro ?? null,
+      cidade: a.cidade ?? null,
+      uf: a.uf ?? null,
+      referencia: a.referencia ?? null,
+    });
+  }
 
   // 6) Lembrete de retorno
   if (body.return_reminder_date) {

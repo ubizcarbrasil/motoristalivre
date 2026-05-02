@@ -22,6 +22,21 @@ export interface TipoServico {
   is_active: boolean;
   created_at: string;
   category_id?: string | null;
+  requires_address?: boolean;
+  service_radius_km?: number | null;
+  travel_fee_base?: number | null;
+  travel_fee_per_km?: number | null;
+}
+
+export interface EnderecoAtendimento {
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  referencia?: string;
 }
 
 export interface DisponibilidadeProfissional {
