@@ -130,13 +130,15 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
 
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex gap-1 overflow-x-auto px-3 py-2 scrollbar-none">
-          {subAbasVisiveis.map(({ id, label, icone: Icone }) => {
-            const ativo = secao === id;
+          {subAbasVisiveis.map((sub) => {
+            const ativo = secao === sub.id;
+            const Icone = modoServicos && sub.iconeServicos ? sub.iconeServicos : sub.icone;
+            const label = modoServicos && sub.labelServicos ? sub.labelServicos : sub.label;
             return (
               <button
-                key={id}
+                key={sub.id}
                 type="button"
-                onClick={() => setSecao(id)}
+                onClick={() => setSecao(sub.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-colors ${
                   ativo
                     ? "bg-primary/15 text-primary border border-primary/30"
