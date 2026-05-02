@@ -218,44 +218,54 @@ export type Database = {
       commissions: {
         Row: {
           amount: number
+          booking_id: string | null
           commission_context: string
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at: string
           from_wallet_id: string | null
           id: string
           processed_at: string | null
-          ride_id: string
+          ride_id: string | null
           status: Database["public"]["Enums"]["commission_status"]
           tenant_id: string
           to_wallet_id: string | null
         }
         Insert: {
           amount: number
+          booking_id?: string | null
           commission_context?: string
           commission_type: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           from_wallet_id?: string | null
           id?: string
           processed_at?: string | null
-          ride_id: string
+          ride_id?: string | null
           status?: Database["public"]["Enums"]["commission_status"]
           tenant_id: string
           to_wallet_id?: string | null
         }
         Update: {
           amount?: number
+          booking_id?: string | null
           commission_context?: string
           commission_type?: Database["public"]["Enums"]["commission_type"]
           created_at?: string
           from_wallet_id?: string | null
           id?: string
           processed_at?: string | null
-          ride_id?: string
+          ride_id?: string | null
           status?: Database["public"]["Enums"]["commission_status"]
           tenant_id?: string
           to_wallet_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commissions_from_wallet_id_fkey"
             columns: ["from_wallet_id"]
