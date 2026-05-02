@@ -8,6 +8,7 @@ import { TIPOS_TRANSACAO_LABELS } from "../constants/constantes_painel";
 import { SheetSolicitarSaque } from "@/compartilhados/components/sheet_solicitar_saque";
 import { HistoricoSaques } from "@/compartilhados/components/historico_saques";
 import { garantirCarteira } from "@/compartilhados/services/servico_saque";
+import { SecaoMinhaRede } from "@/features/minha_rede/components/secao_minha_rede";
 
 interface AbaCarteiraProps {
   userId: string;
@@ -130,6 +131,8 @@ export function AbaCarteira({ userId }: AbaCarteiraProps) {
           <HistoricoSaques userId={userId} ownerType="driver" recarregar={versaoSaques} />
         </TabsContent>
       </Tabs>
+
+      <SecaoMinhaRede />
 
       <SheetSolicitarSaque
         aberto={sheetSaqueAberto}
