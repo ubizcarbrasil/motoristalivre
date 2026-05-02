@@ -31,7 +31,7 @@ export const schemaOnboardingProfissional = z.object({
     .max(10, "Máximo de 10 categorias")
     .refine(
       (lista) => lista.every((s) => slugValido(s)),
-      { message: "Algumas categorias antigas não são mais suportadas. Toque em Editar e refaça a seleção." },
+      { message: "Refaça a seleção tocando em Editar." },
     ),
   avatar_url: z.string().url("Faça upload da foto de perfil"),
   cover_url: z.string().url("Faça upload da foto de capa"),
