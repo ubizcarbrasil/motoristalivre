@@ -208,7 +208,7 @@ export default function PaginaPerfilProfissionalServicos() {
                 />
               </section>
             ) : (
-              <VitrineEspecialidadesVisuais
+              <VitrineEspecialidades
                 categorias={dados.service_categories}
                 nomeProfissional={dados.full_name}
                 whatsapp={whatsappTenant}
