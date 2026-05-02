@@ -21,6 +21,7 @@ export interface TipoServico {
   is_immediate: boolean;
   is_active: boolean;
   created_at: string;
+  category_id?: string | null;
 }
 
 export interface DisponibilidadeProfissional {

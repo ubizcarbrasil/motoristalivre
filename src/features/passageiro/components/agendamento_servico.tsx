@@ -14,6 +14,10 @@ import {
   chamarBookService,
 } from "@/features/servicos/services/servico_servicos";
 import {
+  FormularioBriefing,
+  validarBriefing,
+} from "@/features/triboservicos/components/formulario_briefing";
+import {
   lerOrigemIndicacao,
   limparOrigemIndicacao,
 } from "@/features/triboservicos/services/servico_origem_indicacao";
@@ -108,8 +112,42 @@ export function AgendamentoServico({
     quando: Date;
     servico: TipoServico;
   } | null>(null);
+  const [briefing, setBriefing] = useState<Record<string, unknown>>({});
+  const [mapaCategorias, setMapaCategorias] = useState<Map<string, string>>(new Map());
 
   const servicoAtual = ativos.find((s) => s.id === servicoId) ?? null;
+  const slugCategoriaAtual = servicoAtual?.category_id
+    ? mapaCategorias.get(servicoAtual.category_id) ?? null
+    : null;
+
+  // Reseta o briefing ao trocar de serviço (categorias podem ter campos diferentes)
+  useEffect(() => {
+    setBriefing({});
+  }, [servicoId]);
+
+  // Carrega o mapa id → slug das categorias usadas pelos serviços ativos
+  useEffect(() => {
+    const ids = Array.from(
+      new Set(ativos.map((s) => s.category_id).filter(Boolean) as string[]),
+    );
+    if (ids.length === 0) return;
+    let cancelado = false;
+    (async () => {
+      const { data } = await supabase
+        .from("service_categories" as any)
+        .select("id, slug")
+        .in("id", ids);
+      if (cancelado || !data) return;
+      const m = new Map<string, string>();
+      for (const row of data as unknown as Array<{ id: string; slug: string }>) {
+        m.set(row.id, row.slug);
+      }
+      setMapaCategorias(m);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [ativos]);
 
   // Carrega agendamentos futuros do driver para cálculo de conflitos
   useEffect(() => {
@@ -174,6 +212,14 @@ export function AgendamentoServico({
     if (nome.trim().length < 2) return toast.error("Informe seu nome completo");
     if (!validarWhatsapp(whatsapp)) return toast.error("WhatsApp inválido. Use formato +55…");
 
+    // Valida e sanitiza briefing conforme schema da categoria selecionada
+    let briefingValidado: Record<string, unknown> | null = null;
+    try {
+      briefingValidado = validarBriefing(slugCategoriaAtual, briefing);
+    } catch (err: any) {
+      return toast.error(err?.message ?? "Briefing inválido");
+    }
+
     salvarGuestStorage({ nome: nome.trim(), whatsapp: whatsapp.trim() });
     setEnviando(true);
     try {
@@ -192,6 +238,7 @@ export function AgendamentoServico({
         scheduled_at: slotSelecionado.iso,
         payment_method: pagamento,
         notes: observacoes.trim() || undefined,
+        briefing: briefingValidado ?? undefined,
         guest: { full_name: nome.trim(), whatsapp: whatsapp.trim() },
         origin_driver_id: originDriverId,
       });
@@ -501,6 +548,11 @@ export function AgendamentoServico({
                 maxLength={20}
               />
             </div>
+            <FormularioBriefing
+              slugCategoria={slugCategoriaAtual}
+              valor={briefing}
+              onChange={setBriefing}
+            />
             <div className="space-y-1.5">
               <Label htmlFor="ag_obs">Observações (opcional)</Label>
               <Textarea
