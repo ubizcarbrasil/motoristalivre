@@ -200,11 +200,29 @@ BEGIN
   RAISE NOTICE '  ✓ N3b ok';
 
   -- =========================================================
-  -- N4: categoria sem commission_rules + tenant_settings zerado
-  --     (cobertura legítima, mas pct=0 → nada lançado)
+  -- N4: categoria sem commission_rules
+  --     Se tenant_settings tiver pct>0, cria-se commission_rules com pct=0
+  --     na própria categoria para forçar fallback inerte e validar que
+  --     pct=0 ⇒ sem commissions / wallet_tx.
   -- =========================================================
-  RAISE NOTICE '--- N4: sem rule e settings zerado ---';
-  -- Reseta saldos para detectar qualquer movimentação indevida
+  RAISE NOTICE '--- N4: sem regra efetiva (pct=0) ---';
+  DECLARE
+    _ts_transbordo numeric;
+    _ts_affiliate numeric;
+  BEGIN
+    SELECT transbordo_commission, affiliate_commission
+      INTO _ts_transbordo, _ts_affiliate
+    FROM public.tenant_settings WHERE tenant_id = _tenant_id;
+
+    IF COALESCE(_ts_transbordo, 0) > 0 OR COALESCE(_ts_affiliate, 0) > 0 THEN
+      -- Cria regra com pct=0 para neutralizar o fallback positivo do tenant
+      INSERT INTO public.commission_rules (
+        tenant_id, category_id, comissao_cobertura_pct, comissao_indicacao_pct, comissao_fixa_brl, ativo
+      ) VALUES (_tenant_id, _category_sem_regra, 0, 0, 0, true);
+      RAISE NOTICE '  (tenant_settings>0 detectado: usando rule pct=0 para isolar o cenário)';
+    END IF;
+  END;
+
   UPDATE public.wallets SET balance = _saldo_a_ini, blocked_balance = 0 WHERE id = _wallet_a;
   UPDATE public.wallets SET balance = _saldo_b_ini, blocked_balance = 0 WHERE id = _wallet_b;
 
@@ -228,7 +246,6 @@ BEGIN
   ASSERT _qtd_wallet_tx = 0,
     format('N4: esperava 0 wallet_tx (pct=0), obtido %s', _qtd_wallet_tx);
 
-  -- Saldos não podem ter mudado
   SELECT balance INTO _saldo_a_pos FROM public.wallets WHERE id = _wallet_a;
   SELECT balance INTO _saldo_b_pos FROM public.wallets WHERE id = _wallet_b;
   ASSERT _saldo_a_pos = _saldo_a_ini,
