@@ -36,6 +36,9 @@ export function SecaoCRM() {
   const [clientes, setClientes] = useState<ClienteCRM[]>([]);
   const [filtro, setFiltro] = useState<FiltroFrequencia>("todos");
   const [carregando, setCarregando] = useState(true);
+  const [modoServicos, setModoServicos] = useState(false);
+
+  const labelMetrica = modoServicos ? "Atendimentos" : "Corridas";
 
   useEffect(() => {
     if (!usuario) return;
@@ -46,6 +49,14 @@ export function SecaoCRM() {
     try {
       const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
       if (!perfil) return;
+
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("active_modules")
+        .eq("id", perfil.tenant_id)
+        .maybeSingle();
+      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+      setModoServicos(modulos.includes("services") && !modulos.includes("mobility"));
 
       const { data: passengers } = await supabase
         .from("passengers")
@@ -118,7 +129,7 @@ export function SecaoCRM() {
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Corridas</p>
+                <p className="text-xs text-muted-foreground">{labelMetrica}</p>
                 <p className="text-foreground font-medium">{c.totalCorridas}</p>
               </div>
               <div>
@@ -148,7 +159,7 @@ export function SecaoCRM() {
           <TableRow>
             <TableHead>Cliente</TableHead>
             <TableHead>Frequencia</TableHead>
-            <TableHead>Corridas</TableHead>
+            <TableHead>{labelMetrica}</TableHead>
             <TableHead>Gasto total</TableHead>
             <TableHead>Cashback</TableHead>
             <TableHead>Origem</TableHead>

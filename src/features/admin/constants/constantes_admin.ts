@@ -15,7 +15,11 @@ import {
 export interface ItemMenu {
   id: SecaoAdmin;
   label: string;
+  /** Label alternativa para tribos em modo Serviços */
+  labelServicos?: string;
   icone: LucideIcon;
+  /** Ícone alternativo para tribos em modo Serviços */
+  iconeServicos?: LucideIcon;
 }
 
 export interface GrupoMenu {
@@ -28,10 +32,20 @@ export const MENU_ADMIN: GrupoMenu[] = [
     titulo: "Operacao",
     itens: [
       { id: "dashboard", label: "Dashboard", icone: LayoutDashboard },
-      { id: "motoristas", label: "Motoristas", icone: Car },
+      {
+        id: "motoristas",
+        label: "Motoristas",
+        labelServicos: "Profissionais",
+        icone: Car,
+      },
       { id: "afiliados", label: "Afiliados", icone: Users },
       { id: "crm", label: "CRM", icone: UserCheck },
-      { id: "corridas", label: "Corridas", icone: Route },
+      {
+        id: "corridas",
+        label: "Corridas",
+        labelServicos: "Agendamentos",
+        icone: Route,
+      },
       { id: "carteira", label: "Carteira do Grupo", icone: Wallet },
     ],
   },

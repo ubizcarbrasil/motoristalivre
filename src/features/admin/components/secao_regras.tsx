@@ -21,6 +21,7 @@ export function SecaoRegras() {
   const [permitirOfertas, setPermitirOfertas] = useState(false);
   const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [salvando, setSalvando] = useState(false);
+  const [modoServicos, setModoServicos] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
@@ -31,6 +32,14 @@ export function SecaoRegras() {
     const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
     if (!perfil) return;
     setTenantId(perfil.tenant_id);
+
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("active_modules")
+      .eq("id", perfil.tenant_id)
+      .maybeSingle();
+    const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+    setModoServicos(modulos.includes("services") && !modulos.includes("mobility"));
 
     const { data } = await supabase.from("tenant_settings").select("*").eq("tenant_id", perfil.tenant_id).single();
     if (data) {
@@ -68,19 +77,21 @@ export function SecaoRegras() {
   return (
     <div className="max-w-lg space-y-6 p-4 sm:p-6">
       {tenantId && <CardModulosTribo tenantId={tenantId} />}
-      <div className="space-y-2">
-        <Label>Modo de despacho</Label>
-        <Select value={modoDespacho} onValueChange={setModoDespacho}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="auto">Prioridade ao dono do link</SelectItem>
-            <SelectItem value="manual">Por proximidade</SelectItem>
-            <SelectItem value="hybrid">Para todos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!modoServicos && (
+        <div className="space-y-2">
+          <Label>Modo de despacho</Label>
+          <Select value={modoDespacho} onValueChange={setModoDespacho}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Prioridade ao dono do link</SelectItem>
+              <SelectItem value="manual">Por proximidade</SelectItem>
+              <SelectItem value="hybrid">Para todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Fuso horário</Label>
@@ -101,30 +112,34 @@ export function SecaoRegras() {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Raio de despacho: {raio} km</Label>
-        <Slider value={[raio]} onValueChange={([v]) => setRaio(v)} min={1} max={50} step={1} />
-      </div>
+      {!modoServicos && (
+        <>
+          <div className="space-y-2">
+            <Label>Raio de despacho: {raio} km</Label>
+            <Slider value={[raio]} onValueChange={([v]) => setRaio(v)} min={1} max={50} step={1} />
+          </div>
 
-      <div className="space-y-2">
-        <Label>Tempo para o motorista responder: {timeout}s (recomendado 60-180s)</Label>
-        <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={30} max={180} step={5} />
-      </div>
+          <div className="space-y-2">
+            <Label>Tempo para o motorista responder: {timeout}s (recomendado 60-180s)</Label>
+            <Slider value={[timeout]} onValueChange={([v]) => setTimeout_(v)} min={30} max={180} step={5} />
+          </div>
 
-      <div className="space-y-2">
-        <Label>Tentativas maximas: {tentativas}</Label>
-        <Slider value={[tentativas]} onValueChange={([v]) => setTentativas(v)} min={1} max={10} step={1} />
-      </div>
+          <div className="space-y-2">
+            <Label>Tentativas maximas: {tentativas}</Label>
+            <Slider value={[tentativas]} onValueChange={([v]) => setTentativas(v)} min={1} max={10} step={1} />
+          </div>
 
-      <div className="flex items-center justify-between">
-        <Label>Permitir precos personalizados por motorista</Label>
-        <Switch checked={permitirPrecos} onCheckedChange={setPermitirPrecos} />
-      </div>
+          <div className="flex items-center justify-between">
+            <Label>Permitir precos personalizados por motorista</Label>
+            <Switch checked={permitirPrecos} onCheckedChange={setPermitirPrecos} />
+          </div>
 
-      <div className="flex items-center justify-between">
-        <Label>Permitir ofertas de passageiros</Label>
-        <Switch checked={permitirOfertas} onCheckedChange={setPermitirOfertas} />
-      </div>
+          <div className="flex items-center justify-between">
+            <Label>Permitir ofertas de passageiros</Label>
+            <Switch checked={permitirOfertas} onCheckedChange={setPermitirOfertas} />
+          </div>
+        </>
+      )}
 
       <Button onClick={salvar} disabled={salvando}>
         {salvando ? "Salvando..." : "Salvar regras"}
