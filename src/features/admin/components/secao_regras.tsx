@@ -10,7 +10,11 @@ import { toast } from "sonner";
 import { TIMEZONES_DISPONIVEIS } from "../constants/constantes_timezones";
 import { CardModulosTribo } from "./card_modulos_tribo";
 
-export function SecaoRegras() {
+interface SecaoRegrasProps {
+  modo?: "mobilidade" | "servicos" | "hibrido";
+}
+
+export function SecaoRegras({ modo: modoProp }: SecaoRegrasProps = {}) {
   const { usuario } = useAutenticacao();
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [modoDespacho, setModoDespacho] = useState("auto");
@@ -21,25 +25,29 @@ export function SecaoRegras() {
   const [permitirOfertas, setPermitirOfertas] = useState(false);
   const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [salvando, setSalvando] = useState(false);
-  const [modoServicos, setModoServicos] = useState(false);
+  const [modoServicos, setModoServicos] = useState(modoProp === "servicos");
 
   useEffect(() => {
     if (!usuario) return;
     carregar();
-  }, [usuario]);
+  }, [usuario, modoProp]);
 
   async function carregar() {
     const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
     if (!perfil) return;
     setTenantId(perfil.tenant_id);
 
-    const { data: tenant } = await supabase
-      .from("tenants")
-      .select("active_modules")
-      .eq("id", perfil.tenant_id)
-      .maybeSingle();
-    const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
-    setModoServicos(modulos.includes("services") && !modulos.includes("mobility"));
+    if (modoProp) {
+      setModoServicos(modoProp === "servicos");
+    } else {
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("active_modules")
+        .eq("id", perfil.tenant_id)
+        .maybeSingle();
+      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+      setModoServicos(modulos.includes("services") && !modulos.includes("mobility"));
+    }
 
     const { data } = await supabase.from("tenant_settings").select("*").eq("tenant_id", perfil.tenant_id).single();
     if (data) {
