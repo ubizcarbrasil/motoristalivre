@@ -1,7 +1,10 @@
 import { BadgeCheck, ShieldCheck, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { resolverNomeCategoria } from "../utils/resolver_nome_categoria";
+import {
+  resolverNomeCategoria,
+  ordenarCategoriasServico,
+} from "../utils/resolver_nome_categoria";
 
 interface Props {
   nome: string;
@@ -70,7 +73,7 @@ export function CabecalhoPerfilProfissional({
 
           {serviceCategories.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {serviceCategories.map((cat) => (
+              {ordenarCategoriasServico(serviceCategories).map((cat) => (
                 <Badge key={cat} variant="secondary" className="text-xs">
                   {resolverNomeCategoria(cat)}
                 </Badge>
