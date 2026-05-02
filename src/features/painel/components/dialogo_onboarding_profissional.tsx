@@ -384,27 +384,33 @@ function PassoDadosBasicos({ form, onChange }: PropsPasso) {
   );
 }
 
-function PassoTipoCategorias({ form, onChange }: PropsPasso) {
+function PassoTipoCategorias({
+  form,
+  onChange,
+  modoServicos = false,
+}: PropsPasso & { modoServicos?: boolean }) {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Tipo de profissional</Label>
-        <Select
-          value={form.professional_type}
-          onValueChange={(v) =>
-            onChange("professional_type", v as FormState["professional_type"])
-          }
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="driver">Somente motorista</SelectItem>
-            <SelectItem value="service_provider">Prestador de serviços</SelectItem>
-            <SelectItem value="both">Ambos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!modoServicos && (
+        <div className="space-y-2">
+          <Label>Tipo de profissional</Label>
+          <Select
+            value={form.professional_type}
+            onValueChange={(v) =>
+              onChange("professional_type", v as FormState["professional_type"])
+            }
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="driver">Somente motorista</SelectItem>
+              <SelectItem value="service_provider">Prestador de serviços</SelectItem>
+              <SelectItem value="both">Ambos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Categorias de serviço</Label>
