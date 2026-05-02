@@ -29,7 +29,7 @@ import type { DadosOnboardingProfissional } from "../hooks/hook_onboarding_profi
 import { useHookAutoSaveOnboarding } from "../hooks/hook_autosave_onboarding";
 import { IndicadorAutoSave } from "./indicador_autosave";
 import { SeletorCategoriasServico } from "./seletor_categorias_servico";
-import { iconePorSlug, nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+import { iconePorSlug, nomePorSlug, slugValido } from "@/compartilhados/constants/constantes_categorias_servico";
 
 function SeletorCategoriasServicoInline({
   selecionadas,
@@ -120,14 +120,12 @@ export function DialogoOnboardingProfissional({
 }: DialogoOnboardingProfissionalProps) {
   const [passo, setPasso] = useState(0);
   const [salvando, setSalvando] = useState(false);
-  const [novaCategoria, setNovaCategoria] = useState("");
   const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais));
 
   useEffect(() => {
     if (aberto) {
       setForm(montarFormInicial(dadosIniciais));
       setPasso(0);
-      setNovaCategoria("");
     }
   }, [aberto, dadosIniciais]);
 
@@ -140,32 +138,6 @@ export function DialogoOnboardingProfissional({
 
   const atualizar = <K extends keyof FormState>(campo: K, valor: FormState[K]) =>
     setForm((prev) => ({ ...prev, [campo]: valor }));
-
-  const adicionarCategoria = () => {
-    const valor = novaCategoria.trim();
-    if (!valor) return;
-    if (valor.length > 50) {
-      toast.error("Categoria muito longa");
-      return;
-    }
-    if (form.service_categories.some((c) => c.toLowerCase() === valor.toLowerCase())) {
-      toast.error("Categoria já adicionada");
-      return;
-    }
-    if (form.service_categories.length >= 10) {
-      toast.error("Máximo de 10 categorias");
-      return;
-    }
-    atualizar("service_categories", [...form.service_categories, valor]);
-    setNovaCategoria("");
-  };
-
-  const removerCategoria = (cat: string) => {
-    atualizar(
-      "service_categories",
-      form.service_categories.filter((c) => c !== cat),
-    );
-  };
 
   const validarPassoAtual = (): boolean => {
     try {
@@ -276,14 +248,7 @@ export function DialogoOnboardingProfissional({
             <PassoDadosBasicos form={form} onChange={atualizar} />
           )}
           {passo === 1 && (
-            <PassoTipoCategorias
-              form={form}
-              onChange={atualizar}
-              novaCategoria={novaCategoria}
-              setNovaCategoria={setNovaCategoria}
-              onAdicionar={adicionarCategoria}
-              onRemover={removerCategoria}
-            />
+            <PassoTipoCategorias form={form} onChange={atualizar} />
           )}
           {passo === 2 && <PassoBio form={form} onChange={atualizar} />}
           {passo === 3 && (
@@ -406,21 +371,7 @@ function PassoDadosBasicos({ form, onChange }: PropsPasso) {
   );
 }
 
-interface PropsPassoCategorias extends PropsPasso {
-  novaCategoria: string;
-  setNovaCategoria: (v: string) => void;
-  onAdicionar: () => void;
-  onRemover: (cat: string) => void;
-}
-
-function PassoTipoCategorias({
-  form,
-  onChange,
-  novaCategoria,
-  setNovaCategoria,
-  onAdicionar,
-  onRemover,
-}: PropsPassoCategorias) {
+function PassoTipoCategorias({ form, onChange }: PropsPasso) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -530,7 +481,7 @@ function montarFormInicial(
         ? tipo
         : "",
     bio: dados.bio ?? "",
-    service_categories: dados.service_categories ?? [],
+    service_categories: (dados.service_categories ?? []).filter((s) => slugValido(s)),
     avatar_url: dados.avatar_url ?? "",
     cover_url: dados.cover_url ?? "",
   };
