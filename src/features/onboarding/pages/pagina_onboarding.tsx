@@ -34,6 +34,8 @@ export default function PaginaOnboarding() {
     setConfiguracao,
     servicos,
     setServicos,
+    disponibilidade,
+    setDisponibilidade,
     enviando,
     setEnviando,
     irParaEtapa,
