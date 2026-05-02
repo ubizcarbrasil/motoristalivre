@@ -33,6 +33,7 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
   const [candidatos, setCandidatos] = useState<CandidatoEquipe[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [headlineMap, setHeadlineMap] = useState<Record<string, string>>({});
+  const [espelhamento, setEspelhamento] = useState<{ id: string; nome: string } | null>(null);
 
   const carregar = async () => {
     setCarregando(true);
