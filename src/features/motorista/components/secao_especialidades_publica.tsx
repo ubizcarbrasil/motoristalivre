@@ -1,9 +1,7 @@
 import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  iconePorSlug,
-  nomePorSlug,
-} from "@/compartilhados/constants/constantes_categorias_servico";
+import { nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
+import { imagemParaCategoria } from "@/compartilhados/utils/imagens_categorias";
 
 interface Props {
   categorias: string[];
@@ -18,11 +16,10 @@ function montarLinkWhatsapp(whatsapp: string, mensagem: string): string {
 }
 
 /**
- * Fallback exibido quando o profissional ainda não cadastrou serviços
- * vendáveis (com preço e duração), mas tem especialidades selecionadas.
- *
- * Mostra as especialidades como cards e oferece um CTA de orçamento
- * via WhatsApp, evitando que a página fique inutilizável para o cliente.
+ * Vitrine de especialidades em estilo "app de serviços":
+ * cards quadrados com imagem ilustrativa (Unsplash provisório)
+ * e título sobreposto. Toque no card abre WhatsApp com pedido
+ * de orçamento daquela especialidade.
  */
 export function SecaoEspecialidadesPublica({
   categorias,
@@ -37,38 +34,61 @@ export function SecaoEspecialidadesPublica({
     const mensagem = especialidade
       ? `${mensagemBase} e gostaria de um orçamento para *${especialidade}*.`
       : `${mensagemBase} e gostaria de solicitar um orçamento.`;
-    window.open(montarLinkWhatsapp(whatsapp, mensagem), "_blank", "noopener,noreferrer");
+    window.open(
+      montarLinkWhatsapp(whatsapp, mensagem),
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   return (
-    <div className="px-6 space-y-3">
+    <div className="px-4 space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-semibold text-foreground">Solicite um orçamento</h2>
+        <h2 className="text-sm font-semibold text-foreground">
+          Serviços oferecidos
+        </h2>
       </div>
       <p className="text-xs text-muted-foreground">
-        Toque em uma especialidade para conversar diretamente com o profissional.
+        Toque em um serviço para solicitar orçamento direto pelo WhatsApp.
       </p>
+
       <div className="grid grid-cols-2 gap-2">
         {categorias.map((slug) => {
-          const Icone = iconePorSlug(slug);
           const nome = nomePorSlug(slug);
+          const imagem = imagemParaCategoria(slug);
           return (
             <button
               key={slug}
               type="button"
               onClick={() => solicitarOrcamento(nome)}
               disabled={!whatsapp}
-              className="flex items-center gap-2 rounded-xl bg-card border border-border p-3 text-left transition-colors hover:border-primary/50 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card text-left transition-transform active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                <Icone className="w-4 h-4 text-primary" />
-              </span>
-              <span className="text-xs font-medium text-foreground line-clamp-2">{nome}</span>
+              <img
+                src={imagem}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-2.5">
+                <span className="text-xs font-semibold text-foreground line-clamp-2 leading-tight">
+                  {nome}
+                </span>
+                {whatsapp && (
+                  <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-primary">
+                    <MessageCircle className="w-3 h-3" />
+                    Pedir orçamento
+                  </span>
+                )}
+              </div>
             </button>
           );
         })}
       </div>
+
       {whatsapp ? (
         <Button
           type="button"
