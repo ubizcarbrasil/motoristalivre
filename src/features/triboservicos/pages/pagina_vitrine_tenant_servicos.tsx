@@ -174,8 +174,6 @@ export default function PaginaVitrineTenantServicos() {
           )}
         </section>
       </main>
-
-      <FooterServicos />
     </TemaServicos>
   );
 }
