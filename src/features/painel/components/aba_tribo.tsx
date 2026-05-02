@@ -9,6 +9,8 @@ import {
   Palette,
   Settings,
   Percent,
+  Briefcase,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 import { SecaoDashboard } from "@/features/admin/components/secao_dashboard";
@@ -45,16 +47,32 @@ const SECOES: Record<SecaoAdmin, () => JSX.Element> = {
 interface SubAbaConfig {
   id: SecaoAdmin;
   label: string;
+  labelServicos?: string;
   icone: LucideIcon;
+  iconeServicos?: LucideIcon;
   modulos: ("mobility" | "services")[] | null; // null = sempre visível
 }
 
 const SUB_ABAS: SubAbaConfig[] = [
   { id: "dashboard", label: "Visão", icone: LayoutDashboard, modulos: null },
-  { id: "motoristas", label: "Motoristas", icone: Car, modulos: ["mobility"] },
+  {
+    id: "motoristas",
+    label: "Motoristas",
+    labelServicos: "Profissionais",
+    icone: Car,
+    iconeServicos: Briefcase,
+    modulos: ["mobility", "services"],
+  },
   { id: "afiliados", label: "Afiliados", icone: Users, modulos: ["mobility"] },
   { id: "crm", label: "CRM", icone: UserCheck, modulos: null },
-  { id: "corridas", label: "Corridas", icone: Route, modulos: ["mobility"] },
+  {
+    id: "corridas",
+    label: "Corridas",
+    labelServicos: "Agendamentos",
+    icone: Route,
+    iconeServicos: Calendar,
+    modulos: ["mobility", "services"],
+  },
   { id: "carteira", label: "Carteira", icone: Wallet, modulos: null },
   { id: "identidade", label: "Visual", icone: Palette, modulos: null },
   { id: "regras", label: "Regras", icone: Settings, modulos: null },
@@ -63,6 +81,10 @@ const SUB_ABAS: SubAbaConfig[] = [
 
 export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTriboProps) {
   const [secao, setSecao] = useState<SecaoAdmin>("dashboard");
+
+  const temMobilidade = tribo.activeModules.includes("mobility");
+  const temServicos = tribo.activeModules.includes("services");
+  const modoServicos = temServicos && !temMobilidade;
 
   const subAbasVisiveis = SUB_ABAS.filter((s) => {
     if (s.modulos === null) return true;
@@ -77,9 +99,21 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
           <p className="text-xs text-muted-foreground">Você é membro deste grupo</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-          Apenas o dono do grupo pode gerenciar motoristas, afiliados, regras e comissões.
-          Você recebe corridas e comissões deste grupo na sua aba <strong className="text-foreground">Início</strong> e{" "}
-          <strong className="text-foreground">Carteira</strong>.
+          {modoServicos ? (
+            <>
+              Apenas o dono do grupo pode gerenciar profissionais, regras e configurações.
+              Você gerencia seus agendamentos e ganhos na aba{" "}
+              <strong className="text-foreground">Início</strong> e{" "}
+              <strong className="text-foreground">Carteira</strong>.
+            </>
+          ) : (
+            <>
+              Apenas o dono do grupo pode gerenciar motoristas, afiliados, regras e comissões.
+              Você recebe corridas e comissões deste grupo na sua aba{" "}
+              <strong className="text-foreground">Início</strong> e{" "}
+              <strong className="text-foreground">Carteira</strong>.
+            </>
+          )}
         </div>
       </div>
     );
@@ -96,13 +130,15 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
 
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex gap-1 overflow-x-auto px-3 py-2 scrollbar-none">
-          {subAbasVisiveis.map(({ id, label, icone: Icone }) => {
-            const ativo = secao === id;
+          {subAbasVisiveis.map((sub) => {
+            const ativo = secao === sub.id;
+            const Icone = modoServicos && sub.iconeServicos ? sub.iconeServicos : sub.icone;
+            const label = modoServicos && sub.labelServicos ? sub.labelServicos : sub.label;
             return (
               <button
-                key={id}
+                key={sub.id}
                 type="button"
-                onClick={() => setSecao(id)}
+                onClick={() => setSecao(sub.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-colors ${
                   ativo
                     ? "bg-primary/15 text-primary border border-primary/30"
