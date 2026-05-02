@@ -87,6 +87,7 @@ export default function PaginaOnboarding() {
         planoId: planoSelecionado,
         configuracao,
         servicos,
+        disponibilidade,
       });
       toast.success("Tudo pronto!");
       window.location.href = fluxoSolo ? "/painel" : "/admin";
