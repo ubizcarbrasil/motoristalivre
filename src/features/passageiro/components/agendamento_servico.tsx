@@ -620,6 +620,20 @@ export function AgendamentoServico({
           </div>
         )}
 
+        {/* Fatores de preço dinâmicos */}
+        {servicoAtual && fatores.length > 0 && (
+          <SecaoFatoresServico
+            fatores={fatores}
+            valores={valoresFatores}
+            onChange={setValoresFatores}
+          />
+        )}
+
+        {/* Endereço do atendimento */}
+        {servicoAtual?.requires_address && slotSelecionado && (
+          <SecaoEnderecoAtendimento valor={endereco} onChange={setEndereco} />
+        )}
+
         {/* Identificação */}
         {slotSelecionado && (
           <div className="space-y-3">
