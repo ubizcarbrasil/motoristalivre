@@ -1,37 +1,69 @@
-import { DollarSign, Car, Percent, Star } from "lucide-react";
+import { DollarSign, Car, Percent, Star, Calendar, Briefcase } from "lucide-react";
 import type { EstatisticasHoje } from "../types/tipos_painel";
+import type { ModoPainel } from "../utils/modo_painel";
 
 interface GridStatsProps {
   stats: EstatisticasHoje;
+  modo: ModoPainel;
+  agendamentosHoje?: number;
+  servicosAtivos?: number;
 }
 
-export function GridStats({ stats }: GridStatsProps) {
-  const itens = [
-    {
-      label: "Faturamento",
-      valor: `R$${stats.faturamento.toFixed(2).replace(".", ",")}`,
-      icone: DollarSign,
-      cor: "text-primary",
-    },
-    {
-      label: "Corridas",
-      valor: String(stats.corridas),
-      icone: Car,
-      cor: "text-foreground",
-    },
-    {
-      label: "Comissões",
-      valor: `R$${stats.comissoes.toFixed(2).replace(".", ",")}`,
-      icone: Percent,
-      cor: "text-primary",
-    },
-    {
-      label: "Avaliação",
-      valor: stats.avaliacao > 0 ? stats.avaliacao.toFixed(1) : "—",
-      icone: Star,
-      cor: "text-foreground",
-    },
-  ];
+export function GridStats({ stats, modo, agendamentosHoje = 0, servicosAtivos = 0 }: GridStatsProps) {
+  const itens =
+    modo === "servicos"
+      ? [
+          {
+            label: "Faturamento",
+            valor: `R$${stats.faturamento.toFixed(2).replace(".", ",")}`,
+            icone: DollarSign,
+            cor: "text-primary",
+          },
+          {
+            label: "Agendamentos",
+            valor: String(agendamentosHoje),
+            icone: Calendar,
+            cor: "text-foreground",
+          },
+          {
+            label: "Serviços ativos",
+            valor: String(servicosAtivos),
+            icone: Briefcase,
+            cor: "text-primary",
+          },
+          {
+            label: "Avaliação",
+            valor: stats.avaliacao > 0 ? stats.avaliacao.toFixed(1) : "—",
+            icone: Star,
+            cor: "text-foreground",
+          },
+        ]
+      : [
+          {
+            label: "Faturamento",
+            valor: `R$${stats.faturamento.toFixed(2).replace(".", ",")}`,
+            icone: DollarSign,
+            cor: "text-primary",
+          },
+          {
+            label: "Corridas",
+            valor: String(stats.corridas),
+            icone: Car,
+            cor: "text-foreground",
+          },
+          {
+            label: "Comissões",
+            valor: `R$${stats.comissoes.toFixed(2).replace(".", ",")}`,
+            icone: Percent,
+            cor: "text-primary",
+          },
+          {
+            label: "Avaliação",
+            valor: stats.avaliacao > 0 ? stats.avaliacao.toFixed(1) : "—",
+            icone: Star,
+            cor: "text-foreground",
+          },
+        ];
 
   return (
     <div className="grid grid-cols-2 gap-3 px-5">
