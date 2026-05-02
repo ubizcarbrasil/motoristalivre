@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
 
 interface Props {
   categorias: string[];
