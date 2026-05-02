@@ -248,14 +248,7 @@ export function DialogoOnboardingProfissional({
             <PassoDadosBasicos form={form} onChange={atualizar} />
           )}
           {passo === 1 && (
-            <PassoTipoCategorias
-              form={form}
-              onChange={atualizar}
-              novaCategoria={novaCategoria}
-              setNovaCategoria={setNovaCategoria}
-              onAdicionar={adicionarCategoria}
-              onRemover={removerCategoria}
-            />
+            <PassoTipoCategorias form={form} onChange={atualizar} />
           )}
           {passo === 2 && <PassoBio form={form} onChange={atualizar} />}
           {passo === 3 && (
