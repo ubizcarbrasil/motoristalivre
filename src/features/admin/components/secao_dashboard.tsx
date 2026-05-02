@@ -16,6 +16,9 @@ export function SecaoDashboard() {
   const [motoristasOnline, setMotoristasOnline] = useState<{ nome: string; corridas: number; faturamento: number }[]>([]);
   const [afiliadosAtivos, setAfiliadosAtivos] = useState<{ nome: string; corridasHoje: number }[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [modoServicos, setModoServicos] = useState(false);
+  const [agendamentosHoje, setAgendamentosHoje] = useState(0);
+  const [profissionaisAtivos, setProfissionaisAtivos] = useState(0);
 
   useEffect(() => {
     if (!usuario) return;
@@ -33,42 +36,98 @@ export function SecaoDashboard() {
       if (!perfil) return;
       const tenantId = perfil.tenant_id;
 
+      // Detecta módulo dominante da tribo
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("active_modules")
+        .eq("id", tenantId)
+        .maybeSingle();
+      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+      const ehServicos = modulos.includes("services") && !modulos.includes("mobility");
+      setModoServicos(ehServicos);
+
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const inicioHoje = hoje.toISOString();
+      const fimHoje = new Date(hoje);
+      fimHoje.setDate(fimHoje.getDate() + 1);
 
-      const [corridasRes, motoristasRes, afiliadosRes] = await Promise.all([
-        supabase.from("rides").select("price_paid, driver_id").eq("tenant_id", tenantId).gte("created_at", inicioHoje),
+      const [corridasRes, motoristasRes, afiliadosRes, bookingsRes, servicosRes] = await Promise.all([
+        ehServicos
+          ? Promise.resolve({ data: [] as any[] })
+          : supabase.from("rides").select("price_paid, driver_id").eq("tenant_id", tenantId).gte("created_at", inicioHoje),
         supabase.from("drivers").select("id, slug, is_online").eq("tenant_id", tenantId),
         supabase.from("affiliates").select("id, slug, business_name, is_approved").eq("tenant_id", tenantId).eq("is_approved", true),
+        ehServicos
+          ? supabase
+              .from("service_bookings" as any)
+              .select("id, driver_id, price_agreed, status")
+              .eq("tenant_id", tenantId)
+              .gte("scheduled_at", inicioHoje)
+              .lt("scheduled_at", fimHoje.toISOString())
+          : Promise.resolve({ data: [] as any[] }),
+        ehServicos
+          ? supabase
+              .from("service_types" as any)
+              .select("id, driver_id, is_active")
+              .eq("tenant_id", tenantId)
+              .eq("is_active", true)
+          : Promise.resolve({ data: [] as any[] }),
       ]);
 
-      const corridas = corridasRes.data || [];
-      const motoristas = motoristasRes.data || [];
-      const afiliados = afiliadosRes.data || [];
+      const corridas = (corridasRes.data || []) as any[];
+      const motoristas = (motoristasRes.data || []) as any[];
+      const afiliados = (afiliadosRes.data || []) as any[];
+      const bookings = (bookingsRes.data || []) as any[];
+      const servicos = (servicosRes.data || []) as any[];
 
-      const receitaHoje = corridas.reduce((acc, c) => acc + (c.price_paid || 0), 0);
       const onlineCount = motoristas.filter((m) => m.is_online).length;
 
-      setStats([
-        { label: "Receita hoje", valor: `R$ ${receitaHoje.toFixed(2)}`, icone: DollarSign },
-        { label: "Corridas hoje", valor: String(corridas.length), icone: Car },
-        { label: "Comissoes hoje", valor: "R$ 0,00", icone: Percent },
-        { label: "Afiliados ativos", valor: String(afiliados.length), icone: Users },
-        { label: "Motoristas online", valor: String(onlineCount), icone: Wifi },
-      ]);
+      if (ehServicos) {
+        const receitaHoje = bookings.reduce((acc, b) => acc + Number(b.price_agreed || 0), 0);
+        setAgendamentosHoje(bookings.length);
+        setProfissionaisAtivos(servicos.length);
+        setStats([
+          { label: "Receita hoje", valor: `R$ ${receitaHoje.toFixed(2)}`, icone: DollarSign },
+          { label: "Agendamentos hoje", valor: String(bookings.length), icone: Calendar },
+          { label: "Serviços ativos", valor: String(servicos.length), icone: Briefcase },
+          { label: "Tribo (membros)", valor: String(afiliados.length + motoristas.length), icone: Users },
+          { label: "Profissionais online", valor: String(onlineCount), icone: Wifi },
+        ]);
 
-      const motoristasOnlineData = motoristas
-        .filter((m) => m.is_online)
-        .map((m) => {
-          const corridasMotorista = corridas.filter((c) => c.driver_id === m.id);
-          return {
-            nome: m.slug,
-            corridas: corridasMotorista.length,
-            faturamento: corridasMotorista.reduce((a, c) => a + (c.price_paid || 0), 0),
-          };
-        });
-      setMotoristasOnline(motoristasOnlineData);
+        const profissionaisData = motoristas
+          .filter((m) => m.is_online)
+          .map((m) => {
+            const meusBookings = bookings.filter((b) => b.driver_id === m.id);
+            return {
+              nome: m.slug,
+              corridas: meusBookings.length,
+              faturamento: meusBookings.reduce((a, b) => a + Number(b.price_agreed || 0), 0),
+            };
+          });
+        setMotoristasOnline(profissionaisData);
+      } else {
+        const receitaHoje = corridas.reduce((acc, c) => acc + (c.price_paid || 0), 0);
+        setStats([
+          { label: "Receita hoje", valor: `R$ ${receitaHoje.toFixed(2)}`, icone: DollarSign },
+          { label: "Corridas hoje", valor: String(corridas.length), icone: Car },
+          { label: "Comissoes hoje", valor: "R$ 0,00", icone: Percent },
+          { label: "Afiliados ativos", valor: String(afiliados.length), icone: Users },
+          { label: "Motoristas online", valor: String(onlineCount), icone: Wifi },
+        ]);
+
+        const motoristasOnlineData = motoristas
+          .filter((m) => m.is_online)
+          .map((m) => {
+            const corridasMotorista = corridas.filter((c) => c.driver_id === m.id);
+            return {
+              nome: m.slug,
+              corridas: corridasMotorista.length,
+              faturamento: corridasMotorista.reduce((a, c) => a + (c.price_paid || 0), 0),
+            };
+          });
+        setMotoristasOnline(motoristasOnlineData);
+      }
 
       setAfiliadosAtivos(
         afiliados.map((a) => ({
