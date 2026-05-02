@@ -235,6 +235,13 @@ export default function PaginaSolicitarOrcamento() {
       </header>
 
       <main className="max-w-md mx-auto px-4 py-6">
+        {bannerVisivel && rascunhoEm && (
+          <BannerRascunho
+            atualizadoEm={rascunhoEm}
+            onContinuar={continuarRascunho}
+            onDescartar={descartarRascunho}
+          />
+        )}
         {passo === 1 && (
           <PassoCategoria
             categorias={categorias}
