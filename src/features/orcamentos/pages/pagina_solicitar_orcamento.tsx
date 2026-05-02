@@ -31,8 +31,8 @@ type Passo = 1 | 2 | 3 | 4 | 5;
 export default function PaginaSolicitarOrcamento() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { usuario } = useAutenticacao();
-  const { tenant } = useTenant();
+  const { usuario } = useContext(ContextoAutenticacao);
+  const { tenant } = useContext(ContextoTenant);
 
   const [categorias, setCategorias] = useState<CategoriaServico[]>([]);
   const [carregando, setCarregando] = useState(true);
