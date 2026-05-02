@@ -1559,6 +1559,42 @@ export type Database = {
           },
         ]
       }
+      team_mirror_invites: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_driver_id: string
+          inviter_driver_id: string
+          message: string | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["team_mirror_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_driver_id: string
+          inviter_driver_id: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["team_mirror_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_driver_id?: string
+          inviter_driver_id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["team_mirror_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenant_branding: {
         Row: {
           city: string | null
@@ -1975,6 +2011,7 @@ export type Database = {
         | "cancelled"
       service_pricing_mode: "fixed" | "hourly" | "daily"
       subscription_status: "active" | "past_due" | "cancelled" | "trialing"
+      team_mirror_status: "pending" | "accepted" | "declined"
       tenant_status: "active" | "inactive" | "suspended"
       user_status: "active" | "inactive" | "banned"
       wallet_owner_type: "driver" | "affiliate" | "group"
@@ -2152,6 +2189,7 @@ export const Constants = {
       ],
       service_pricing_mode: ["fixed", "hourly", "daily"],
       subscription_status: ["active", "past_due", "cancelled", "trialing"],
+      team_mirror_status: ["pending", "accepted", "declined"],
       tenant_status: ["active", "inactive", "suspended"],
       user_status: ["active", "inactive", "banned"],
       wallet_owner_type: ["driver", "affiliate", "group"],
