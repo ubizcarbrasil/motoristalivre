@@ -21,8 +21,8 @@ DO $$
 DECLARE
   _tenant_id uuid;
   _category_id uuid;
-  _driver_a uuid := gen_random_uuid();  -- atendente
-  _driver_b uuid := gen_random_uuid();  -- origem (cobertura/indicação)
+  _driver_a uuid;  -- atendente
+  _driver_b uuid;  -- origem (cobertura/indicação)
   _service_type_id uuid;
   _booking_cobertura uuid;
   _booking_indicacao uuid;
@@ -42,20 +42,28 @@ DECLARE
   _saldo_b_final numeric;
   _commission_type text;
 BEGIN
-  -- Pega tenant existente para satisfazer FKs
-  SELECT id INTO _tenant_id FROM public.tenants LIMIT 1;
+  -- Pega 2 drivers reais do mesmo tenant
+  SELECT tenant_id INTO _tenant_id
+  FROM public.drivers
+  GROUP BY tenant_id
+  HAVING count(*) >= 2
+  LIMIT 1;
+
   IF _tenant_id IS NULL THEN
-    RAISE EXCEPTION 'Nenhum tenant disponível para teste';
+    RAISE EXCEPTION 'Precisa de pelo menos 2 drivers no mesmo tenant para o teste';
   END IF;
 
-  RAISE NOTICE '=== Setup: tenant=% ===', _tenant_id;
+  SELECT id INTO _driver_a FROM public.drivers WHERE tenant_id = _tenant_id ORDER BY created_at LIMIT 1;
+  SELECT id INTO _driver_b FROM public.drivers WHERE tenant_id = _tenant_id AND id <> _driver_a ORDER BY created_at LIMIT 1;
+
+  RAISE NOTICE '=== Setup: tenant=% drv_a=% drv_b=% ===', _tenant_id, _driver_a, _driver_b;
 
   -- Garante tenant_settings (fallback se não houver regra)
   INSERT INTO public.tenant_settings (tenant_id, transbordo_commission, affiliate_commission)
   VALUES (_tenant_id, 0, 0)
   ON CONFLICT (tenant_id) DO NOTHING;
 
-  -- Cria/usa categoria
+  -- Categoria de teste
   INSERT INTO public.service_categories (slug, nome, ordem)
   VALUES ('teste-comissao-' || substr(gen_random_uuid()::text, 1, 6), 'Teste Comissão', 999)
   RETURNING id INTO _category_id;
@@ -67,19 +75,17 @@ BEGIN
     _tenant_id, _category_id, _pct_cobertura, _pct_indicacao, 0, true
   );
 
-  -- drivers fake (não criamos linhas em public.users porque ela tem FK para auth.users)
-  INSERT INTO public.drivers (id, tenant_id, slug, is_verified)
-  VALUES
-    (_driver_a, _tenant_id, 'a-' || substr(_driver_a::text, 1, 8), true),
-    (_driver_b, _tenant_id, 'b-' || substr(_driver_b::text, 1, 8), true);
-
-  -- Carteiras
+  -- Carteiras (upsert: cria se não houver, ajusta saldo controlado para o teste)
   INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
   VALUES (_driver_a, 'driver', _tenant_id, _saldo_a_inicial, 0)
+  ON CONFLICT (owner_id, owner_type) DO UPDATE
+    SET balance = _saldo_a_inicial, blocked_balance = 0
   RETURNING id INTO _wallet_a;
 
   INSERT INTO public.wallets (owner_id, owner_type, tenant_id, balance, blocked_balance)
   VALUES (_driver_b, 'driver', _tenant_id, _saldo_b_inicial, 0)
+  ON CONFLICT (owner_id, owner_type) DO UPDATE
+    SET balance = _saldo_b_inicial, blocked_balance = 0
   RETURNING id INTO _wallet_b;
 
   -- Tipo de serviço vinculado à categoria
