@@ -11,13 +11,13 @@ export function CardPerfilAcesso({ perfil }: Props) {
   const { titulo, descricao, Icone, acessoCaminho, cadastroCaminho, observacao } = perfil;
 
   return (
-    <article className="group flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40">
-      <header className="flex items-start gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-          <Icone className="h-6 w-6" />
+    <article className="group flex h-full flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40 sm:gap-5 sm:p-6">
+      <header className="flex items-start gap-3 sm:gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 sm:h-12 sm:w-12">
+          <Icone className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
-        <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-foreground">{titulo}</h3>
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-base font-semibold text-foreground sm:text-lg">{titulo}</h3>
           <p className="text-sm leading-relaxed text-muted-foreground">{descricao}</p>
         </div>
       </header>
