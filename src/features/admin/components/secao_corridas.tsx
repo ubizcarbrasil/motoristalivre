@@ -34,7 +34,6 @@ export function SecaoCorridas() {
 
   const ehServicos = modo === "servicos";
   const labelTitulo = ehServicos ? "agendamento" : "corrida";
-  const labelTituloPlural = ehServicos ? "agendamentos" : "corridas";
 
   useEffect(() => {
     if (!usuario) return;
