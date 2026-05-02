@@ -149,19 +149,8 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
         stats: statsAfiliado,
       },
     );
-  } else {
-    // Profissional puro (sem corridas) ainda pode indicar — mantém afiliado
-    const statsAfiliado = await statsPorOrigem("origin_affiliate_id", p.driverId);
-    canais.push({
-      tipo: "afiliado",
-      titulo: "Link de afiliado",
-      descricao: "Para indicar corridas e ganhar comissão por cada uma atendida.",
-      url: `${base}/${p.tenantSlug}/a/${p.driverSlug}`,
-      handle: `@${p.driverSlug}`,
-      cor: "azul",
-      stats: statsAfiliado,
-    });
   }
+  // Profissional puro (modo serviços) não recebe link de afiliado de corridas.
 
   if (p.ehAdminGrupo) {
     const stats = await statsTenant(p.tenantId);
