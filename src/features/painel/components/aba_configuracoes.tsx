@@ -148,6 +148,12 @@ export function AbaConfiguracoes({
     temServicos &&
     (professionalType === "service_provider" || professionalType === "both");
 
+  // Modo "serviços puros": esconde toda a UI de mobilidade
+  const modoServicosPuro =
+    temServicos && professionalType === "service_provider";
+
+  const exibirSecoesMobilidade = temMobilidade && !modoServicosPuro;
+
   return (
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
@@ -159,7 +165,7 @@ export function AbaConfiguracoes({
         />
       )}
 
-      {temMobilidade && (
+      {exibirSecoesMobilidade && (
         <>
           <SecaoMeuPreco driverId={driverId} tenantId={tenantId} />
           <Separator />
@@ -173,7 +179,7 @@ export function AbaConfiguracoes({
       {/* Tipo de profissional — só faz sentido quando a tribo tem mobilidade
           (define se atende corrida, serviço ou ambos). Em tribo só de serviços
           o tipo é fixo em service_provider. */}
-      {temMobilidade && (
+      {exibirSecoesMobilidade && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Briefcase className="w-4 h-4 text-primary" />
