@@ -127,7 +127,10 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
   const canais: CanalLink[] = [];
 
   if (ofereceServicos) {
-    const stats = await statsServicos(p.driverId);
+    const [stats, statsIndicacao] = await Promise.all([
+      statsServicos(p.driverId),
+      statsIndicacaoServicos(p.driverId),
+    ]);
     canais.push({
       tipo: "servicos",
       titulo: "Link de Serviços",
@@ -139,6 +142,21 @@ export async function buscarCanaisLinks(p: BuscarCanaisParams): Promise<CanalLin
       rotuloMetricas: {
         primario: "Agendamentos/mês",
         secundario: "Conclusão",
+        terciario: "Receita/mês",
+      },
+    });
+    canais.push({
+      tipo: "indicacao_servicos",
+      titulo: "Link de indicação",
+      descricao:
+        "Para indicar clientes ao seu grupo e ganhar comissão sobre os agendamentos.",
+      url: `${base}/s/${p.tenantSlug}/a/${p.driverSlug}`,
+      handle: `@${p.driverSlug}`,
+      cor: "azul",
+      stats: statsIndicacao,
+      rotuloMetricas: {
+        primario: "Indicações/mês",
+        secundario: "Conversão",
         terciario: "Receita/mês",
       },
     });
