@@ -55,6 +55,20 @@ export default function PaginaPerfilMotorista() {
     perfil.professional_type === "service_provider" || perfil.professional_type === "both";
   const ofereceCorrida =
     perfil.professional_type === "driver" || perfil.professional_type === "both";
+  const temServicosVendaveis = servicos.length > 0;
+  const temEspecialidades = perfil.service_categories.length > 0;
+
+  const abrirOrcamentoWhatsapp = () => {
+    if (!perfil.whatsapp) return;
+    const numero = perfil.whatsapp.replace(/\D/g, "");
+    const completo = numero.length <= 11 ? `55${numero}` : numero;
+    const mensagem = `Olá ${perfil.nome}, vim pelo TriboServiços e gostaria de solicitar um orçamento.`;
+    window.open(
+      `https://wa.me/${completo}?text=${encodeURIComponent(mensagem)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
