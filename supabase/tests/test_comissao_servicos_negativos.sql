@@ -38,6 +38,8 @@ DECLARE
   _qtd_commissions int;
   _qtd_wallet_tx int;
   _result jsonb;
+  _ts_transbordo numeric;
+  _ts_affiliate numeric;
 BEGIN
   -- Setup base
   SELECT tenant_id INTO _tenant_id
