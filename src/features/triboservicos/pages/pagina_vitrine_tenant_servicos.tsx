@@ -22,6 +22,7 @@ import {
 
 export default function PaginaVitrineTenantServicos() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [tenant, setTenant] = useState<TenantPublicoServicos | null>(null);
   const [profissionais, setProfissionais] = useState<ProfissionalVitrine[]>([]);
   const [preview, setPreview] = useState<ItemPreviewPortfolioTenant[]>([]);
