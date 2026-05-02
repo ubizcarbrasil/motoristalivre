@@ -1,30 +1,22 @@
 import { useNavigate } from "react-router-dom";
-import { Loader2, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, CalendarPlus, Loader2, MessageCircle, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { usePerfilMotorista } from "../hooks/hook_perfil_motorista";
-import { HeaderPerfil } from "../components/header_perfil";
-import { GridMetricas } from "../components/grid_metricas";
-import { InfoVeiculo } from "../components/info_veiculo";
 import { SecaoBio } from "../components/secao_bio";
-import { DistribuicaoNotas } from "../components/distribuicao_notas";
-import { ListaAvaliacoes } from "../components/lista_avaliacoes";
 import { SecaoServicosPublica } from "../components/secao_servicos_publica";
-import { SecaoDisponibilidadePublica } from "../components/secao_disponibilidade_publica";
 import { SecaoEquipePublica } from "../components/secao_equipe_publica";
-import { SecaoCategoriasPortfolio } from "../components/secao_categorias_portfolio";
-import { SecaoEspecialidadesPublica } from "../components/secao_especialidades_publica";
-import { MessageCircle } from "lucide-react";
+import { VitrineEspecialidades } from "@/compartilhados/components/vitrine_especialidades";
+import { imagemDeCapa } from "@/compartilhados/utils/imagens_categorias";
+import { nomePorSlug } from "@/compartilhados/constants/constantes_categorias_servico";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
   const {
     perfil,
-    metricas,
-    distribuicao,
-    avaliacoes,
     servicos,
-    disponibilidade,
     portfolio,
     equipe,
     carregando,
@@ -50,13 +42,28 @@ export default function PaginaPerfilMotorista() {
     );
   }
 
-  const urlBase = `/${perfil.tenant_slug}/${perfil.slug}`;
   const ofereceServico =
     perfil.professional_type === "service_provider" || perfil.professional_type === "both";
   const ofereceCorrida =
     perfil.professional_type === "driver" || perfil.professional_type === "both";
   const temServicosVendaveis = servicos.length > 0;
   const temEspecialidades = perfil.service_categories.length > 0;
+  const coverUrl = perfil.cover_url ?? imagemDeCapa(perfil.service_categories);
+  const inicial = perfil.nome.charAt(0).toUpperCase();
+  const categoriasTopo = perfil.service_categories.slice(0, 5);
+
+  const compartilhar = () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: perfil.nome, url }).catch(() => {
+        navigator.clipboard.writeText(url);
+        toast.success("Link copiado!");
+      });
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    }
+  };
 
   const abrirOrcamentoWhatsapp = () => {
     if (!perfil.whatsapp) return;
@@ -70,37 +77,90 @@ export default function PaginaPerfilMotorista() {
     );
   };
 
-  return (
-    <div className="fixed inset-0 bg-background overflow-y-auto">
-      {/* Botão de voltar flutuante sobre a cover image */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed top-3 left-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
-        aria-label="Voltar"
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </button>
+  const irAgendar = () =>
+    navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`);
+  const irCorrida = () =>
+    navigate(`/${perfil.tenant_slug}/${perfil.slug}?modo=ride`);
 
-      <div className="space-y-5 pb-32">
-        <HeaderPerfil perfil={perfil} />
-        <GridMetricas metricas={metricas} />
+  return (
+    <main className="min-h-screen bg-background pb-32">
+      {/* Botões flutuantes sobre a cover */}
+      <div className="fixed top-3 inset-x-0 z-30 flex items-center justify-between px-3 pointer-events-none">
+        <button
+          onClick={() => navigate(-1)}
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <button
+          onClick={compartilhar}
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-md border border-border text-foreground shadow-lg"
+          aria-label="Compartilhar"
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Cover */}
+      <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-secondary">
+        <img
+          src={coverUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+      </div>
+
+      {/* Identidade */}
+      <section className="max-w-3xl mx-auto px-4 -mt-12 relative">
+        <Avatar className="w-20 h-20 sm:w-24 sm:h-24 ring-4 ring-background shadow-xl">
+          <AvatarImage src={perfil.avatar_url ?? undefined} alt={perfil.nome} />
+          <AvatarFallback className="text-xl bg-primary/10 text-primary">
+            {inicial}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="mt-3 space-y-2">
+          <h1 className="text-2xl font-semibold text-foreground leading-tight">
+            {perfil.nome}
+          </h1>
+          {perfil.tenant_nome && (
+            <p className="text-sm text-muted-foreground">{perfil.tenant_nome}</p>
+          )}
+          {categoriasTopo.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {categoriasTopo.map((cat) => (
+                <Badge key={cat} variant="secondary" className="text-xs">
+                  {nomePorSlug(cat)}
+                </Badge>
+              ))}
+              {perfil.service_categories.length > 5 && (
+                <Badge variant="outline" className="text-xs">
+                  +{perfil.service_categories.length - 5}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="mt-6 space-y-6">
         <SecaoBio bio={perfil.bio} />
 
         {ofereceServico && (
           <>
             {temServicosVendaveis ? (
-              <>
-                <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
-                <SecaoServicosPublica
-                  servicos={servicos}
-                  portfolio={portfolio}
-                  tenantSlug={perfil.tenant_slug}
-                  driverSlug={perfil.slug}
-                />
-              </>
+              <SecaoServicosPublica
+                servicos={servicos}
+                portfolio={portfolio}
+                tenantSlug={perfil.tenant_slug}
+                driverSlug={perfil.slug}
+              />
             ) : (
               temEspecialidades && (
-                <SecaoEspecialidadesPublica
+                <VitrineEspecialidades
                   categorias={perfil.service_categories}
                   nomeProfissional={perfil.nome}
                   whatsapp={perfil.whatsapp}
@@ -108,74 +168,47 @@ export default function PaginaPerfilMotorista() {
               )
             )}
             <SecaoEquipePublica membros={equipe} tenantSlug={perfil.tenant_slug} />
-            <SecaoDisponibilidadePublica blocos={disponibilidade} />
           </>
         )}
-
-        {ofereceCorrida && <InfoVeiculo perfil={perfil} />}
-
-        <DistribuicaoNotas
-          distribuicao={distribuicao}
-          notaMedia={metricas.nota_media}
-          totalAvaliacoes={metricas.total_avaliacoes}
-        />
-        <ListaAvaliacoes avaliacoes={avaliacoes} />
-
-        <div className="px-6">
-          <h2 className="text-sm font-semibold text-foreground mb-2">Grupo</h2>
-          <div className="flex items-center gap-2 rounded-xl bg-card border border-border p-3">
-            <Badge variant="outline" className="border-primary text-primary">
-              {perfil.tenant_nome}
-            </Badge>
-            <span className="text-xs text-muted-foreground">/{perfil.tenant_slug}</span>
-          </div>
-        </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm border-t border-border">
-        {perfil.professional_type === "both" ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              className="h-12 text-sm font-semibold"
-              onClick={() => navigate(`${urlBase}?modo=ride`)}
-            >
+      {/* Bottom action bar */}
+      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur p-4">
+        <div className="max-w-3xl mx-auto">
+          {perfil.professional_type === "both" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="h-12" onClick={irCorrida}>
+                Solicitar corrida
+              </Button>
+              <Button className="h-12 gap-2" onClick={irAgendar}>
+                <CalendarPlus className="w-4 h-4" />
+                Agendar
+              </Button>
+            </div>
+          ) : ofereceServico ? (
+            temServicosVendaveis ? (
+              <Button size="lg" className="w-full gap-2" onClick={irAgendar}>
+                <CalendarPlus className="w-4 h-4" />
+                Agendar agora
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="w-full gap-2"
+                disabled={!perfil.whatsapp}
+                onClick={abrirOrcamentoWhatsapp}
+              >
+                <MessageCircle className="w-4 h-4" />
+                {perfil.whatsapp ? "Solicitar orçamento" : "WhatsApp não cadastrado"}
+              </Button>
+            )
+          ) : ofereceCorrida ? (
+            <Button size="lg" className="w-full" onClick={irCorrida}>
               Solicitar corrida
             </Button>
-            <Button
-              className="h-12 text-sm font-semibold"
-              onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
-            >
-              Agendar serviço
-            </Button>
-          </div>
-        ) : ofereceServico ? (
-          temServicosVendaveis ? (
-            <Button
-              className="w-full h-12 text-base font-semibold"
-              onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
-            >
-              Agendar serviço
-            </Button>
-          ) : (
-            <Button
-              className="w-full h-12 text-base font-semibold gap-2"
-              disabled={!perfil.whatsapp}
-              onClick={abrirOrcamentoWhatsapp}
-            >
-              <MessageCircle className="w-4 h-4" />
-              Solicitar orçamento
-            </Button>
-          )
-        ) : (
-          <Button
-            className="w-full h-12 text-base font-semibold"
-            onClick={() => navigate(urlBase)}
-          >
-            Solicitar corrida
-          </Button>
-        )}
+          ) : null}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
