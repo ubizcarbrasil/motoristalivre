@@ -171,6 +171,7 @@ export default function PaginaPainel() {
               tenantId={triboAtiva.id}
               ehAdmin={true}
               activeModules={activeModulesAtual}
+              modo={modoPainel}
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
@@ -182,6 +183,7 @@ export default function PaginaPainel() {
             mostrarTribo={true}
             modoSomenteDono
             activeModules={activeModulesAtual}
+            modo={modoPainel}
           />
         </div>
       );
