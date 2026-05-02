@@ -141,7 +141,7 @@ export function SecaoMotoristas() {
           </div>
         ))}
         {motoristas.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Nenhum motorista cadastrado</p>
+          <p className="text-center text-muted-foreground py-8">Nenhum {labelEntidade} cadastrado</p>
         )}
       </div>
 
