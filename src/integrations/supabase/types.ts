@@ -2248,6 +2248,10 @@ export type Database = {
           min_fare: number
           price_per_km: number
           price_per_min: number
+          quote_menu_color: string | null
+          quote_menu_enabled: boolean
+          quote_menu_icon: string | null
+          quote_menu_label: string | null
           tenant_id: string
           timezone: string
           transbordo_commission: number
@@ -2267,6 +2271,10 @@ export type Database = {
           min_fare?: number
           price_per_km?: number
           price_per_min?: number
+          quote_menu_color?: string | null
+          quote_menu_enabled?: boolean
+          quote_menu_icon?: string | null
+          quote_menu_label?: string | null
           tenant_id: string
           timezone?: string
           transbordo_commission?: number
@@ -2286,6 +2294,10 @@ export type Database = {
           min_fare?: number
           price_per_km?: number
           price_per_min?: number
+          quote_menu_color?: string | null
+          quote_menu_enabled?: boolean
+          quote_menu_icon?: string | null
+          quote_menu_label?: string | null
           tenant_id?: string
           timezone?: string
           transbordo_commission?: number
