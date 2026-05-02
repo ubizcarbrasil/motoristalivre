@@ -27,7 +27,7 @@ export function VitrineEspecialidades({
   whatsapp,
   titulo = "Serviços oferecidos",
 }: Props) {
-  const ordenadas = ordenar(categorias);
+  const ordenadas = categorias;
   if (ordenadas.length === 0) return null;
 
   const solicitarOrcamento = (especialidade?: string) => {
