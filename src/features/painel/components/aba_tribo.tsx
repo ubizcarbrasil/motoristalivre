@@ -86,7 +86,7 @@ const SUB_ABAS: SubAbaConfig[] = [
   { id: "carteira", label: "Carteira", icone: Wallet, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "identidade", label: "Visual", icone: Palette, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "regras", label: "Regras", icone: Settings, modos: ["mobilidade", "servicos", "hibrido"] },
-  { id: "comissoes", label: "Comissões", icone: Percent, modos: ["mobilidade", "hibrido"] },
+  { id: "comissoes", label: "Comissões", icone: Percent, modos: ["mobilidade", "servicos", "hibrido"] },
 ];
 
 export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, professionalType }: AbaTriboProps) {
