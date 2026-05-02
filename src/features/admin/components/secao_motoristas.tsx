@@ -24,7 +24,6 @@ export function SecaoMotoristas() {
   const [modo, setModo] = useState<Modo>("mobilidade");
 
   const labelEntidade = modo === "servicos" ? "profissional" : "motorista";
-  const labelEntidadePlural = modo === "servicos" ? "profissionais" : "motoristas";
   const labelMetrica = modo === "servicos" ? "Agendamentos" : "Corridas";
 
   useEffect(() => {
