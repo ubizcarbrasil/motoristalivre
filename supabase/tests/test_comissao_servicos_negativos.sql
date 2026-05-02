@@ -260,8 +260,7 @@ BEGIN
   -- N6: idempotência - reprocessar não duplica
   -- =========================================================
   RAISE NOTICE '--- N6: idempotência ---';
-  UPDATE public.wallets SET balance = _saldo_a_ini, blocked_balance = 0 WHERE id = _wallet_a;
-  UPDATE public.wallets SET balance = _saldo_b_ini, blocked_balance = 0 WHERE id = _wallet_b;
+  -- (sem reset de saldos — comparações são por delta de commissions/wallet_tx)
 
   INSERT INTO public.service_bookings (
     tenant_id, driver_id, service_type_id, scheduled_at,
