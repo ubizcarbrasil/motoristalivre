@@ -324,20 +324,19 @@ Deno.serve(async (req) => {
     .single();
   if (errBook) return json({ error: errBook.message }, 500);
 
-  // 5.1) Persiste endereço se enviado
-  if (body.address) {
-    const a = body.address;
+  // 5.1) Persiste endereço normalizado
+  if (enderecoNormalizado) {
     await supabase.from("service_booking_addresses").insert({
       booking_id: booking.id,
       tenant_id: body.tenant_id,
-      cep: a.cep ?? null,
-      logradouro: a.logradouro ?? null,
-      numero: a.numero ?? null,
-      complemento: a.complemento ?? null,
-      bairro: a.bairro ?? null,
-      cidade: a.cidade ?? null,
-      uf: a.uf ?? null,
-      referencia: a.referencia ?? null,
+      cep: enderecoNormalizado.cep || null,
+      logradouro: enderecoNormalizado.logradouro || null,
+      numero: enderecoNormalizado.numero || null,
+      complemento: enderecoNormalizado.complemento || null,
+      bairro: enderecoNormalizado.bairro || null,
+      cidade: enderecoNormalizado.cidade || null,
+      uf: enderecoNormalizado.uf || null,
+      referencia: enderecoNormalizado.referencia || null,
     });
   }
 
