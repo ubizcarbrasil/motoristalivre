@@ -839,6 +839,45 @@ export type Database = {
         }
         Relationships: []
       }
+      recruitment_monthly_payouts: {
+        Row: {
+          amount: number
+          ano_mes: string
+          commission_id: string | null
+          created_at: string
+          id: string
+          recruited_id: string
+          recruiter_id: string
+          referral_id: string
+          tenant_id: string
+          wallet_transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          ano_mes: string
+          commission_id?: string | null
+          created_at?: string
+          id?: string
+          recruited_id: string
+          recruiter_id: string
+          referral_id: string
+          tenant_id: string
+          wallet_transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          ano_mes?: string
+          commission_id?: string | null
+          created_at?: string
+          id?: string
+          recruited_id?: string
+          recruiter_id?: string
+          referral_id?: string
+          tenant_id?: string
+          wallet_transaction_id?: string | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -2023,6 +2062,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _ensure_driver_wallet: {
+        Args: { _driver_id: string; _tenant_id: string }
+        Returns: string
+      }
       approve_payout: { Args: { _payout_id: string }; Returns: undefined }
       create_guest_ride_request: {
         Args: {
@@ -2071,6 +2114,13 @@ export type Database = {
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
+      process_recruitment_monthly: {
+        Args: never
+        Returns: {
+          processados: number
+          total_pago: number
+        }[]
+      }
       process_ride_commission: { Args: { _ride_id: string }; Returns: Json }
       process_service_commission: {
         Args: { _booking_id: string }

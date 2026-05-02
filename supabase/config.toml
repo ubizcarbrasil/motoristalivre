@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.seed-personas]
 verify_jwt = false
+
+[functions.cron-recruitment-commissions]
+verify_jwt = false
