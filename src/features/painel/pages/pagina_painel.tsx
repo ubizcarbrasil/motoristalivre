@@ -297,6 +297,7 @@ export default function PaginaPainel() {
         driverId={userId}
         tenantId={tenant.id}
         dadosIniciais={dadosOnboarding}
+        modoServicos={modoPainel === "servicos"}
         onConcluido={() => {
           setDialogoOnboardingAberto(false);
           recarregarOnboarding();
