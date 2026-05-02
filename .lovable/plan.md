@@ -1,78 +1,59 @@
-# Página de QA de Links — `/dev/links`
+## Problema
 
-Criar uma página simples (rota dev, sem autenticação obrigatória) que lista todas as tribos cadastradas no banco e gera os links clicáveis de todos os fluxos públicos para cada uma. Serve para testar rapidamente o sistema ponta a ponta sem precisar digitar slugs manualmente.
+No onboarding profissional, o usuário fica preso no Passo 2 com o erro "Categoria inválida na lista" ao clicar em **Avançar**, mesmo que as categorias visíveis pareçam corretas.
 
-## O que será criado
+### Causa raiz
 
-### Nova feature: `src/features/dev_links/`
+O perfil do profissional (`drivers.service_categories` no banco) contém uma entrada legada `"Limpeza"` (com L maiúsculo, texto livre) que **não corresponde a nenhum id de categoria válido**. Os ids válidos do catálogo são tipo `"encanador"`, `"limpeza-pos-obra"`, `"troca-registro"`, etc.
+
+Como o chip mostra o `nomePorSlug(slug)` que faz fallback para o próprio slug quando ele não é encontrado, a string `"Limpeza"` aparece como se fosse uma categoria normal, mas o schema (`schemaOnboardingProfissional`) rejeita no `.refine(slugValido)`.
+
+### Confirmação no banco
 
 ```
-src/features/dev_links/
-├── pages/
-│   └── pagina_dev_links.tsx         # tela principal
-├── components/
-│   ├── card_tribo_links.tsx         # card por tribo com links
-│   ├── secao_links_globais.tsx      # links que não dependem de tribo
-│   └── linha_link.tsx               # uma linha (label + URL + botão copiar)
-├── hooks/
-│   └── hook_listar_tribos_dev.ts    # busca tenants do banco
-├── services/
-│   └── servico_dev_links.ts         # query dos tenants
-├── types/
-│   └── tipos_dev_links.ts           # TriboDev, GrupoLinks
-└── utils/
-    └── construtor_links.ts          # monta as URLs por slug
+service_categories: ["Limpeza", "encanador", "troca-vaso-sanitario",
+                     "instalacao-filtro", "troca-registro", "desentupimento"]
 ```
 
-### Estrutura da tela
+Apenas `"Limpeza"` é inválido — os outros 5 estão certos.
 
-**Topo:** título "Links para teste" + descrição curta.
+### Origem provável
 
-**Seção 1 — Links globais** (não dependem de tribo):
-- `/` Landing mobilidade
-- `/s` Landing serviços
-- `/acesso` Hub de acessos
-- `/entrar`, `/cadastro`
-- `/motorista/acesso`, `/motorista/cadastro`
-- `/profissional/acesso`, `/profissional/cadastro`
-- `/admin/acesso`
-- `/instalar`
+A função `adicionarCategoria` no `dialogo_onboarding_profissional.tsx` (linhas 144-161) aceita texto livre via `novaCategoria` e salva sem normalizar para slug. Esse fluxo está obsoleto desde que o `SeletorCategoriasServico` foi adotado, mas ainda existe e gerou o lixo legado.
 
-**Seção 2 — Tribos cadastradas** (uma card por tenant retornado do banco):
-Cada card mostra: nome da tribo, slug em mono, módulos ativos como badges, e os links da tribo:
-- `/{slug}` — passageiro (mobilidade)
-- `/m/{slug}` — mobilidade direto (só se `mobility` em active_modules)
-- `/s/{slug}` — vitrine serviços (só se `services` em active_modules)
-- `/{slug}/{driver_slug}` — exemplo com primeiro motorista da tribo (se houver)
+## Solução
 
-Cada linha tem: label, URL clicável (abre em nova aba) e botão copiar (toast "Copiado").
+### 1. Sanitizar `service_categories` ao carregar o formulário
 
-### Roteamento
-Adicionar em `src/App.tsx`:
-```tsx
-<Route path="/dev/links" element={<PaginaDevLinks />} />
+Em `montarFormInicial` (final do `dialogo_onboarding_profissional.tsx`), filtrar a lista usando `slugValido()` antes de popular o estado. Categorias antigas inválidas são descartadas silenciosamente — o usuário simplesmente não vê o item quebrado.
+
+### 2. Remover o adicionar de categoria por texto livre
+
+Apagar `novaCategoria`, `setNovaCategoria`, `adicionarCategoria`, `removerCategoria` e os props relacionados de `PassoTipoCategorias`. O único caminho oficial passa a ser o `SeletorCategoriasServicoInline`, que já só emite ids válidos do catálogo. Isso impede que novos profissionais voltem a salvar slugs inválidos.
+
+### 3. Mensagem de erro mais clara no schema
+
+Trocar `"Categoria inválida na lista"` por algo direcionado ao usuário, por exemplo:
+
 ```
-Sem proteção (igual a `/dev/personas` que já existe).
-
-### Query
-`servico_dev_links.ts` faz:
-```sql
-select id, slug, name, active_modules from tenants order by created_at desc;
-```
-Para cada tribo, opcionalmente busca o primeiro motorista:
-```sql
-select slug from drivers where tenant_id = ? limit 1;
+"Algumas categorias antigas não são mais suportadas. Toque em Editar e refaça a seleção."
 ```
 
-## Detalhes técnicos
+Mesmo com a sanitização do passo 1, manter uma mensagem útil caso ainda apareça o erro em outros pontos.
 
-- Usa tokens do design system (bg `#000`, accent `#1db865`, fonte IBM Plex Sans).
-- Componentização: `LinhaLink` é reutilizável, `CardTriboLinks` compõe várias linhas, `SecaoLinksGlobais` segue mesmo padrão.
-- Sem chamadas de API em componente visual — tudo passa pelo `servico_dev_links.ts` e hook.
-- Tipos: `TriboDev { id, slug, name, modulos, motoristaSlug? }`.
-- Botão copiar usa `navigator.clipboard.writeText` + `toast` do sonner.
+### 4. (Opcional) Migration de saneamento
 
-## Fora do escopo
-- Não cria autenticação para a rota.
-- Não modifica `/acesso` nem `docs/links_acesso.md`.
-- Não adiciona QR codes (pode ser próxima iteração se quiser).
+Como há registros antigos com slugs inválidos espalhados no banco, posso opcionalmente rodar uma migration que remove entradas inválidas de `drivers.service_categories`. Sem essa migration, cada perfil é limpo no primeiro `salvar` após reabrir o dialog (via passo 1).
+
+## Arquivos afetados
+
+```text
+src/features/painel/components/dialogo_onboarding_profissional.tsx   (sanitização + remover entrada livre)
+src/features/painel/schemas/schema_onboarding_profissional.ts        (mensagem clara)
+supabase/migrations/<novo>.sql                                       (opcional — saneamento)
+```
+
+## Confirmar antes de executar
+
+- [ ] Quer que eu inclua a migration de saneamento para limpar todos os perfis legados de uma vez?  
+- [ ] Posso remover o campo de "categoria livre" sem reservar fallback (ele não é mais usado pela UI atual)?
