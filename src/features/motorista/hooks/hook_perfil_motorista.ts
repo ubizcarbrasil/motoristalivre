@@ -53,6 +53,12 @@ export function usePerfilMotorista() {
 
         if (!tenant) { setErro(true); return; }
 
+        const { data: branding } = await supabase
+          .from("tenant_branding")
+          .select("whatsapp")
+          .eq("tenant_id", tenant.id)
+          .maybeSingle();
+
         const { data: driver } = await supabase
           .from("drivers")
           .select("*")
@@ -64,11 +70,16 @@ export function usePerfilMotorista() {
 
         const { data: user } = await supabase
           .from("users")
-          .select("full_name, avatar_url")
+          .select("full_name, avatar_url, phone")
           .eq("id", driver.id)
           .single();
 
         const tipoProfissional = ((driver as any).professional_type as PerfilPublicoMotorista["professional_type"]) ?? "driver";
+
+        const whatsappPerfil =
+          (branding?.whatsapp && branding.whatsapp.trim().length > 0
+            ? branding.whatsapp
+            : user?.phone) ?? null;
 
         setPerfil({
           id: driver.id,
