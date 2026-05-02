@@ -17,6 +17,7 @@ export interface MembroEquipe {
   nome: string;
   avatar_url: string | null;
   slug: string;
+  handle: string | null;
   is_verified: boolean;
   credential_verified: boolean;
   service_categories: string[];

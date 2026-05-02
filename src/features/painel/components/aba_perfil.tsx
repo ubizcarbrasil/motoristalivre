@@ -10,6 +10,7 @@ import type { PerfilMotorista, ReputacaoMotorista, AvaliacaoRecente } from "../t
 import { buscarReputacao, buscarAvaliacoesRecentes } from "../services/servico_painel";
 import { SELOS_MOTORISTA } from "../constants/constantes_painel";
 import { CampoUploadImagem } from "@/features/onboarding/components/campo_upload_imagem";
+import { EditorHandleProfissional } from "@/features/triboservicos/components/editor_handle_profissional";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 
 interface AbaPerfilProps {
@@ -164,6 +165,9 @@ export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
           {salvando ? "Salvando..." : "Salvar alterações"}
         </Button>
       </div>
+
+      {/* @handle público — apenas profissionais de serviço/híbrido */}
+      {perfil.professional_type !== "driver" && <EditorHandleProfissional />}
 
       {/* Reputação */}
       {reputacao && (

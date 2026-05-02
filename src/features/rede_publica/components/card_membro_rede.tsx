@@ -28,10 +28,15 @@ export function CardMembroRede({ membro, tenantSlug }: Props) {
   const categoriasMostrar = membro.service_categories.slice(0, 3);
   const restante = membro.service_categories.length - categoriasMostrar.length;
 
+  // Prefere @handle (URL curta) quando disponível
+  const destino = membro.handle
+    ? `/@${membro.handle}`
+    : `/s/${tenantSlug}/${membro.slug}`;
+
   return (
     <button
       type="button"
-      onClick={() => navigate(`/s/${tenantSlug}/${membro.slug}`)}
+      onClick={() => navigate(destino)}
       className="w-full text-left rounded-xl bg-card border border-border p-4 flex gap-3 hover:border-primary/50 transition-colors"
     >
       <div className="h-14 w-14 shrink-0 rounded-full overflow-hidden bg-secondary">

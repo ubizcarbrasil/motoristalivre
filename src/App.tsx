@@ -40,6 +40,7 @@ import PaginaPerfilProfissionalServicos from "@/features/triboservicos/pages/pag
 import PaginaAgendamentoServicos from "@/features/triboservicos/pages/pagina_agendamento_servicos";
 import PaginaIndicacaoServicos from "@/features/triboservicos/pages/pagina_indicacao_servicos";
 import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica";
+import PaginaResolverHandle from "@/features/triboservicos/pages/pagina_resolver_handle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,10 @@ const App = () => (
 
             {/* Mobilidade — link público exclusivo */}
             <Route path="/m/:slug" element={<PaginaPublicaMobilidade />} />
+
+            {/* Friendly URL via @handle — resolve para o perfil canônico */}
+            <Route path="/@:handle" element={<PaginaResolverHandle />} />
+
 
             <Route path="/s/:slug/a/:driver_slug" element={<PaginaIndicacaoServicos />} />
             <Route path="/s/:slug/:driver_slug/rede" element={<PaginaRedePublica />} />

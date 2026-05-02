@@ -106,16 +106,18 @@ Fase 1 (Schema base)
 
 ---
 
-## Fase 6 — Handles @ e roteamento amigável (Semana 6)
+## Fase 6 — Handles @ e roteamento amigável (Semana 6) ✅
 
 **Objetivo:** suporte a URLs no formato `/@joao-eletricista` conforme memorial.
 
 **Entregáveis**
-- Migration: adicionar coluna `handle` em `drivers` (unique, lowercase, regex)
-- Função SQL `generate_handle(_full_name)` com fallback numérico
-- Rota catch-all `/@:handle` que resolve para o perfil correto (busca `drivers.handle`)
-- Componente de edição de handle no painel do profissional (com validação de disponibilidade)
-- Redirect 301 das URLs antigas (`/s/:slug/:driver_slug`) quando handle existir
+- ✅ Migration: coluna `handle` em `drivers` (unique global, regex `^[a-z0-9][a-z0-9_-]{2,29}$`), backfill automático
+- ✅ Função SQL `generate_handle(_full_name)` com normalização (unaccent) + fallback numérico
+- ✅ Função SQL `resolve_handle(_handle)` para resolver handle → driver/tenant
+- ✅ Rota `/@:handle` (`PaginaResolverHandle`) que resolve e faz `Navigate replace`
+- ✅ Componente `EditorHandleProfissional` no painel do profissional com validação em tempo real (debounce 400ms)
+- ✅ Cards da rede pública (`CardMembroRede`) usam `@handle` quando disponível
+- ✅ `MembroEquipe` agora carrega `handle`, propagado em 3 services
 
 **Depende de:** Fases 1–5 (perfil já estável).
 
