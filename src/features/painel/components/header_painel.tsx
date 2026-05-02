@@ -76,6 +76,7 @@ export function HeaderPainel({
   realtimeAtivo = false,
   audioDestravado = false,
   mostrarToggleOnline = true,
+  modo,
   onToggleOnline,
   tribos,
   triboAtivaId,
