@@ -3,12 +3,20 @@ import type {
   DadosIdentidade,
   DadosConfiguracao,
   DadosServico,
+  DadosDisponibilidadeOnboarding,
   EtapaOnboarding,
   ModuloPlataforma,
 } from "../types/tipos_onboarding";
 import { IDENTIDADE_INICIAL, CONFIGURACAO_INICIAL } from "../constants/constantes_onboarding";
+import { diasDoPreset } from "@/features/painel/components/editor_disponibilidade_semanal";
 
 const ETAPA_FINAL: EtapaOnboarding = 5;
+
+const DISPONIBILIDADE_INICIAL: DadosDisponibilidadeOnboarding = {
+  dias: diasDoPreset("comercial"),
+  slotMin: 60,
+  bufferMin: 0,
+};
 
 export function useOnboarding() {
   const [etapaAtual, setEtapaAtual] = useState<EtapaOnboarding>(0);
@@ -18,6 +26,8 @@ export function useOnboarding() {
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
   const [configuracao, setConfiguracao] = useState<DadosConfiguracao>(CONFIGURACAO_INICIAL);
   const [servicos, setServicos] = useState<DadosServico[]>([]);
+  const [disponibilidade, setDisponibilidade] =
+    useState<DadosDisponibilidadeOnboarding>(DISPONIBILIDADE_INICIAL);
   const [enviando, setEnviando] = useState(false);
 
   const avancar = useCallback(() => {
@@ -46,6 +56,8 @@ export function useOnboarding() {
     setConfiguracao,
     servicos,
     setServicos,
+    disponibilidade,
+    setDisponibilidade,
     enviando,
     setEnviando,
     avancar,

@@ -44,6 +44,12 @@ export interface DadosServico {
 
 export type ModuloPlataforma = "mobility" | "services";
 
+export interface DadosDisponibilidadeOnboarding {
+  dias: import("@/features/servicos/types/tipos_servicos").DiaDisponibilidadeOnboarding[];
+  slotMin: number;
+  bufferMin: number;
+}
+
 export interface DadosOnboarding {
   identidade: DadosIdentidade;
   modulos: ModuloPlataforma[];
@@ -51,6 +57,7 @@ export interface DadosOnboarding {
   pagamentoConfirmado: boolean;
   configuracao: DadosConfiguracao;
   servicos: DadosServico[];
+  disponibilidade: DadosDisponibilidadeOnboarding;
 }
 
 export type EtapaOnboarding = 0 | 1 | 2 | 3 | 4 | 5;

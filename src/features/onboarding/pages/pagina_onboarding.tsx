@@ -34,6 +34,8 @@ export default function PaginaOnboarding() {
     setConfiguracao,
     servicos,
     setServicos,
+    disponibilidade,
+    setDisponibilidade,
     enviando,
     setEnviando,
     irParaEtapa,
@@ -85,6 +87,7 @@ export default function PaginaOnboarding() {
         planoId: planoSelecionado,
         configuracao,
         servicos,
+        disponibilidade,
       });
       toast.success("Tudo pronto!");
       window.location.href = fluxoSolo ? "/painel" : "/admin";
@@ -163,6 +166,8 @@ export default function PaginaOnboarding() {
             onChange={setConfiguracao}
             servicos={servicos}
             onChangeServicos={setServicos}
+            disponibilidade={disponibilidade}
+            onChangeDisponibilidade={setDisponibilidade}
             onAvancar={acaoAvancarConfiguracao}
             onVoltar={voltarFluxo}
             rotuloAvancar={fluxoSolo && naUltima ? "Concluir" : undefined}
