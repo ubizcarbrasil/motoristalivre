@@ -21,6 +21,11 @@ export function SecaoMotoristas() {
   const { usuario } = useAutenticacao();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [modo, setModo] = useState<Modo>("mobilidade");
+
+  const labelEntidade = modo === "servicos" ? "profissional" : "motorista";
+  const labelEntidadePlural = modo === "servicos" ? "profissionais" : "motoristas";
+  const labelMetrica = modo === "servicos" ? "Agendamentos" : "Corridas";
 
   useEffect(() => {
     if (!usuario) return;
