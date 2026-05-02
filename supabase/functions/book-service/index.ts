@@ -181,6 +181,10 @@ Deno.serve(async (req) => {
       status: "confirmed",
       notes: body.notes ?? null,
       return_reminder_date: body.return_reminder_date ?? null,
+      briefing:
+        body.briefing && typeof body.briefing === "object"
+          ? body.briefing
+          : {},
     })
     .select("*")
     .single();
