@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { slugValido } from "@/compartilhados/constants/constantes_categorias_servico";
 
 /**
  * Identifica se o profissional ainda precisa concluir o onboarding antes de
@@ -80,6 +81,15 @@ export function useHookOnboardingProfissional(
         service_categories: string[] | null;
       } | null;
 
+      const categoriasSaneadas = (driverRow?.service_categories ?? []).filter((slug) =>
+        slugValido(slug),
+      );
+
+      console.log("[onboarding] versão sanitização v3", {
+        categoriasOriginais: driverRow?.service_categories ?? [],
+        categoriasSaneadas,
+      });
+
       setDados({
         full_name: user?.full_name ?? null,
         phone: user?.phone ?? null,
@@ -87,7 +97,7 @@ export function useHookOnboardingProfissional(
         bio: driverRow?.bio ?? null,
         cover_url: driverRow?.cover_url ?? null,
         professional_type: driverRow?.professional_type ?? null,
-        service_categories: driverRow?.service_categories ?? [],
+        service_categories: categoriasSaneadas,
         cidade: branding?.city ?? null,
       });
     } finally {
