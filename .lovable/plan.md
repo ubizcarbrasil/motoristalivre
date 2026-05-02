@@ -1,90 +1,97 @@
-## Diagnóstico — por que está feio
+# Plano: Disponibilidade simples, em massa e obrigatória
 
-Olhei o código e o banco. Os problemas são reais e cumulativos:
+Três frentes: (1) cadastrar horários em massa de forma fácil, (2) tornar isso obrigatório no onboarding solo do profissional, (3) permitir desligar disponibilidade ou bloquear datas/horários pontuais.
 
-**1. A foto do perfil até pode aparecer, mas o banner é praticamente impossível de aparecer hoje.**
-- `avatar_url` vem da tabela `users` (existe e é populado pelo Google OAuth).
-- `cover_url` está na tabela `drivers`, mas **não existe NENHUMA tela no app que permita ao profissional fazer upload de banner**. Resultado: `cover_url` é sempre `null` e o app cai no fallback Unsplash genérico.
-- Também não existe tela de troca de avatar dentro do app — o avatar só existe se veio do Google.
+## 1. Editor de disponibilidade em massa (UX nova)
 
-**2. O visual realmente não tem cara de app de serviço.**
-- Cover de só 176px, com gradiente preto cobrindo metade — a foto vira um borrão.
-- Avatar pequeno (80px) jogado no canto esquerdo, sem destaque.
-- Nome em peso médio, badges cinza pequenos — hierarquia fraca.
-- Bio, serviços e equipe empilhados em cards genéricos do shadcn, sem personalidade.
-- Sem rating em destaque, sem chip "Verificado", sem cidade visível em destaque.
-- Footer fixo de CTA isolado, sem reforço de confiança acima.
+Substituir o `secao_minha_disponibilidade.tsx` atual (que pede um bloco por vez) por um editor estilo grade semanal com presets.
 
-**3. Tokens fora do design system em pontos pontuais** (ex.: `bg-secondary` cinza no placeholder de cover e `bg-primary/10` no fallback de avatar não casam com o accent verde TriboCar #1db865 sobre preto puro).
+**Novo componente** `editor_disponibilidade_semanal.tsx`:
+- Linha por dia da semana (Dom–Sáb) com toggle "Atende neste dia".
+- Cada dia tem 1+ faixas (início → fim). Botão "+ adicionar faixa" para split (ex.: 9–12 e 14–18).
+- Campo único global de duração de slot e buffer (aplicado a todos os blocos). Ninguém quer configurar slot por dia.
+- **Presets rápidos** (chips no topo):
+  - "Comercial seg–sex 9h–18h"
+  - "Estendido seg–sáb 8h–20h"
+  - "Final de semana sáb–dom 9h–17h"
+  - "24/7"
+  - "Copiar segunda para todos os dias úteis"
+- Botão "Salvar" persiste tudo de uma vez (delete-then-insert por driver).
 
-## O que vou fazer
+**Service novo** `salvarDisponibilidadeEmMassa(driverId, tenantId, blocos[])`:
+- Apaga blocos atuais do driver e insere os novos em uma transação (via RPC `replace_provider_availability`).
 
-### Etapa 1 — Permitir que o profissional realmente tenha foto e banner
+## 2. Obrigatório no onboarding (fluxo solo profissional)
 
-1. Criar bucket `perfis-profissionais` no storage (público, com RLS de upload restrito ao próprio profissional).
-2. Adicionar coluna `avatar_url` em `drivers` (override do avatar do Google quando o profissional escolher uma foto profissional dedicada).
-3. Criar tela **"Editar perfil público"** dentro de `src/features/configuracoes` (feature nova) com:
-   - Upload de **foto de perfil** (crop circular 1:1, máx 2MB).
-   - Upload de **banner** (16:9, máx 5MB, sugestão de imagem horizontal).
-   - Edição de bio, cidade, categorias.
-   - Preview ao vivo de como vai aparecer na página pública.
-4. Atualizar `hook_perfil_motorista` para priorizar `drivers.avatar_url` sobre `users.avatar_url`.
+Adicionar uma sub-seção "Sua agenda" dentro de `etapa_configuracao.tsx`, exibida quando `temServicos` for true.
 
-### Etapa 2 — Refazer a página pública estilo iFood/Rappi
+- Reusa `editor_disponibilidade_semanal.tsx` (modo "configuração inicial", sem persistir ainda — guarda no estado do hook).
+- Pré-preenche com preset "Comercial seg–sex 9h–18h" para reduzir fricção.
+- Validação na função `validar()` da etapa: pelo menos um dia ativo com faixa válida.
+- Mensagem se vazio: "Defina ao menos um dia de atendimento para receber agendamentos."
+- No `criarGrupo()` em `servico_onboarding.ts`, após criar tenant, inserir os blocos em `professional_availability`.
 
-Refatorar `pagina_perfil_motorista.tsx` em componentes próprios, todos em `src/features/motorista/components/perfil_publico/`:
-
-```
-hero_perfil.tsx          — banner 240px + avatar 96px sobreposto
-identidade_perfil.tsx    — nome XL + verified + cidade + rating destaque
-chips_categorias.tsx     — pílulas de categoria com ícone
-bloco_confianca.tsx      — "X anos no app", "Y atendimentos", "Z avaliações"
-secao_bio_premium.tsx    — bio com tipografia editorial
-barra_acao_fixa.tsx      — CTA + botão WhatsApp secundário
+Tipos novos em `tipos_onboarding.ts`:
+```ts
+interface FaixaHorario { inicio: string; fim: string }
+interface DiaDisponibilidade { diaSemana: 0..6; ativo: boolean; faixas: FaixaHorario[] }
+DadosOnboarding.disponibilidade: { dias: DiaDisponibilidade[]; slotMin: number; bufferMin: number }
 ```
 
-Mudanças visuais concretas (vibe iFood/Rappi):
-- **Banner cheio** (240px mobile / 320px desktop), foto cobrindo 100%, gradiente sutil só na base.
-- **Avatar grande** (96px mobile / 128px desktop) com ring verde accent.
-- **Nome em XL bold** com ícone de verificado verde ao lado.
-- **Rating em destaque** ao lado do nome (★ 4.9 · 127 avaliações) — quando houver.
-- **Chips de categoria coloridos** (verde claro sobre fundo escuro), não badges cinza.
-- **Linha de confiança** logo abaixo: "Verificado · X meses no app · Y atendimentos".
-- **Cards com bordas arredondadas 16px**, fundo `#0a0a0a` (não `bg-card` shadcn padrão), sombra interna sutil.
-- **Footer CTA** com botão verde pulsante e botão WhatsApp secundário lado a lado.
+## 3. Pausar agenda + bloqueios pontuais
 
-### Etapa 3 — Fallbacks dignos quando não há foto
+**Pausar tudo (kill switch)**: novo campo `accepting_bookings` (boolean default true) em `drivers`. Toggle no painel: "Aceitando agendamentos". Quando off:
+- Vitrine pública mostra badge "Agenda pausada — não está aceitando agendamentos no momento".
+- `book-service` retorna 423 com mensagem amigável.
+- Não apaga blocos cadastrados.
 
-- Avatar sem foto: gerar avatar gradiente verde→preto com inicial em IBM Plex tamanho grande, em vez do cinza atual.
-- Banner sem foto: continuar com Unsplash por categoria, mas com **overlay verde sutil + textura sutil** para parecer intencional, não um stock genérico solto.
+**Bloqueios pontuais**: nova tabela `provider_time_off`:
+```
+id, driver_id, tenant_id, starts_at timestamptz, ends_at timestamptz,
+reason text, all_day bool, created_at
+```
+RLS: driver gerencia próprio; público pode ler (para o cálculo de slots).
 
-## Detalhes técnicos
+Componente `bloqueios_agenda.tsx` no painel:
+- Lista bloqueios futuros com data/hora e motivo opcional.
+- "Bloquear dia inteiro" e "Bloquear intervalo".
+- Apagar bloqueio.
 
-**Migrations necessárias:**
-- `ALTER TABLE drivers ADD COLUMN avatar_url text;`
-- Criar bucket `perfis-profissionais` público.
-- RLS: insert/update/delete só pelo próprio driver (`auth.uid() = (storage.foldername(name))[1]::uuid`).
+Integração:
+- `calcular_slots_disponiveis.ts`: receber `bloqueios[]` e descartar slots que se sobreponham com qualquer bloqueio.
+- `book-service` (edge): rejeitar (409 BLOCKED) se o `scheduled_at` cair em bloqueio ou se driver estiver com `accepting_bookings = false`.
 
-**Padrão de path no bucket:** `{driver_id}/avatar.jpg` e `{driver_id}/cover.jpg`.
+## Arquivos afetados
 
-**Upload:** usar `supabase.storage.from('perfis-profissionais').upload()` com `upsert: true`. Após upload, salvar a public URL na coluna correspondente em `drivers`.
+```text
+NOVOS
+  src/features/painel/components/editor_disponibilidade_semanal.tsx
+  src/features/painel/components/bloqueios_agenda.tsx
+  src/features/onboarding/components/secao_disponibilidade_onboarding.tsx
+  supabase/migrations/<timestamp>_disponibilidade_em_massa.sql
 
-**Crop:** usar `react-easy-crop` (já é prática comum em apps tipo iFood) para garantir proporção certa.
+ALTERADOS
+  src/features/painel/components/secao_minha_disponibilidade.tsx (substitui editor antigo)
+  src/features/painel/components/aba_perfil.tsx (adiciona toggle "Aceitando agendamentos" + bloqueios)
+  src/features/onboarding/components/etapa_configuracao.tsx (inclui agenda + validação)
+  src/features/onboarding/services/servico_onboarding.ts (insere availability)
+  src/features/onboarding/types/tipos_onboarding.ts (tipos de agenda)
+  src/features/onboarding/hooks/hook_onboarding.ts (estado + preset default)
+  src/features/passageiro/utils/calcular_slots_disponiveis.ts (considera bloqueios)
+  src/features/passageiro/hooks/hook_dados_servico_motorista.ts (carrega bloqueios + flag accepting)
+  src/features/servicos/services/servico_servicos.ts (RPC replace + CRUD bloqueios)
+  src/features/servicos/types/tipos_servicos.ts
+  supabase/functions/book-service/index.ts (valida bloqueios + accepting_bookings)
+```
 
-**Componentização:** seguir feature-based como manda o workspace, em snake_case pt-BR, com hook próprio `hook_editar_perfil_publico.ts` e service `servico_perfil_publico.ts`.
+## Migração SQL (resumo)
 
-## Ordem de implementação
+- `ALTER TABLE drivers ADD COLUMN accepting_bookings boolean NOT NULL DEFAULT true;`
+- `CREATE TABLE provider_time_off (...)` com RLS (owner CRUD, público SELECT).
+- `CREATE FUNCTION replace_provider_availability(_driver_id uuid, _tenant_id uuid, _slot_min int, _buffer_min int, _blocos jsonb)` — apaga blocos do driver e insere os novos atomicamente, validando ownership via auth.uid().
 
-1. Migration + bucket + RLS.
-2. Tela de edição de perfil (upload de avatar + banner + bio + cidade).
-3. Refatoração visual da página pública em componentes pequenos.
-4. Fallbacks bonitos.
-5. Teste end-to-end: subo uma foto real, vejo o resultado na rota pública.
+## Pontos de atenção
 
-## O que não vou fazer agora
-
-- Reviews/rating real (a UI já mostra quando existe; integração real fica pra depois).
-- Edição de portfólio (já existe componente separado).
-- Gestão de equipe (já existe).
-
-Posso começar?
+- Manter retrocompatibilidade: blocos já cadastrados continuam válidos; o novo editor lê `professional_availability` e renderiza no modelo de faixas por dia.
+- Preset default no onboarding já cria pelo menos um bloco — evita o problema atual em que o profissional finaliza sem horários.
+- O fix de "serviço imediato sem disponibilidade" segue ativo como fallback, mas deixa de ser o caminho principal.

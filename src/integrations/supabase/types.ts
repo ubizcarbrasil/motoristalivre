@@ -348,6 +348,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          accepting_bookings: boolean
           alert_sound: string
           avatar_url: string | null
           bio: string | null
@@ -377,6 +378,7 @@ export type Database = {
           vehicle_year: number | null
         }
         Insert: {
+          accepting_bookings?: boolean
           alert_sound?: string
           avatar_url?: string | null
           bio?: string | null
@@ -406,6 +408,7 @@ export type Database = {
           vehicle_year?: number | null
         }
         Update: {
+          accepting_bookings?: boolean
           alert_sound?: string
           avatar_url?: string | null
           bio?: string | null
@@ -839,6 +842,39 @@ export type Database = {
           owner_driver_id?: string
           tenant_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_time_off: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          driver_id: string
+          ends_at: string
+          id: string
+          reason: string | null
+          starts_at: string
+          tenant_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          driver_id: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          starts_at: string
+          tenant_id: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          driver_id?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          starts_at?: string
+          tenant_id?: string
         }
         Relationships: []
       }
@@ -2130,6 +2166,16 @@ export type Database = {
         Returns: Json
       }
       reject_payout: { Args: { _payout_id: string }; Returns: undefined }
+      replace_provider_availability: {
+        Args: {
+          _blocos: Json
+          _buffer_min: number
+          _driver_id: string
+          _slot_min: number
+          _tenant_id: string
+        }
+        Returns: undefined
+      }
       request_driver_join: {
         Args: { _message?: string; _tenant_slug: string }
         Returns: string
