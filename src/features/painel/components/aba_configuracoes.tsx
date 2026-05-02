@@ -331,9 +331,11 @@ export function AbaConfiguracoes({
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Grupos e rede</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            {modoServicosPuro ? "Tribo e rede" : "Grupos e rede"}
+          </h3>
           <p className="text-[11px] text-muted-foreground">
-            Seus grupos ativos, convites e busca de novos grupos.
+            Suas tribos ativas, convites e busca de novas tribos.
           </p>
         </div>
 
