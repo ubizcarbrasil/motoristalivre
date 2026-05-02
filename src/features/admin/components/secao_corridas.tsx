@@ -174,7 +174,8 @@ export function SecaoCorridas() {
   ];
   const filtrosServicos: { id: string; label: string }[] = [
     { id: "todos", label: "Todos" },
-    { id: "scheduled", label: "Agendados" },
+    { id: "pending", label: "Pendentes" },
+    { id: "confirmed", label: "Confirmados" },
     { id: "in_progress", label: "Em andamento" },
     { id: "completed", label: "Concluídos" },
     { id: "cancelled", label: "Cancelados" },
