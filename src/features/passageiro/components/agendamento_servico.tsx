@@ -177,6 +177,14 @@ export function AgendamentoServico({
     salvarGuestStorage({ nome: nome.trim(), whatsapp: whatsapp.trim() });
     setEnviando(true);
     try {
+      // Lê origem de indicação (driver que indicou via /s/:slug/a/:driver_slug)
+      // e ignora se a origem for o próprio profissional do agendamento.
+      const origemIndicacao = lerOrigemIndicacao(
+        (typeof window !== "undefined" && window.location.pathname.split("/")[2]) || "",
+      );
+      const originDriverId =
+        origemIndicacao && origemIndicacao !== driver.id ? origemIndicacao : null;
+
       await chamarBookService({
         tenant_id: tenantId,
         driver_id: driver.id,
@@ -185,7 +193,9 @@ export function AgendamentoServico({
         payment_method: pagamento,
         notes: observacoes.trim() || undefined,
         guest: { full_name: nome.trim(), whatsapp: whatsapp.trim() },
+        origin_driver_id: originDriverId,
       });
+      if (originDriverId) limparOrigemIndicacao();
       setConfirmado({ quando: new Date(slotSelecionado.iso), servico: servicoAtual });
     } catch (erro: any) {
       const mensagem = String(erro?.message ?? erro?.context?.error ?? "");
