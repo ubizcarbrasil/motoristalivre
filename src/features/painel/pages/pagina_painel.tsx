@@ -183,9 +183,9 @@ export default function PaginaPainel() {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-2">
-          <p className="text-base font-medium text-foreground">Perfil de motorista não encontrado</p>
+          <p className="text-base font-medium text-foreground">Perfil profissional não encontrado</p>
           <p className="text-sm text-muted-foreground">
-            Você precisa estar cadastrado como motorista em um grupo.
+            Você precisa estar cadastrado como profissional em um grupo.
           </p>
         </div>
       </div>
