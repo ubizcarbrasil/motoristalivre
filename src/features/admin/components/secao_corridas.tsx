@@ -25,12 +25,16 @@ interface Corrida {
 
 type Modo = "mobilidade" | "servicos";
 
-export function SecaoCorridas() {
+interface SecaoCorridasProps {
+  modo?: "mobilidade" | "servicos" | "hibrido";
+}
+
+export function SecaoCorridas({ modo: modoProp }: SecaoCorridasProps = {}) {
   const { usuario } = useAutenticacao();
   const [corridas, setCorridas] = useState<Corrida[]>([]);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [carregando, setCarregando] = useState(true);
-  const [modo, setModo] = useState<Modo>("mobilidade");
+  const [modo, setModo] = useState<Modo>(modoProp === "servicos" ? "servicos" : "mobilidade");
 
   const ehServicos = modo === "servicos";
   const labelTitulo = ehServicos ? "agendamento" : "corrida";
@@ -38,21 +42,25 @@ export function SecaoCorridas() {
   useEffect(() => {
     if (!usuario) return;
     carregar();
-  }, [usuario]);
+  }, [usuario, modoProp]);
 
   async function carregar() {
     try {
       const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
       if (!perfil) return;
 
-      // Detecta modo da tribo
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("active_modules")
-        .eq("id", perfil.tenant_id)
-        .maybeSingle();
-      const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
-      const ehServicosTribo = modulos.includes("services") && !modulos.includes("mobility");
+      let ehServicosTribo: boolean;
+      if (modoProp) {
+        ehServicosTribo = modoProp === "servicos";
+      } else {
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("active_modules")
+          .eq("id", perfil.tenant_id)
+          .maybeSingle();
+        const modulos = (tenant?.active_modules ?? ["mobility"]) as string[];
+        ehServicosTribo = modulos.includes("services") && !modulos.includes("mobility");
+      }
       setModo(ehServicosTribo ? "servicos" : "mobilidade");
 
       if (ehServicosTribo) {
