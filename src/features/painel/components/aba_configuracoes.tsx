@@ -293,7 +293,7 @@ export function AbaConfiguracoes({
         </Button>
       </div>
 
-      {onTestarAlerta && (
+      {onTestarAlerta && exibirSecoesMobilidade && (
         <Button
           variant="outline"
           className="w-full h-12 gap-2"
@@ -304,26 +304,28 @@ export function AbaConfiguracoes({
         </Button>
       )}
 
-      <div className="rounded-xl bg-card border border-border p-3 space-y-1">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-          ID do motorista logado
-        </p>
-        <button
-          type="button"
-          onClick={copiarId}
-          className="w-full flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 hover:bg-secondary transition-colors"
-        >
-          <span className="text-sm font-mono text-foreground">{idCurto}…</span>
-          {idCopiado ? (
-            <Check className="w-4 h-4 text-primary" />
-          ) : (
-            <Copy className="w-4 h-4 text-muted-foreground" />
-          )}
-        </button>
-        <p className="text-[11px] text-muted-foreground">
-          Use este ID no simulador de dispatch para testar.
-        </p>
-      </div>
+      {exibirSecoesMobilidade && (
+        <div className="rounded-xl bg-card border border-border p-3 space-y-1">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            ID do motorista logado
+          </p>
+          <button
+            type="button"
+            onClick={copiarId}
+            className="w-full flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 hover:bg-secondary transition-colors"
+          >
+            <span className="text-sm font-mono text-foreground">{idCurto}…</span>
+            {idCopiado ? (
+              <Check className="w-4 h-4 text-primary" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+          <p className="text-[11px] text-muted-foreground">
+            Use este ID no simulador de dispatch para testar.
+          </p>
+        </div>
+      )}
 
       <Separator />
 
