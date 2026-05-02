@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TemaServicos } from "../components/tema_servicos";
 import { CabecalhoPerfilProfissional } from "../components/cabecalho_perfil_profissional";
+import { SecaoSobreProfissional } from "../components/secao_sobre_profissional";
 import { GaleriaPortfolio } from "../components/galeria_portfolio";
 import { FiltrosPortfolio } from "../components/filtros_portfolio";
 import { PaginacaoPortfolio } from "../components/paginacao_portfolio";
@@ -152,6 +153,17 @@ export default function PaginaPerfilProfissionalServicos() {
           isVerified={dados.is_verified}
           credentialVerified={dados.credential_verified}
           credentialType={dados.credential_type}
+          serviceCategories={dados.service_categories}
+          cidade={tenant.branding?.city ?? null}
+        />
+
+        <SecaoSobreProfissional
+          nome={dados.full_name}
+          bio={dados.bio}
+          isVerified={dados.is_verified}
+          credentialVerified={dados.credential_verified}
+          credentialType={dados.credential_type}
+          credentialNumber={dados.credential_number}
           serviceCategories={dados.service_categories}
           cidade={tenant.branding?.city ?? null}
         />
