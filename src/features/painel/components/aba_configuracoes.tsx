@@ -370,7 +370,7 @@ export function AbaConfiguracoes({
                           : "Membro"}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {g.corridas_mes} corridas/mês
+                        {g.corridas_mes} {modoServicosPuro ? "agendamentos/mês" : "corridas/mês"}
                       </span>
                     </div>
                   </div>
