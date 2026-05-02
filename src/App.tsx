@@ -84,6 +84,7 @@ const App = () => (
 
             {/* Orçamentos — wizard de solicitação e acompanhamento */}
             <Route path="/solicitar-orcamento" element={<PaginaSolicitarOrcamento />} />
+            <Route path="/orcamento/novo" element={<PaginaSolicitarOrcamento />} />
             <Route path="/orcamento/:id" element={<PaginaAcompanharOrcamento />} />
             <Route path="/dev/simular-dispatch" element={<RotaProtegida><PaginaSimuladorDispatch /></RotaProtegida>} />
 
