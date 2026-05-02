@@ -144,11 +144,11 @@ BEGIN
   INSERT INTO public.service_bookings (
     tenant_id, driver_id, service_type_id, scheduled_at,
     duration_minutes, price_agreed, payment_method, status,
-    is_coverage, origin_driver_id
+    is_coverage, origin_driver_id, guest_passenger_id
   ) VALUES (
     _tenant_id, _driver_a, _service_type_id, now(),
     60, _preco, 'cash', 'pending',
-    false, _driver_b
+    false, _driver_b, _guest_id
   ) RETURNING id INTO _booking_indicacao;
 
   UPDATE public.service_bookings SET status = 'completed' WHERE id = _booking_indicacao;
