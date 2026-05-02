@@ -128,7 +128,7 @@ export function DialogoOnboardingProfissional({
 
   useEffect(() => {
     if (aberto) {
-      const proximoForm = montarFormInicial(dadosIniciais);
+      const proximoForm = montarFormInicial(dadosIniciais, modoServicos);
       const totalOriginal = dadosIniciais?.service_categories?.length ?? 0;
       if (totalOriginal > proximoForm.service_categories.length) {
         toast.info("Atualizamos sua lista. Refaça a seleção tocando em Editar.");
@@ -136,7 +136,7 @@ export function DialogoOnboardingProfissional({
       setForm(proximoForm);
       setPasso(0);
     }
-  }, [aberto, dadosIniciais]);
+  }, [aberto, dadosIniciais, modoServicos]);
 
   const { status: statusAutoSave } = useHookAutoSaveOnboarding({
     driverId,
