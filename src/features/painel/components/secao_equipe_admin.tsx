@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Trash2, Loader2, ShieldCheck, Search } from "lucide-react";
+import { Users, Plus, Trash2, Loader2, ShieldCheck, Search, Link2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,38 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
   const [buscando, setBuscando] = useState(false);
   const [headlineMap, setHeadlineMap] = useState<Record<string, string>>({});
   const [espelhamento, setEspelhamento] = useState<{ id: string; nome: string } | null>(null);
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    supabase
+      .from("tenants")
+      .select("slug")
+      .eq("id", tenantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (ativo) setTenantSlug((data as any)?.slug ?? null);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [tenantId]);
+
+  const copiarLinkIndicacao = async (m: MembroEquipe) => {
+    if (!tenantSlug) {
+      toast.error("Aguarde, carregando dados do grupo...");
+      return;
+    }
+    const url = `${window.location.origin}/s/${tenantSlug}/a/${m.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link de indicação copiado!", {
+        description: `Compartilhe este link para indicar ${m.nome}.`,
+      });
+    } catch {
+      toast.error("Não foi possível copiar o link");
+    }
+  };
 
   const carregar = async () => {
     setCarregando(true);
@@ -154,6 +187,15 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
                   {m.headline ?? `/${m.slug}`}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => copiarLinkIndicacao(m)}
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Copiar link de indicação"
+                title="Copiar link de indicação"
+              >
+                <Link2 className="w-4 h-4" />
+              </button>
               <button
                 type="button"
                 onClick={() => remover(m)}
