@@ -66,7 +66,7 @@ export async function listarProfissionaisVitrine(
   const { data: drivers } = await supabase
     .from("drivers")
     .select(
-      "id, slug, bio, cover_url, is_verified, credential_verified, professional_type, service_categories",
+      "id, slug, bio, avatar_url, cover_url, is_verified, credential_verified, professional_type, service_categories",
     )
     .eq("tenant_id", tenantId)
     .in("professional_type", ["service_provider", "both"]);
@@ -102,7 +102,7 @@ export async function listarProfissionaisVitrine(
       id: d.id,
       slug: d.slug,
       nome: mapaUsers.get(d.id)?.full_name ?? "Profissional",
-      avatar_url: mapaUsers.get(d.id)?.avatar_url ?? null,
+      avatar_url: (d as any).avatar_url ?? mapaUsers.get(d.id)?.avatar_url ?? null,
       cover_url: (d as any).cover_url ?? null,
       bio: (d as any).bio ?? null,
       is_verified: !!d.is_verified,
