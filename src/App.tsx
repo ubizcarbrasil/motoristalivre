@@ -101,16 +101,16 @@ const App = () => (
             <Route path="/afiliado" element={<Navigate to="/painel" replace />} />
             <Route path="/root" element={<RotaProtegidaRoot><PaginaRoot /></RotaProtegidaRoot>} />
 
-            {/* Rotas com tenant (slug) */}
-            <Route path="/:slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
-            <Route path="/:slug/a/:affiliate_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            {/* Rotas com tenant (slug) — wrapper bifurca para vitrine de serviços quando tribo é só services */}
+            <Route path="/:slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
+            <Route path="/:slug/a/:affiliate_slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
             <Route path="/:slug/perfil/:driver_slug" element={<PaginaPerfilMotorista />} />
             <Route path="/:slug/servicos" element={<RedirectVitrineTenantLegado />} />
             <Route
               path="/:slug/servicos/:driver_slug"
               element={<RedirectVitrineProfissionalLegado />}
             />
-            <Route path="/:slug/:driver_slug" element={<ProvedorTenant><PaginaPassageiro /></ProvedorTenant>} />
+            <Route path="/:slug/:driver_slug" element={<ResolverPublicoTenant><ProvedorTenant><PaginaPassageiro /></ProvedorTenant></ResolverPublicoTenant>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
