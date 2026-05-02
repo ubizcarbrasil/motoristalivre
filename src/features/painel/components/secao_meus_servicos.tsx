@@ -132,8 +132,17 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
                 <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {s.duration_minutes} min · R$ {Number(s.price).toFixed(2)}
+                  {s.requires_address ? " · presencial" : ""}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setServicoEnderecoEdicao(s)}
+                className={`transition-colors ${s.requires_address ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                aria-label="Configurar endereço e deslocamento"
+              >
+                <MapPin className="w-4 h-4" />
+              </button>
               <Switch checked={s.is_active} onCheckedChange={() => alternarAtivo(s)} />
               <button
                 type="button"
@@ -147,6 +156,13 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
           ))}
         </div>
       )}
+
+      <EditorEnderecoServico
+        servico={servicoEnderecoEdicao}
+        aberto={!!servicoEnderecoEdicao}
+        onFechar={() => setServicoEnderecoEdicao(null)}
+        onSalvo={onAtualizar}
+      />
 
       <Dialog open={aberto} onOpenChange={(o) => { setAberto(o); if (!o) resetar(); }}>
         <DialogContent className="max-w-md">
