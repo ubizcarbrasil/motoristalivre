@@ -157,6 +157,17 @@ export default function PaginaPerfilProfissionalServicos() {
           cidade={tenant.branding?.city ?? null}
         />
 
+        <SecaoSobreProfissional
+          nome={dados.full_name}
+          bio={dados.bio}
+          isVerified={dados.is_verified}
+          credentialVerified={dados.credential_verified}
+          credentialType={dados.credential_type}
+          credentialNumber={dados.credential_number}
+          serviceCategories={dados.service_categories}
+          cidade={tenant.branding?.city ?? null}
+        />
+
         {!ofereceServicos ? (
           <section className="max-w-3xl mx-auto px-4 mt-8">
             <div className="rounded-xl border border-border p-6 text-center">
