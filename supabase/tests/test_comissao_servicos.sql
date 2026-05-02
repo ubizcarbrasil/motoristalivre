@@ -147,9 +147,11 @@ BEGIN
     is_coverage, origin_driver_id, guest_passenger_id
   ) VALUES (
     _tenant_id, _driver_a, _service_type_id, now(),
-    60, _preco, 'cash', 'pending',
+    60, _preco, 'cash', 'completed',
     false, _driver_b, _guest_id
   ) RETURNING id INTO _booking_indicacao;
+
+  PERFORM public.process_service_commission(_booking_indicacao);
 
   UPDATE public.service_bookings SET status = 'completed' WHERE id = _booking_indicacao;
 
