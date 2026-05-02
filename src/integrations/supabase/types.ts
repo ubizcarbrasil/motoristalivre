@@ -360,6 +360,7 @@ export type Database = {
           custom_price_per_km: number | null
           custom_price_per_min: number | null
           dispatch_mode: Database["public"]["Enums"]["dispatch_mode"] | null
+          handle: string | null
           id: string
           is_online: boolean
           is_verified: boolean
@@ -387,6 +388,7 @@ export type Database = {
           custom_price_per_km?: number | null
           custom_price_per_min?: number | null
           dispatch_mode?: Database["public"]["Enums"]["dispatch_mode"] | null
+          handle?: string | null
           id: string
           is_online?: boolean
           is_verified?: boolean
@@ -414,6 +416,7 @@ export type Database = {
           custom_price_per_km?: number | null
           custom_price_per_min?: number | null
           dispatch_mode?: Database["public"]["Enums"]["dispatch_mode"] | null
+          handle?: string | null
           id?: string
           is_online?: boolean
           is_verified?: boolean
@@ -2061,6 +2064,7 @@ export type Database = {
         Args: { _full_name: string; _tenant_id: string }
         Returns: string
       }
+      generate_handle: { Args: { _full_name: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -2085,6 +2089,15 @@ export type Database = {
           _pix_key_type: Database["public"]["Enums"]["pix_key_type"]
         }
         Returns: string
+      }
+      resolve_handle: {
+        Args: { _handle: string }
+        Returns: {
+          driver_id: string
+          driver_slug: string
+          tenant_id: string
+          tenant_slug: string
+        }[]
       }
     }
     Enums: {
