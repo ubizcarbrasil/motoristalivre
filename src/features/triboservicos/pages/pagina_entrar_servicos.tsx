@@ -21,6 +21,18 @@ export default function PaginaEntrarServicos() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [carregandoGoogle, setCarregandoGoogle] = useState(false);
+
+  async function handleGoogle() {
+    setCarregandoGoogle(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/s/entrar`,
+    });
+    if (result?.error) {
+      toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
+      setCarregandoGoogle(false);
+    }
+  }
 
   if (carregandoAuth || (usuario && carregandoDestino)) {
     return (
