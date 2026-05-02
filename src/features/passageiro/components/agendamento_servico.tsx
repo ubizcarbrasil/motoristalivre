@@ -139,7 +139,7 @@ export function AgendamentoServico({
         .in("id", ids);
       if (cancelado || !data) return;
       const m = new Map<string, string>();
-      for (const row of data as Array<{ id: string; slug: string }>) {
+      for (const row of data as unknown as Array<{ id: string; slug: string }>) {
         m.set(row.id, row.slug);
       }
       setMapaCategorias(m);
