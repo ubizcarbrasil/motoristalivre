@@ -44,38 +44,38 @@
     --sidebar-ring: 152 78% 42%;
   }
 
-  /* TriboServiços — tema dourado/champanhe, isolado nas rotas /s/* */
+  /* TriboServiços — respeita o design system TriboCar nas rotas /s/* */
   .tema-servicos {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
 
-    --card: 30 10% 7%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 30 10% 7%;
+    --popover: 0 0% 5%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 33 47% 65%;
-    --primary-foreground: 24 35% 10%;
+    --primary: 152 78% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 8% 14%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 8% 14%;
-    --muted-foreground: 33 12% 65%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 33 47% 65%;
-    --accent-foreground: 24 35% 10%;
+    --accent: 152 78% 42%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 33 12% 18%;
-    --input: 33 12% 18%;
-    --ring: 33 47% 65%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 152 78% 42%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(33 47% 65%), hsl(33 60% 55%));
-    --shadow-elegant: 0 10px 30px -10px hsl(33 47% 65% / 0.35);
+    --gradient-primary: linear-gradient(135deg, hsl(152 78% 42%), hsl(152 78% 32%));
+    --shadow-elegant: 0 10px 30px -10px hsl(152 78% 42% / 0.35);
   }
 }
 
