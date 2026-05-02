@@ -9,7 +9,7 @@ import { CabecalhoVitrineTenant } from "../components/cabecalho_vitrine_tenant";
 import { CardProfissionalVitrine } from "../components/card_profissional_vitrine";
 import { SecaoPreviewPortfolioTenant } from "../components/secao_preview_portfolio_tenant";
 import { SecaoComoAgendarTenant } from "../components/secao_como_agendar_tenant";
-import { FooterServicos } from "../components/footer_servicos";
+
 import { useSeoBasico } from "@/compartilhados/hooks/hook_seo_basico";
 import {
   buscarTenantPublicoServicos,
