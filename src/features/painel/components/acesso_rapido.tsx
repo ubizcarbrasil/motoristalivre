@@ -38,6 +38,7 @@ export function AcessoRapido({ onNavegar, tenantSlug, modo, driverSlug }: Acesso
           },
           { label: "Preços", icone: DollarSign, onClick: () => onNavegar("configuracoes") },
           { label: "Meus Links", icone: Share2, onClick: () => onNavegar("meus_links") },
+          { label: "Solicitar orçamento", icone: FileText, onClick: () => navigate("/orcamento/novo") },
           { label: "Grupos", icone: Users, onClick: () => onNavegar("configuracoes") },
           { label: "Instalar app", icone: Download, onClick: () => navigate("/instalar") },
         ];
