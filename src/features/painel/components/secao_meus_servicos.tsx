@@ -89,12 +89,23 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
     }
   };
 
+  const ativos = servicos.filter((s) => s.is_active).length;
+  const pausados = servicos.length - ativos;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Briefcase className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">Meus serviços</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Meus serviços ativos</h3>
+            {servicos.length > 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                {ativos} ativo{ativos === 1 ? "" : "s"}
+                {pausados > 0 ? ` · ${pausados} pausado${pausados === 1 ? "" : "s"}` : ""}
+              </p>
+            )}
+          </div>
         </div>
         <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAberto(true)}>
           <Plus className="w-3.5 h-3.5" />
@@ -103,9 +114,12 @@ export function SecaoMeusServicos({ driverId, tenantId, servicos, onAtualizar }:
       </div>
 
       {servicos.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-4 text-center">
-          <p className="text-xs text-muted-foreground">
-            Nenhum serviço cadastrado. Adicione o primeiro para começar a receber agendamentos.
+        <div className="rounded-xl bg-card border border-border p-4 text-center space-y-1">
+          <p className="text-xs text-foreground font-medium">
+            Nenhum serviço com preço cadastrado
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Para que clientes possam agendar e pagar, cadastre serviços com nome, duração e valor.
           </p>
         </div>
       ) : (

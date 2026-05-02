@@ -13,6 +13,8 @@ import { SecaoServicosPublica } from "../components/secao_servicos_publica";
 import { SecaoDisponibilidadePublica } from "../components/secao_disponibilidade_publica";
 import { SecaoEquipePublica } from "../components/secao_equipe_publica";
 import { SecaoCategoriasPortfolio } from "../components/secao_categorias_portfolio";
+import { SecaoEspecialidadesPublica } from "../components/secao_especialidades_publica";
+import { MessageCircle } from "lucide-react";
 
 export default function PaginaPerfilMotorista() {
   const navigate = useNavigate();
@@ -53,6 +55,20 @@ export default function PaginaPerfilMotorista() {
     perfil.professional_type === "service_provider" || perfil.professional_type === "both";
   const ofereceCorrida =
     perfil.professional_type === "driver" || perfil.professional_type === "both";
+  const temServicosVendaveis = servicos.length > 0;
+  const temEspecialidades = perfil.service_categories.length > 0;
+
+  const abrirOrcamentoWhatsapp = () => {
+    if (!perfil.whatsapp) return;
+    const numero = perfil.whatsapp.replace(/\D/g, "");
+    const completo = numero.length <= 11 ? `55${numero}` : numero;
+    const mensagem = `Olá ${perfil.nome}, vim pelo TriboServiços e gostaria de solicitar um orçamento.`;
+    window.open(
+      `https://wa.me/${completo}?text=${encodeURIComponent(mensagem)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
@@ -64,7 +80,7 @@ export default function PaginaPerfilMotorista() {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="text-sm font-medium text-foreground">Perfil</span>
+        <span className="text-sm font-medium text-foreground truncate">{perfil.nome}</span>
       </div>
 
       <div className="space-y-5 pb-32">
@@ -74,13 +90,25 @@ export default function PaginaPerfilMotorista() {
 
         {ofereceServico && (
           <>
-            <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
-            <SecaoServicosPublica
-              servicos={servicos}
-              portfolio={portfolio}
-              tenantSlug={perfil.tenant_slug}
-              driverSlug={perfil.slug}
-            />
+            {temServicosVendaveis ? (
+              <>
+                <SecaoCategoriasPortfolio servicos={servicos} portfolio={portfolio} />
+                <SecaoServicosPublica
+                  servicos={servicos}
+                  portfolio={portfolio}
+                  tenantSlug={perfil.tenant_slug}
+                  driverSlug={perfil.slug}
+                />
+              </>
+            ) : (
+              temEspecialidades && (
+                <SecaoEspecialidadesPublica
+                  categorias={perfil.service_categories}
+                  nomeProfissional={perfil.nome}
+                  whatsapp={perfil.whatsapp}
+                />
+              )
+            )}
             <SecaoEquipePublica membros={equipe} tenantSlug={perfil.tenant_slug} />
             <SecaoDisponibilidadePublica blocos={disponibilidade} />
           </>
@@ -124,12 +152,23 @@ export default function PaginaPerfilMotorista() {
             </Button>
           </div>
         ) : ofereceServico ? (
-          <Button
-            className="w-full h-12 text-base font-semibold"
-            onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
-          >
-            Agendar serviço
-          </Button>
+          temServicosVendaveis ? (
+            <Button
+              className="w-full h-12 text-base font-semibold"
+              onClick={() => navigate(`/${perfil.tenant_slug}/servicos/${perfil.slug}`)}
+            >
+              Agendar serviço
+            </Button>
+          ) : (
+            <Button
+              className="w-full h-12 text-base font-semibold gap-2"
+              disabled={!perfil.whatsapp}
+              onClick={abrirOrcamentoWhatsapp}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Solicitar orçamento
+            </Button>
+          )
         ) : (
           <Button
             className="w-full h-12 text-base font-semibold"

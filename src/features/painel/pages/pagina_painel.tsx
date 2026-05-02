@@ -258,7 +258,9 @@ export default function PaginaPainel() {
 
       {aba === "carteira" && <AbaCarteira userId={userId} />}
 
-      {aba === "perfil" && <AbaPerfil perfil={perfil} onAtualizar={setPerfil} />}
+      {aba === "perfil" && (
+        <AbaPerfil perfil={perfil} onAtualizar={setPerfil} onMudarAba={setAba} />
+      )}
 
       {aba === "configuracoes" && (
         <AbaConfiguracoes
