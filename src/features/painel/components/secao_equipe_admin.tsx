@@ -238,6 +238,17 @@ export function SecaoEquipeAdmin({ driverId, tenantId }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {espelhamento && (
+        <DialogoEspelhamento
+          aberto={!!espelhamento}
+          onFechar={() => setEspelhamento(null)}
+          tenantId={tenantId}
+          ownerDriverId={driverId}
+          membroId={espelhamento.id}
+          membroNome={espelhamento.nome}
+        />
+      )}
     </div>
   );
 }
