@@ -1,81 +1,95 @@
-## Diagnóstico
 
-Investiguei seu perfil no banco (Alecio Cavalcante / `papalegua`) e encontrei o seguinte:
+## Diagnóstico do que está aparecendo
 
-| Item | Status no banco |
-|---|---|
-| Perfil (nome, bio, avatar, capa) | OK — salvo |
-| `service_categories` (especialidades — chips) | OK — 5 itens salvos |
-| `service_types` (serviços vendáveis com preço/duração) | **0 registros** |
-| `service_portfolio_items` (imagens de portfólio) | **0 registros** |
+A tela do print é a rota `/@handle` (perfil público), renderizada por `pagina_perfil_motorista.tsx`. Três problemas concretos:
 
-**Conclusão importante:** a página pública NÃO está com bug nem está perdendo dados. Ela está mostrando exatamente o que existe no banco. O que aconteceu é que você cadastrou apenas as **especialidades** (chips/categorias do onboarding), mas **nunca cadastrou nenhum serviço vendável** (com preço, duração, descrição) nem subiu imagens de portfólio. Por isso aparece "Este profissional ainda não publicou serviços" e "ainda não publicou trabalhos no portfólio".
+1. **Bloco fantasma no topo** ("Adicionar serviço" / "Comissões e fidelidade" desfocado + um "P" gigante) — é o `HeaderPerfil` desta página: a cover não está carregando bem e o avatar entra como fallback enorme (`h-24 w-24` com inicial). Visualmente parece um card de onboarding sobrando.
+2. **Especialidades como chips de texto** ("Marido de aluguel", "Pequenos reparos"…) — vêm de `ChipsCategorias` + `SecaoSobreProfissional`. Está duplicado (aparece no header e de novo no card "Sobre Profissional"). Não tem nada do visual de "app de serviço" com foto que já existe em `VitrineEspecialidadesVisuais` / `SecaoEspecialidadesPublica`.
+3. **Footer institucional poluindo** (segundo print, riscado pelo usuário) — `FooterServicos` mostra "Tribo Serviços / Produto: Sou profissional / Sou operadora / Entrar / Suporte". Isso não é footer de página pública de prestador, é footer de site institucional. Está sendo usado dentro do perfil.
 
-Hoje existem 3 conceitos diferentes — e isso está confundindo:
+A rota `/@handle` cai em `pagina_perfil_motorista`, mas a versão visualmente correta (cover + vitrine de especialidades com foto + bottom bar) já existe em `pagina_perfil_profissional_servicos`. As duas estão divergindo.
 
-1. **Especialidades** (chips "Marido de aluguel", "Pequenos reparos"…): só uma etiqueta visual, não tem preço.
-2. **Serviços oferecidos** (cards com "Agendar"): item vendável com nome, duração e preço. É o que o cliente contrata.
-3. **Portfólio**: fotos de trabalhos feitos.
+## Objetivo
 
-Você só preencheu o item 1.
+Deixar a página pública do profissional (`/@handle` e `/s/:slug/:driver_slug`) com cara de app de serviço de verdade: **cover → avatar normal → nome + cidade → grid visual de especialidades com foto → portfólio → bottom bar com CTA**. Sem footer institucional, sem chips duplicados, sem "P" gigante.
 
-## O que vou fazer
+## Mudanças
 
-O problema é metade falta de UX, metade falta de dados. Vou atacar os dois lados.
+### 1. `pagina_perfil_motorista.tsx` (rota `/@handle`)
 
-### 1. Tornar a página pública útil mesmo sem serviços vendáveis cadastrados
+- **Remover** o uso de `HeaderPerfil` antigo (que produz o avatar gigante centralizado e a cover frouxa).
+- **Substituir** pelo mesmo `CabecalhoPerfilProfissional` já usado em `pagina_perfil_profissional_servicos` — cover hero + avatar `w-24 h-24` alinhado à esquerda + nome + cidade + chips compactos (máx 5).
+- **Remover a duplicação** de "Sobre Profissional" + chips de Especialidades. Manter um único bloco "Sobre" curto (bio + verificado + cidade), sem repetir a lista de especialidades como chips de texto.
+- **Remover do meio da página** as seções que não são de cliente: "Distribuição de notas", "Lista de avaliações", "Grid Métricas", "Info veículo" (quando o tipo é `service_provider`), "Disponibilidade pública", e o card "Grupo / tenant slug". Esses elementos pertencem ao painel interno, não à página de venda.
+- **Manter visível**, em ordem:
+  1. Cover + identidade
+  2. Bio curta (se houver)
+  3. **Vitrine visual de especialidades** (`SecaoEspecialidadesPublica` já existe, com foto Unsplash por categoria — usar como bloco principal quando não há serviços precificados; quando há, mostrar `SecaoServicosPublica`)
+  4. Portfólio (se houver imagens)
+  5. Equipe (se houver)
+- **Bottom bar fixa** com um único CTA forte: "Agendar agora" (se há serviços) ou "Solicitar orçamento" via WhatsApp.
 
-Em `pagina_perfil_motorista.tsx` e `secao_servicos_publica.tsx`:
+### 2. `FooterServicos` na página pública
 
-- Quando não houver serviços vendáveis cadastrados, mas houver **especialidades** (`service_categories`), exibir as especialidades como cards clicáveis com um botão **"Solicitar orçamento"** que abre WhatsApp/chat com o profissional. Hoje cai num vazio "ainda não publicou serviços" — fica inutilizável.
-- Botão fixo inferior: trocar "Agendar serviço" por **"Solicitar orçamento"** quando não há serviços vendáveis com preço (em vez de levar para uma agenda vazia).
-- Mostrar nome do profissional no header sticky (hoje só aparece "Perfil") — no print 1 dá pra ver que ficou genérico.
+- **Remover** `<FooterServicos />` de `pagina_perfil_profissional_servicos.tsx`. Página de prestador não leva footer de site corporativo.
+- O footer institucional continua existindo, mas só é usado em landing/marketing (`pagina_landing`, vitrine `/s/:slug`).
 
-### 2. Corrigir o painel do profissional para deixar claro o que falta
+### 3. Avatar fallback gigante ("P")
 
-Em `aba_perfil.tsx` e/ou `banner_onboarding_profissional.tsx`:
+- Reduzir o avatar em `CabecalhoPerfilProfissional` para `w-20 h-20` em mobile (`<= 430px`), `w-24 h-24` em telas maiores. Tamanho da inicial cai junto.
+- Quando não há `avatar_url`, em vez de letra solta, usar inicial sobre fundo `bg-primary/10` com a cor da marca — o que já existe, mas hoje a letra está com `text-2xl` e parece desproporcional em mobile.
 
-- Adicionar um **checklist de publicação** no topo do painel:
-  - [x] Perfil preenchido
-  - [x] Especialidades selecionadas
-  - [ ] **Pelo menos 1 serviço cadastrado com preço** ← bloqueia agendamento
-  - [ ] **Pelo menos 1 foto no portfólio** ← recomendado
-- Cada item incompleto vira um botão que rola até a seção correta.
-- Renomear "Adicionar serviço" para **"Adicionar serviço com preço"** e adicionar um subtítulo curto: *"Para que clientes possam agendar e pagar, cadastre serviços com nome, duração e valor."*
+### 4. Topo do scroll (o "card desfocado" do print)
 
-### 3. Onde ver os serviços já ativos
+- O efeito do print ("Comissões e fidelidade" aparecendo desfocado atrás) é o gradiente `from-background via-background/50 to-transparent` aplicado por cima de uma imagem que falhou ao carregar, com o avatar gigante por cima. Ao trocar pelo `CabecalhoPerfilProfissional` (que já tem fallback de cover por categoria via `imagemDeCapa`) e reduzir o avatar, esse "fantasma" desaparece naturalmente.
 
-Os serviços ativos aparecem no painel, aba **Perfil → seção "Meus serviços"**, com um Switch para ativar/desativar e botão de remover. Vou:
+### 5. Vitrine de especialidades — paridade visual
 
-- Renomear a seção para **"Meus serviços ativos"**.
-- Mostrar contador ("3 ativos · 1 pausado").
-- Adicionar link "Ver como o cliente vê" que abre o preview da vitrine (já existe o componente `BotaoPreviewVitrine`, só falta destacar).
+- Garantir que `SecaoEspecialidadesPublica` (usada na rota `/@handle`) e `VitrineEspecialidadesVisuais` (usada em `/s/:slug/:driver_slug`) tenham **exatamente o mesmo layout**: grid `grid-cols-2` em mobile, `aspect-[4/3]`, foto Unsplash por categoria, título sobreposto com gradiente, tap → WhatsApp com a especialidade no texto.
+- Hoje as duas já existem e são quase idênticas — vou consolidar em um único componente em `compartilhados/components/` para evitar drift futuro.
 
-### 4. Imagens (avatar e capa) que você subiu
+## Resultado esperado (mobile 430px)
 
-Confirmado no banco: avatar e capa **estão salvos e públicos**. Eles aparecem no `HeaderPerfil` da página pública. Os prints 1 e 2 mostram apenas as partes inferiores da página (após scroll), por isso parece que não há imagem — no print 3 dá para ver o avatar "P" porque está no preview do painel, não na página pública. Vou:
+```text
+┌─────────────────────────────┐
+│ [<]                     [⤴] │  ← botões flutuantes
+│   ░░░ cover (foto categ.) ░░│
+│                             │
+│  ◯ Profissional ✓           │  ← avatar 80px, alinhado esq.
+│    📍 Águas Claras           │
+│    [Marido] [Reparos] +3     │  ← chips compactos
+│                             │
+│  Sobre                      │
+│  Ksjsjajahahxhncnznzn       │
+│                             │
+│  ✨ Serviços oferecidos      │
+│  ┌──────┐ ┌──────┐          │
+│  │ foto │ │ foto │          │  ← vitrine visual
+│  │Marido│ │Reparo│          │
+│  └──────┘ └──────┘          │
+│  ┌──────┐ ┌──────┐          │
+│  │ foto │ │ foto │          │
+│  └──────┘ └──────┘          │
+│                             │
+│  📷 Portfólio (se houver)   │
+│                             │
+├─────────────────────────────┤
+│  [📅 Agendar agora]          │  ← bottom bar fixa
+└─────────────────────────────┘
+```
 
-- Garantir que a capa (`cover_url`) seja exibida no topo do header da página pública mesmo no preview do painel.
-- Adicionar no painel uma prévia visual de avatar e capa salvos, com botão "Trocar".
+Sem footer "Tribo Serviços / Produto / Suporte". Sem "P" gigante. Sem chips repetidos.
 
-## Detalhes técnicos
+## Arquivos afetados
 
-**Arquivos a editar:**
-- `src/features/motorista/pages/pagina_perfil_motorista.tsx` — fallback de "solicitar orçamento", header com nome
-- `src/features/motorista/components/secao_servicos_publica.tsx` — usar `service_categories` como fallback
-- `src/features/motorista/components/header_perfil.tsx` — confirmar render de cover_url
-- `src/features/painel/components/aba_perfil.tsx` — checklist de publicação
-- `src/features/painel/components/secao_meus_servicos.tsx` — copy melhorada, contador, link para preview
-- `src/features/painel/components/banner_onboarding_profissional.tsx` — destacar ações pendentes
+- `src/features/motorista/pages/pagina_perfil_motorista.tsx` (refatorado)
+- `src/features/triboservicos/pages/pagina_perfil_profissional_servicos.tsx` (remover footer)
+- `src/features/triboservicos/components/cabecalho_perfil_profissional.tsx` (avatar menor em mobile)
+- `src/features/motorista/components/secao_especialidades_publica.tsx` e `src/features/triboservicos/components/vitrine_especialidades_visuais.tsx` (consolidar em um componente compartilhado)
+- (não tocar) `FooterServicos` continua existindo, só deixa de ser usado nas páginas de prestador
 
-**Novo componente:**
-- `src/features/painel/components/checklist_publicacao.tsx`
+## Fora do escopo desta rodada
 
-**Sem mudanças de banco** — não há migração necessária. Tudo é UX/copy/componentização sobre dados que já existem.
-
-## Resumo direto das suas perguntas
-
-- **"É isso mesmo a página do cliente?"** Sim, mas ela está vazia porque você só cadastrou especialidades (etiquetas), não cadastrou serviços vendáveis nem subiu portfólio.
-- **"Como contrata o serviço?"** Hoje, só pelo botão "Agendar" que aparece em cada serviço vendável — e como você não tem nenhum cadastrado, não há como contratar. Vou adicionar fallback de "Solicitar orçamento" para não ficar inutilizável.
-- **"Como ver os serviços que já ativei?"** Painel → aba Perfil → seção "Meus serviços". Vou deixar isso mais visível.
-- **"Cadê as imagens que subi?"** Avatar e capa estão salvos e aparecem no topo da página pública (parte que ficou fora do print). Portfólio está vazio porque você não subiu nenhuma imagem de trabalho ainda.
+- Reativar avaliações/distribuição de notas em formato "app" (cards minimalistas) — pode entrar depois.
+- Botão de "Adicionar serviço" — esse só faz sentido no painel logado, e ele já está lá; nada a fazer na página pública.
+- PWA, offline, ícones — já configurado em rodada anterior.
