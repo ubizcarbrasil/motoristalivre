@@ -10,7 +10,7 @@ function brl(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function SecaoRegrasComissao() {
+export function SecaoRegrasComissao(_props?: { modo?: string }) {
   const { categorias, regras, carregando, salvando, criar, atualizar, remover } =
     useHookRegrasComissao();
   const [dialogoAberto, setDialogoAberto] = useState(false);
