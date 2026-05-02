@@ -1,77 +1,82 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Loader2, Percent, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useHookComissoes } from "../hooks/hook_comissoes";
+import { ControlePercentualComissao } from "./controle_percentual_comissao";
 
-export function SecaoComissoes() {
-  const { usuario } = useAutenticacao();
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [transbordo, setTransbordo] = useState(10);
-  const [afiliado, setAfiliado] = useState(5);
-  const [cashback, setCashback] = useState(0);
-  const [salvando, setSalvando] = useState(false);
+interface Props {
+  modo?: "mobilidade" | "servicos" | "hibrido";
+}
 
-  useEffect(() => {
-    if (!usuario) return;
-    carregar();
-  }, [usuario]);
+export function SecaoComissoes({ modo = "mobilidade" }: Props = {}) {
+  const { valores, atualizarCampo, salvar, carregando, salvando } = useHookComissoes();
 
-  async function carregar() {
-    const { data: perfil } = await supabase.from("users").select("tenant_id").eq("id", usuario!.id).single();
-    if (!perfil) return;
-    setTenantId(perfil.tenant_id);
+  const mostrarTransbordo = modo === "mobilidade" || modo === "hibrido";
 
-    const { data } = await supabase.from("tenant_settings").select("transbordo_commission, affiliate_commission, cashback_pct").eq("tenant_id", perfil.tenant_id).single();
-    if (data) {
-      setTransbordo(data.transbordo_commission);
-      setAfiliado(data.affiliate_commission);
-      setCashback(data.cashback_pct);
-    }
-  }
-
-  async function salvar() {
-    if (!tenantId) return;
-    setSalvando(true);
-    try {
-      await supabase.from("tenant_settings").update({
-        transbordo_commission: transbordo,
-        affiliate_commission: afiliado,
-        cashback_pct: cashback,
-      }).eq("tenant_id", tenantId);
-      toast.success("Comissoes atualizadas");
-    } catch {
-      toast.error("Erro ao salvar");
-    } finally {
-      setSalvando(false);
-    }
+  if (carregando) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-lg space-y-6 p-4 sm:p-6">
-      <div className="space-y-2">
-        <Label>Comissao de transbordo (%)</Label>
-        <Input type="number" value={transbordo} onChange={(e) => setTransbordo(Number(e.target.value))} min={0} max={100} />
-        <p className="text-xs text-muted-foreground">Percentual cobrado quando um motorista atende corrida de outro</p>
+    <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
+      <header className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Percent className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold text-foreground">Comissões e cashback</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Defina os percentuais cobrados pela plataforma e o cashback devolvido aos clientes.
+          As alterações afetam apenas movimentações futuras.
+        </p>
+      </header>
+
+      <div className="space-y-3">
+        {mostrarTransbordo && (
+          <ControlePercentualComissao
+            id="comissao-transbordo"
+            titulo="Comissão de transbordo"
+            descricao="Percentual descontado do profissional que atende uma corrida originada por outro profissional do grupo."
+            valor={valores.transbordo_commission}
+            onChange={(v) => atualizarCampo("transbordo_commission", v)}
+            desabilitado={salvando}
+            max={50}
+          />
+        )}
+
+        <ControlePercentualComissao
+          id="comissao-afiliado"
+          titulo="Comissão de afiliado"
+          descricao="Percentual repassado ao afiliado que originou o cliente."
+          valor={valores.affiliate_commission}
+          onChange={(v) => atualizarCampo("affiliate_commission", v)}
+          desabilitado={salvando}
+          max={50}
+        />
+
+        <ControlePercentualComissao
+          id="cashback-padrao"
+          titulo="Cashback padrão"
+          descricao="Percentual devolvido ao cliente como crédito para usar em corridas/serviços futuros."
+          valor={valores.cashback_pct}
+          onChange={(v) => atualizarCampo("cashback_pct", v)}
+          desabilitado={salvando}
+          max={30}
+        />
       </div>
 
-      <div className="space-y-2">
-        <Label>Comissao de afiliado (%)</Label>
-        <Input type="number" value={afiliado} onChange={(e) => setAfiliado(Number(e.target.value))} min={0} max={100} />
-        <p className="text-xs text-muted-foreground">Percentual pago ao afiliado por corrida gerada</p>
+      <div className="flex justify-end">
+        <Button onClick={salvar} disabled={salvando} className="gap-2">
+          {salvando ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {salvando ? "Salvando..." : "Salvar comissões"}
+        </Button>
       </div>
-
-      <div className="space-y-2">
-        <Label>Cashback padrao (%)</Label>
-        <Input type="number" value={cashback} onChange={(e) => setCashback(Number(e.target.value))} min={0} max={100} />
-        <p className="text-xs text-muted-foreground">Percentual de cashback devolvido ao passageiro</p>
-      </div>
-
-      <Button onClick={salvar} disabled={salvando}>
-        {salvando ? "Salvando..." : "Salvar comissoes"}
-      </Button>
     </div>
   );
 }
