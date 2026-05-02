@@ -120,14 +120,12 @@ export function DialogoOnboardingProfissional({
 }: DialogoOnboardingProfissionalProps) {
   const [passo, setPasso] = useState(0);
   const [salvando, setSalvando] = useState(false);
-  const [novaCategoria, setNovaCategoria] = useState("");
   const [form, setForm] = useState<FormState>(montarFormInicial(dadosIniciais));
 
   useEffect(() => {
     if (aberto) {
       setForm(montarFormInicial(dadosIniciais));
       setPasso(0);
-      setNovaCategoria("");
     }
   }, [aberto, dadosIniciais]);
 
@@ -140,32 +138,6 @@ export function DialogoOnboardingProfissional({
 
   const atualizar = <K extends keyof FormState>(campo: K, valor: FormState[K]) =>
     setForm((prev) => ({ ...prev, [campo]: valor }));
-
-  const adicionarCategoria = () => {
-    const valor = novaCategoria.trim();
-    if (!valor) return;
-    if (valor.length > 50) {
-      toast.error("Categoria muito longa");
-      return;
-    }
-    if (form.service_categories.some((c) => c.toLowerCase() === valor.toLowerCase())) {
-      toast.error("Categoria já adicionada");
-      return;
-    }
-    if (form.service_categories.length >= 10) {
-      toast.error("Máximo de 10 categorias");
-      return;
-    }
-    atualizar("service_categories", [...form.service_categories, valor]);
-    setNovaCategoria("");
-  };
-
-  const removerCategoria = (cat: string) => {
-    atualizar(
-      "service_categories",
-      form.service_categories.filter((c) => c !== cat),
-    );
-  };
 
   const validarPassoAtual = (): boolean => {
     try {
