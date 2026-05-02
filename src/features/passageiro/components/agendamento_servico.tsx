@@ -548,6 +548,11 @@ export function AgendamentoServico({
                 maxLength={20}
               />
             </div>
+            <FormularioBriefing
+              slugCategoria={slugCategoriaAtual}
+              valor={briefing}
+              onChange={setBriefing}
+            />
             <div className="space-y-1.5">
               <Label htmlFor="ag_obs">Observações (opcional)</Label>
               <Textarea
