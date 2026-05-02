@@ -77,19 +77,21 @@ export function SecaoRegras() {
   return (
     <div className="max-w-lg space-y-6 p-4 sm:p-6">
       {tenantId && <CardModulosTribo tenantId={tenantId} />}
-      <div className="space-y-2">
-        <Label>Modo de despacho</Label>
-        <Select value={modoDespacho} onValueChange={setModoDespacho}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="auto">Prioridade ao dono do link</SelectItem>
-            <SelectItem value="manual">Por proximidade</SelectItem>
-            <SelectItem value="hybrid">Para todos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!modoServicos && (
+        <div className="space-y-2">
+          <Label>Modo de despacho</Label>
+          <Select value={modoDespacho} onValueChange={setModoDespacho}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Prioridade ao dono do link</SelectItem>
+              <SelectItem value="manual">Por proximidade</SelectItem>
+              <SelectItem value="hybrid">Para todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Fuso horário</Label>
