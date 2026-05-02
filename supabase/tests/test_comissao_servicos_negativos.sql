@@ -197,22 +197,16 @@ BEGIN
   --     pct=0 ⇒ sem commissions / wallet_tx.
   -- =========================================================
   RAISE NOTICE '--- N4: sem regra efetiva (pct=0) ---';
-  DECLARE
-    _ts_transbordo numeric;
-    _ts_affiliate numeric;
-  BEGIN
-    SELECT transbordo_commission, affiliate_commission
-      INTO _ts_transbordo, _ts_affiliate
-    FROM public.tenant_settings WHERE tenant_id = _tenant_id;
+  SELECT transbordo_commission, affiliate_commission
+    INTO _ts_transbordo, _ts_affiliate
+  FROM public.tenant_settings WHERE tenant_id = _tenant_id;
 
-    IF COALESCE(_ts_transbordo, 0) > 0 OR COALESCE(_ts_affiliate, 0) > 0 THEN
-      -- Cria regra com pct=0 para neutralizar o fallback positivo do tenant
-      INSERT INTO public.commission_rules (
-        tenant_id, category_id, comissao_cobertura_pct, comissao_indicacao_pct, comissao_fixa_brl, ativo
-      ) VALUES (_tenant_id, _category_sem_regra, 0, 0, 0, true);
-      RAISE NOTICE '  (tenant_settings>0 detectado: usando rule pct=0 para isolar o cenário)';
-    END IF;
-  END;
+  IF COALESCE(_ts_transbordo, 0) > 0 OR COALESCE(_ts_affiliate, 0) > 0 THEN
+    INSERT INTO public.commission_rules (
+      tenant_id, category_id, comissao_cobertura_pct, comissao_indicacao_pct, comissao_fixa_brl, ativo
+    ) VALUES (_tenant_id, _category_sem_regra, 0, 0, 0, true);
+    RAISE NOTICE '  (tenant_settings>0 detectado: usando rule pct=0 para isolar o cenário)';
+  END IF;
 
   UPDATE public.wallets SET balance = _saldo_a_ini, blocked_balance = 0 WHERE id = _wallet_a;
   UPDATE public.wallets SET balance = _saldo_b_ini, blocked_balance = 0 WHERE id = _wallet_b;
