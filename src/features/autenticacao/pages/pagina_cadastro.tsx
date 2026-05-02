@@ -217,9 +217,9 @@ export default function PaginaCadastro() {
     );
   }
 
+  // Profissional autônomo é redirecionado para /s/cadastro/profissional, então não aparece aqui.
   const opcoes: Array<{ valor: TipoCadastro; label: string }> = [
     { valor: "grupo", label: "Criar grupo" },
-    { valor: "profissional", label: "Profissional" },
     { valor: "motorista", label: "Motorista" },
     { valor: "passageiro", label: "Passageiro" },
     { valor: "afiliado", label: "Afiliado" },
