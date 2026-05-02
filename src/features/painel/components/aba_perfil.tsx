@@ -166,6 +166,9 @@ export function AbaPerfil({ perfil, onAtualizar }: AbaPerfilProps) {
         </Button>
       </div>
 
+      {/* @handle público — apenas profissionais de serviço/híbrido */}
+      {perfil.professional_type !== "driver" && <EditorHandleProfissional />}
+
       {/* Reputação */}
       {reputacao && (
         <div className="space-y-4">
