@@ -1,66 +1,29 @@
-## Problema
+Diagnóstico: o link público com `@handle` ainda cai em tela preta porque a rota atual foi definida como `/:prefixo + :handle` (`/@:handle` e `/%40:handle`). Pela documentação do React Router v6, segmentos dinâmicos não podem ser parciais; ou seja, `@:handle` não é um padrão confiável. Em produção, o app carrega o bundle, mas o React não renderiza conteúdo para `@alecio-cavalcante`, e nenhuma chamada `resolve_handle` é feita. O perfil canônico `/s/papalegua/alecio-cavalcante` funciona.
 
-O link `https://motoristalivre.lovable.app/@alecio-cavalcante` (e equivalente no preview) mostra **"Link não encontrado"**.
+Plano de correção:
 
-### Diagnóstico
+1. Ajustar o roteamento de handles
+   - Remover a dependência de rotas parciais como `/:prefixo:param`.
+   - Usar uma rota segura `/:slug` para capturar `@alecio-cavalcante` e `%40alecio-cavalcante` como um segmento inteiro.
+   - Fazer o `ResolverPublicoTenant` reconhecer o segmento decodificado que começa com `@` e renderizar diretamente o resolver de handle, em vez de tentar navegar novamente para uma rota parcial.
 
-1. ✅ O handle existe no banco: `resolve_handle('alecio-cavalcante')` retorna `tenant_slug=papalegua`, `driver_slug=alecio-cavalcante`.
-2. ✅ A função RPC tem permissão para `anon`.
-3. ❌ A rota `/@:handle` no `App.tsx` **não está casando** o request. Em vez disso, a rota catch-all `/:slug` captura o path inteiro e o `ResolverPublicoTenant` busca um tenant com slug `@alecio-cavalcante`, não acha, e o `PaginaPassageiro` renderiza a mensagem "Link não encontrado / Verifique se o endereço está correto" (linhas 267-276 de `pagina_passageiro.tsx`).
+2. Tornar o resolver de handle independente de parâmetro parcial
+   - Atualizar `PaginaResolverHandle` para aceitar um `handle` via prop opcional.
+   - Quando não receber prop, continuar usando `useParams` para compatibilidade.
+   - Normalizar sempre: `decodeURIComponent`, remover `@`, `trim`, `lowercase`.
 
-A causa raiz é que navegadores e clients HTTP frequentemente codificam o `@` como `%40` na URL, e o template `/@:handle` do React Router não casa com `/%40alecio-cavalcante`. Resultado: a rota mais genérica `/:slug` ganha.
+3. Corrigir o fallback de link não encontrado
+   - Em caso de handle inexistente, exibir uma tela clara “Perfil não encontrado” em vez de redirecionar para `/404`, porque hoje não existe rota explícita `/404` e isso pode gerar experiência confusa.
 
-## Solução
+4. Garantir que links gerados internamente continuem corretos
+   - Manter os links preferenciais como `/@handle` para compartilhamento.
+   - Se necessário, usar a rota canônica `/s/:tenant/:driver` apenas como destino final após resolver.
 
-Tornar a resolução de `@handle` resiliente a encoding e a qualquer ambiguidade de matching, em duas frentes:
+5. Validar após alteração
+   - Testar no preview as URLs:
+     - `/@alecio-cavalcante`
+     - `/%40alecio-cavalcante`
+     - `/s/papalegua/alecio-cavalcante`
+   - Confirmar que a tela não fica preta e que a página redireciona ou renderiza o perfil corretamente.
 
-### 1. `App.tsx` — adicionar variantes da rota
-
-Adicionar rota explícita também para a forma percent-encoded e para handle posicionado como primeiro segmento:
-
-```tsx
-<Route path="/@:handle" element={<PaginaResolverHandle />} />
-<Route path="/%40:handle" element={<PaginaResolverHandle />} />
-```
-
-### 2. `ResolverPublicoTenant` — interceptar slugs que começam com `@`
-
-No início do `useEffect`, antes de consultar `tenants`, detectar se o `slug` começa com `@` (após `decodeURIComponent`). Se sim, redirecionar internamente para `/@<resto>` via `<Navigate>` para que `PaginaResolverHandle` assuma. Isso fecha qualquer brecha caso o React Router ainda priorize `/:slug`.
-
-```ts
-const slugDecodificado = decodeURIComponent(slug ?? "");
-if (slugDecodificado.startsWith("@")) {
-  setEstado("redirecionar_handle");
-  return;
-}
-// ... resto da lógica atual
-```
-
-E no render:
-```tsx
-if (estado === "redirecionar_handle") {
-  return <Navigate to={`/${slugDecodificado}`} replace />;
-}
-```
-(ou redirecionar direto para `/s/...` chamando `resolverHandle` ali mesmo, evitando uma navegação extra)
-
-### 3. `PaginaResolverHandle` — robustez na leitura do param
-
-Aplicar `decodeURIComponent` no `handle` e remover qualquer `@` residual antes de chamar `resolverHandle()`. Já existe `replace(/^@/, "")` no service, mas adicionar decode no componente protege contra `%40` duplicado.
-
-### 4. Republicação
-
-Após o fix, **republicar o site** para que `motoristalivre.lovable.app` e o domínio customizado `www.motoristalivre.com.br` recebam a versão com a Fase 6 + correção. O preview privado `lovableproject.com` exige login no Lovable e **não deve ser compartilhado com clientes** — vou reforçar isso na resposta.
-
-## Arquivos afetados
-
-- `src/App.tsx` — adicionar rota `/%40:handle`
-- `src/features/passageiro/components/resolver_publico_tenant.tsx` — interceptar slugs com `@`
-- `src/features/triboservicos/pages/pagina_resolver_handle.tsx` — `decodeURIComponent` no param
-
-## Validação
-
-1. Acessar `/@alecio-cavalcante` → deve redirecionar para `/s/papalegua/alecio-cavalcante`.
-2. Acessar `/%40alecio-cavalcante` → mesmo comportamento.
-3. Acessar `/handle-inexistente` (com `@`) → cai no NotFound canônico, não em "Link não encontrado" do passageiro.
-4. Rotas existentes `/papalegua`, `/s/papalegua/alecio-cavalcante` continuam funcionando.
+Observação importante: o link `bfa5b0fa...lovableproject.com` é um link privado de preview e pode exigir login no Lovable para clientes externos. Para divulgação ao cliente, o ideal é usar o domínio público `https://www.motoristalivre.com.br/@alecio-cavalcante` ou `https://motoristalivre.lovable.app/@alecio-cavalcante`. A correção acima mira exatamente esse domínio público também.
