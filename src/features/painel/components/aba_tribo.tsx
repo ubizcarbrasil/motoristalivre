@@ -47,16 +47,32 @@ const SECOES: Record<SecaoAdmin, () => JSX.Element> = {
 interface SubAbaConfig {
   id: SecaoAdmin;
   label: string;
+  labelServicos?: string;
   icone: LucideIcon;
+  iconeServicos?: LucideIcon;
   modulos: ("mobility" | "services")[] | null; // null = sempre visível
 }
 
 const SUB_ABAS: SubAbaConfig[] = [
   { id: "dashboard", label: "Visão", icone: LayoutDashboard, modulos: null },
-  { id: "motoristas", label: "Motoristas", icone: Car, modulos: ["mobility"] },
+  {
+    id: "motoristas",
+    label: "Motoristas",
+    labelServicos: "Profissionais",
+    icone: Car,
+    iconeServicos: Briefcase,
+    modulos: ["mobility", "services"],
+  },
   { id: "afiliados", label: "Afiliados", icone: Users, modulos: ["mobility"] },
   { id: "crm", label: "CRM", icone: UserCheck, modulos: null },
-  { id: "corridas", label: "Corridas", icone: Route, modulos: ["mobility"] },
+  {
+    id: "corridas",
+    label: "Corridas",
+    labelServicos: "Agendamentos",
+    icone: Route,
+    iconeServicos: Calendar,
+    modulos: ["mobility", "services"],
+  },
   { id: "carteira", label: "Carteira", icone: Wallet, modulos: null },
   { id: "identidade", label: "Visual", icone: Palette, modulos: null },
   { id: "regras", label: "Regras", icone: Settings, modulos: null },
