@@ -62,7 +62,9 @@ const App = () => (
 
             {/* Links dedicados por perfil — cadastro */}
             <Route path="/motorista/cadastro" element={<Navigate to="/cadastro?tipo=motorista" replace />} />
-            <Route path="/profissional/cadastro" element={<Navigate to="/cadastro?tipo=profissional" replace />} />
+            {/* Profissional autônomo SEMPRE vai pro cadastro dedicado de serviços (sem opções de motorista/passageiro) */}
+            <Route path="/profissional/cadastro" element={<Navigate to="/s/cadastro/profissional" replace />} />
+            <Route path="/cadastro/profissional" element={<Navigate to="/s/cadastro/profissional" replace />} />
 
             {/* Aliases legados — mantidos por compatibilidade */}
             <Route path="/profissional/login" element={<Navigate to="/profissional/acesso" replace />} />
