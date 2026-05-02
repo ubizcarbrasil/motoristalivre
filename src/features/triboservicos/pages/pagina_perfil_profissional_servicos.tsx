@@ -227,6 +227,10 @@ export default function PaginaPerfilProfissionalServicos() {
             </section>
           </>
         )}
+
+        {driverId && (
+          <SecaoEquipeServicos ownerDriverId={driverId} tenantSlug={tenant.slug} />
+        )}
       </main>
 
       {ofereceServicos && dados.serviceTypes.length > 0 && (
