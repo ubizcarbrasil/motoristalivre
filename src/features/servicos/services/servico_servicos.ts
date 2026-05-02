@@ -201,3 +201,59 @@ export async function chamarBookService(payload: Record<string, unknown>) {
   if (error) throw error;
   return data as { booking: AgendamentoServico };
 }
+
+// ============== Fatores de preço dinâmicos ==============
+
+export async function listarFatoresPreco(serviceTypeId: string) {
+  const { data, error } = await supabase
+    .from("service_pricing_factors" as any)
+    .select("*")
+    .eq("service_type_id", serviceTypeId)
+    .order("ordem", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
+
+export async function salvarFatorPreco(input: {
+  id?: string;
+  service_type_id: string;
+  driver_id: string;
+  tenant_id: string;
+  key: string;
+  label: string;
+  input_type: "number" | "select";
+  unit?: string | null;
+  options?: any[] | null;
+  unit_price?: number;
+  min_value?: number | null;
+  max_value?: number | null;
+  step?: number;
+  default_value?: number | null;
+  required?: boolean;
+  ordem?: number;
+}) {
+  const { id, ...resto } = input;
+  if (id) {
+    const { error } = await supabase
+      .from("service_pricing_factors" as any)
+      .update(resto as any)
+      .eq("id", id);
+    if (error) throw error;
+    return id;
+  }
+  const { data, error } = await supabase
+    .from("service_pricing_factors" as any)
+    .insert(resto as any)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return (data as any).id as string;
+}
+
+export async function excluirFatorPreco(id: string) {
+  const { error } = await supabase
+    .from("service_pricing_factors" as any)
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+}
