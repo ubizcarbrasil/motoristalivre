@@ -24,15 +24,24 @@ import { SecaoRegras } from "@/features/admin/components/secao_regras";
 import { SecaoComissoes } from "@/features/admin/components/secao_comissoes";
 import type { SecaoAdmin } from "@/features/admin/types/tipos_admin";
 import type { TriboMotorista } from "../types/tipos_tribos";
+import type { TipoProfissional } from "@/features/servicos/types/tipos_servicos";
 import { CardAtivarMotorista } from "./card_ativar_motorista";
+import { resolverModoPainel, type ModoPainel } from "../utils/modo_painel";
 
 interface AbaTriboProps {
   tribo: TriboMotorista;
   semPerfilDriver?: boolean;
   onAtivarMotorista?: () => void;
+  /** Tipo profissional do usuário logado. Quando é service_provider, força modo serviços
+   *  mesmo que a tribo ainda tenha o módulo mobility ativo. */
+  professionalType?: TipoProfissional | null;
 }
 
-const SECOES: Record<SecaoAdmin, () => JSX.Element> = {
+interface PropsSecaoAdmin {
+  modo: ModoPainel;
+}
+
+const SECOES: Record<SecaoAdmin, (props: PropsSecaoAdmin) => JSX.Element> = {
   dashboard: SecaoDashboard,
   motoristas: SecaoMotoristas,
   afiliados: SecaoAfiliados,
@@ -50,46 +59,43 @@ interface SubAbaConfig {
   labelServicos?: string;
   icone: LucideIcon;
   iconeServicos?: LucideIcon;
-  modulos: ("mobility" | "services")[] | null; // null = sempre visível
+  /** Modos em que a aba aparece. */
+  modos: ModoPainel[];
 }
 
 const SUB_ABAS: SubAbaConfig[] = [
-  { id: "dashboard", label: "Visão", icone: LayoutDashboard, modulos: null },
+  { id: "dashboard", label: "Visão", icone: LayoutDashboard, modos: ["mobilidade", "servicos", "hibrido"] },
   {
     id: "motoristas",
     label: "Motoristas",
     labelServicos: "Profissionais",
     icone: Car,
     iconeServicos: Briefcase,
-    modulos: ["mobility", "services"],
+    modos: ["mobilidade", "servicos", "hibrido"],
   },
-  { id: "afiliados", label: "Afiliados", icone: Users, modulos: ["mobility"] },
-  { id: "crm", label: "CRM", icone: UserCheck, modulos: null },
+  { id: "afiliados", label: "Afiliados", icone: Users, modos: ["mobilidade", "hibrido"] },
+  { id: "crm", label: "CRM", icone: UserCheck, modos: ["mobilidade", "servicos", "hibrido"] },
   {
     id: "corridas",
     label: "Corridas",
     labelServicos: "Agendamentos",
     icone: Route,
     iconeServicos: Calendar,
-    modulos: ["mobility", "services"],
+    modos: ["mobilidade", "servicos", "hibrido"],
   },
-  { id: "carteira", label: "Carteira", icone: Wallet, modulos: null },
-  { id: "identidade", label: "Visual", icone: Palette, modulos: null },
-  { id: "regras", label: "Regras", icone: Settings, modulos: null },
-  { id: "comissoes", label: "Comissões", icone: Percent, modulos: ["mobility"] },
+  { id: "carteira", label: "Carteira", icone: Wallet, modos: ["mobilidade", "servicos", "hibrido"] },
+  { id: "identidade", label: "Visual", icone: Palette, modos: ["mobilidade", "servicos", "hibrido"] },
+  { id: "regras", label: "Regras", icone: Settings, modos: ["mobilidade", "servicos", "hibrido"] },
+  { id: "comissoes", label: "Comissões", icone: Percent, modos: ["mobilidade", "hibrido"] },
 ];
 
-export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTriboProps) {
+export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, professionalType }: AbaTriboProps) {
   const [secao, setSecao] = useState<SecaoAdmin>("dashboard");
 
-  const temMobilidade = tribo.activeModules.includes("mobility");
-  const temServicos = tribo.activeModules.includes("services");
-  const modoServicos = temServicos && !temMobilidade;
+  const modo = resolverModoPainel(professionalType ?? undefined, tribo.activeModules);
+  const modoServicos = modo === "servicos";
 
-  const subAbasVisiveis = SUB_ABAS.filter((s) => {
-    if (s.modulos === null) return true;
-    return s.modulos.some((m) => tribo.activeModules.includes(m));
-  });
+  const subAbasVisiveis = SUB_ABAS.filter((s) => s.modos.includes(modo));
 
   if (tribo.papel !== "dono") {
     return (
@@ -154,14 +160,14 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista }: AbaTribo
       </div>
 
       <div className="p-3 space-y-3">
-        {semPerfilDriver && tribo.papel === "dono" && onAtivarMotorista && (
+        {semPerfilDriver && tribo.papel === "dono" && onAtivarMotorista && !modoServicos && (
           <CardAtivarMotorista
             tenantId={tribo.id}
             nomeTribo={tribo.nome}
             onAtivado={onAtivarMotorista}
           />
         )}
-        <Conteudo />
+        <Conteudo modo={modo} />
       </div>
     </div>
   );
