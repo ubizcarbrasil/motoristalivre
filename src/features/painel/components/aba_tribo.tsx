@@ -45,7 +45,7 @@ interface PropsSecaoAdmin {
   modo: ModoPainel;
 }
 
-const SECOES: Record<SecaoAdmin, (props: PropsSecaoAdmin) => JSX.Element> = {
+const SECOES: Record<Exclude<SecaoAdmin, "convites">, (props: PropsSecaoAdmin) => JSX.Element> = {
   dashboard: SecaoDashboard,
   motoristas: SecaoMotoristas,
   afiliados: SecaoAfiliados,
