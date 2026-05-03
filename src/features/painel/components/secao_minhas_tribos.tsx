@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Crown, Users, Copy, Check, ExternalLink, LogOut, Link2 } from "lucide-react";
+import { Crown, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { TriboMotorista } from "../types/tipos_tribos";
-import { montarLinkRecrutamento, sairDaTribo } from "../services/servico_minhas_tribos";
+import { sairDaTribo } from "../services/servico_minhas_tribos";
+import { BotaoLinkRecrutamento } from "./botao_link_recrutamento";
 
 interface SecaoMinhasTribosProps {
   tribos: TriboMotorista[];
