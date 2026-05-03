@@ -5,6 +5,7 @@ export type SecaoAdmin =
   | "crm"
   | "corridas"
   | "carteira"
+  | "convites"
   | "identidade"
   | "regras"
   | "comissoes"

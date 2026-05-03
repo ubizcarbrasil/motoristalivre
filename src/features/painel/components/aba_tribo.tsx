@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Briefcase,
   Calendar,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import { SecaoDashboard } from "@/features/admin/components/secao_dashboard";
@@ -20,6 +21,7 @@ import { SecaoAfiliados } from "@/features/admin/components/secao_afiliados";
 import { SecaoCRM } from "@/features/admin/components/secao_crm";
 import { SecaoCorridas } from "@/features/admin/components/secao_corridas";
 import { SecaoCarteira } from "@/features/admin/components/secao_carteira";
+import { SecaoConvitesAdmin } from "@/features/admin/components/secao_convites_admin";
 import { SecaoIdentidade } from "@/features/admin/components/secao_identidade";
 import { SecaoRegras } from "@/features/admin/components/secao_regras";
 import { SecaoComissoes } from "@/features/admin/components/secao_comissoes";
@@ -43,7 +45,7 @@ interface PropsSecaoAdmin {
   modo: ModoPainel;
 }
 
-const SECOES: Record<SecaoAdmin, (props: PropsSecaoAdmin) => JSX.Element> = {
+const SECOES: Record<Exclude<SecaoAdmin, "convites">, (props: PropsSecaoAdmin) => JSX.Element> = {
   dashboard: SecaoDashboard,
   motoristas: SecaoMotoristas,
   afiliados: SecaoAfiliados,
@@ -87,6 +89,7 @@ const SUB_ABAS: SubAbaConfig[] = [
     modos: ["mobilidade", "servicos", "hibrido"],
   },
   { id: "carteira", label: "Carteira", icone: Wallet, modos: ["mobilidade", "servicos", "hibrido"] },
+  { id: "convites", label: "Convites", icone: UserPlus, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "identidade", label: "Visual", icone: Palette, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "regras", label: "Regras", icone: Settings, modos: ["mobilidade", "servicos", "hibrido"] },
   { id: "comissoes", label: "Comissões", icone: Percent, modos: ["mobilidade", "servicos", "hibrido"] },
@@ -134,7 +137,7 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, profession
     );
   }
 
-  const Conteudo = SECOES[secao];
+  const Conteudo = secao === "convites" ? null : SECOES[secao];
 
   return (
     <div className="pb-20">
@@ -176,7 +179,11 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, profession
             onAtivado={onAtivarMotorista}
           />
         )}
-        <Conteudo modo={modo} />
+        {secao === "convites" ? (
+          <SecaoConvitesAdmin tenantId={tribo.id} />
+        ) : (
+          Conteudo && <Conteudo modo={modo} />
+        )}
       </div>
     </div>
   );
