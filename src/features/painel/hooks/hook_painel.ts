@@ -81,6 +81,20 @@ export function usePainel() {
         localStorage.removeItem("tribocar_pending_professional_setup");
       }
 
+      // Processa intenção pendente de entrar em tribo via signup_slug
+      const triboPendente = localStorage.getItem("tribocar_pending_tribo_signup");
+      if (triboPendente) {
+        try {
+          const { entrarNaTriboPorSignupSlug } = await import(
+            "@/features/cadastro_por_categoria/services/servico_tribo_signup"
+          );
+          await entrarNaTriboPorSignupSlug(triboPendente);
+        } catch {
+          // silencioso — slug pode ter sido removido ou inválido
+        }
+        localStorage.removeItem("tribocar_pending_tribo_signup");
+      }
+
       const [p, s, c, d, t, ride] = await Promise.all([
         buscarPerfilMotorista(userId),
         buscarEstatisticasHoje(userId),
