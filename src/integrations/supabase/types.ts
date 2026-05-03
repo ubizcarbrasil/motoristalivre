@@ -2842,6 +2842,26 @@ export type Database = {
         Args: { _booking_id: string; _content: string; _guest_id: string }
         Returns: string
       }
+      fn_join_tribe_by_signup_slug: {
+        Args: { _commission_percent?: number; _signup_slug: string }
+        Returns: string
+      }
+      fn_resolve_tribe_by_signup_slug: {
+        Args: { _signup_slug: string }
+        Returns: {
+          owner_user_id: string
+          service_category_id: string
+          service_category_name: string
+          service_category_slug: string
+          tenant_id: string
+          tenant_name: string
+          tenant_slug: string
+        }[]
+      }
+      fn_setup_tribe_for_owner: {
+        Args: { _service_category_id: string; _tenant_id: string }
+        Returns: string
+      }
       generate_driver_slug: {
         Args: { _full_name: string; _tenant_id: string }
         Returns: string
