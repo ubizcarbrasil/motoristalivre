@@ -21,6 +21,8 @@ import { SecaoMinhaDisponibilidade } from "./secao_minha_disponibilidade";
 import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
 import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
 import { SecaoEquipeAdmin } from "./secao_equipe_admin";
+import { SecaoMinhasTribos } from "./secao_minhas_tribos";
+import type { TriboMotorista } from "../types/tipos_tribos";
 import { BotaoPreviewVitrine } from "./botao_preview_vitrine";
 import { BannerOnboardingProfissional } from "./banner_onboarding_profissional";
 import { BloqueioOnboarding } from "./bloqueio_onboarding";
