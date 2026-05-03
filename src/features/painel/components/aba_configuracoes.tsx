@@ -69,17 +69,6 @@ export function AbaConfiguracoes({
   tribos = [],
   onRecarregarTribos,
 }: AbaConfiguracoesProps) {
-
-export function AbaConfiguracoes({
-  driverId,
-  tenantId,
-  ehAdmin,
-  activeModules,
-  modo,
-  tipoSom,
-  onMudarSom,
-  onTestarAlerta,
-}: AbaConfiguracoesProps) {
   const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
   const [convites, setConvites] = useState<ConviteGrupo[]>([]);
   const [carregando, setCarregando] = useState(true);
