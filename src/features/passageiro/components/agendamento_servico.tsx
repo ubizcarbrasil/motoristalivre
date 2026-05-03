@@ -46,6 +46,8 @@ import {
 import type { EnderecoAtendimento } from "@/features/servicos/types/tipos_servicos";
 import { listarFatoresPreco } from "@/features/servicos/services/servico_servicos";
 import { TelaChatServico } from "@/features/chat_servico/components/tela_chat_servico";
+import { BadgeNaoLidas } from "@/features/chat_servico/components/badge_nao_lidas";
+import { useNaoLidasChat } from "@/features/chat_servico/hooks/hook_nao_lidas_chat";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
@@ -433,9 +435,11 @@ export function AgendamentoServico({
           </Button>
 
           {confirmado.guestId && (
-            <Button onClick={() => setChatAberto(true)} className="w-full h-12">
-              Conversar com profissional
-            </Button>
+            <BotaoConversarProfissional
+              bookingId={confirmado.bookingId}
+              guestId={confirmado.guestId}
+              onAbrir={() => setChatAberto(true)}
+            />
           )}
 
           {onVoltar && (
@@ -749,5 +753,24 @@ export function AgendamentoServico({
         </Button>
       </div>
     </div>
+  );
+}
+
+interface BotaoConversarProfissionalProps {
+  bookingId: string;
+  guestId: string;
+  onAbrir: () => void;
+}
+
+function BotaoConversarProfissional({ bookingId, guestId, onAbrir }: BotaoConversarProfissionalProps) {
+  const { naoLidas } = useNaoLidasChat({
+    bookingId,
+    identidade: { papel: "client", guest_id: guestId },
+  });
+  return (
+    <Button onClick={onAbrir} className="w-full h-12 relative">
+      Conversar com profissional
+      {naoLidas > 0 && <BadgeNaoLidas count={naoLidas} className="ml-2" />}
+    </Button>
   );
 }

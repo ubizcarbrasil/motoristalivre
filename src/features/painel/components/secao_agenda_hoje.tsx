@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { AgendamentoComCliente } from "@/features/servicos/types/tipos_servicos";
 import { TelaChatServico } from "@/features/chat_servico/components/tela_chat_servico";
+import { BadgeNaoLidas } from "@/features/chat_servico/components/badge_nao_lidas";
+import { useNaoLidasChat } from "@/features/chat_servico/hooks/hook_nao_lidas_chat";
 
 interface SecaoAgendaHojeProps {
   agendamentos: AgendamentoComCliente[];
@@ -76,15 +78,11 @@ export function SecaoAgendaHoje({ agendamentos, driverId }: SecaoAgendaHojeProps
                   <Badge variant={status.variant} className="text-[10px]">
                     {status.label}
                   </Badge>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-[11px]"
-                    onClick={() => setChatAberto(a)}
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                    Chat
-                  </Button>
+                  <BotaoChatComBadge
+                    bookingId={a.id}
+                    driverId={driverId}
+                    onAbrir={() => setChatAberto(a)}
+                  />
                 </div>
               </div>
             );
@@ -103,5 +101,30 @@ export function SecaoAgendaHoje({ agendamentos, driverId }: SecaoAgendaHojeProps
         />
       )}
     </section>
+  );
+}
+
+interface BotaoChatComBadgeProps {
+  bookingId: string;
+  driverId: string;
+  onAbrir: () => void;
+}
+
+function BotaoChatComBadge({ bookingId, driverId, onAbrir }: BotaoChatComBadgeProps) {
+  const { naoLidas } = useNaoLidasChat({
+    bookingId,
+    identidade: { papel: "driver", user_id: driverId },
+  });
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-7 px-2 text-[11px] relative"
+      onClick={onAbrir}
+    >
+      <MessageCircle className="w-3.5 h-3.5 mr-1" />
+      Chat
+      {naoLidas > 0 && <BadgeNaoLidas count={naoLidas} className="ml-1" />}
+    </Button>
   );
 }
