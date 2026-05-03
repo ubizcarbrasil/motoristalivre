@@ -113,6 +113,8 @@ export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
     <div className="pt-12 pb-20 px-5 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Meu perfil</h2>
 
+      <BotaoCompartilharPerfil handle={handle} nome={perfil.nome} />
+
       {perfil.professional_type !== "driver" && (
         <ChecklistPublicacao
           driverId={perfil.id}
