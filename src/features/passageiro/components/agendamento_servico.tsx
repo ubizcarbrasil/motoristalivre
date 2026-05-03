@@ -45,6 +45,7 @@ import {
 } from "@/features/servicos/utils/calculadora_preco_servico";
 import type { EnderecoAtendimento } from "@/features/servicos/types/tipos_servicos";
 import { listarFatoresPreco } from "@/features/servicos/services/servico_servicos";
+import { TelaChatServico } from "@/features/chat_servico/components/tela_chat_servico";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
