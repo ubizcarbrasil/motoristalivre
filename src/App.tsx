@@ -94,6 +94,8 @@ const App = () => (
             <Route path="/s/entrar" element={<PaginaEntrarServicos />} />
             <Route path="/s/cadastro/tribo" element={<PaginaCadastroTribo />} />
             <Route path="/s/cadastro/profissional" element={<PaginaCadastroProfissional />} />
+            <Route path="/s/cadastrar" element={<PaginaIndiceCategorias />} />
+            <Route path="/s/cadastrar/:categoria" element={<PaginaCadastroComCategoria />} />
 
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
