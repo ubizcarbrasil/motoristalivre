@@ -2846,6 +2846,7 @@ export type Database = {
         Args: { _commission_percent?: number; _signup_slug: string }
         Returns: string
       }
+      fn_leave_tribe: { Args: { _tenant_id: string }; Returns: boolean }
       fn_resolve_tribe_by_signup_slug: {
         Args: { _signup_slug: string }
         Returns: {
