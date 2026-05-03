@@ -2842,6 +2842,27 @@ export type Database = {
         Args: { _booking_id: string; _content: string; _guest_id: string }
         Returns: string
       }
+      fn_get_professional_profile_by_handle: {
+        Args: { _handle: string }
+        Returns: {
+          active_modules: string[]
+          avatar_url: string
+          bio: string
+          category_id: string
+          category_name: string
+          category_slug: string
+          cover_url: string
+          driver_id: string
+          driver_slug: string
+          full_name: string
+          handle: string
+          role: string
+          signup_slug: string
+          tenant_id: string
+          tenant_name: string
+          tenant_slug: string
+        }[]
+      }
       fn_join_tribe_by_signup_slug: {
         Args: { _commission_percent?: number; _signup_slug: string }
         Returns: string
