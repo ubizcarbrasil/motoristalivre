@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Briefcase,
   Calendar,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import { SecaoDashboard } from "@/features/admin/components/secao_dashboard";
