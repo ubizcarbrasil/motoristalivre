@@ -46,6 +46,7 @@ import PaginaIndicacaoServicos from "@/features/triboservicos/pages/pagina_indic
 import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica";
 import PaginaSolicitarOrcamento from "@/features/orcamentos/pages/pagina_solicitar_orcamento";
 import PaginaAcompanharOrcamento from "@/features/orcamentos/pages/pagina_acompanhar_orcamento";
+import PaginaPerfilPublicoProfissional from "@/features/perfil_publico/pages/pagina_perfil_publico_profissional";
 // PaginaResolverHandle é renderizado dentro do ResolverPublicoTenant (rota /:slug)
 import NotFound from "./pages/NotFound";
 
@@ -100,6 +101,9 @@ const App = () => (
             <Route path="/s/cadastrar" element={<PaginaIndiceCategorias />} />
             <Route path="/s/cadastrar/:categoria" element={<PaginaCadastroComCategoria />} />
             <Route path="/s/cadastro/tribo/:signup_slug" element={<PaginaCadastroPorTribo />} />
+
+            {/* Perfil público agregado do profissional (todas as tribos) */}
+            <Route path="/p/:handle" element={<PaginaPerfilPublicoProfissional />} />
 
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
