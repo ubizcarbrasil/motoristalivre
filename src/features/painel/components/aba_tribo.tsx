@@ -180,7 +180,11 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, profession
           />
         )}
         {secao === "convites" ? (
-          <SecaoConvitesAdmin tenantId={tribo.id} />
+          <SecaoConvitesAdmin
+            tenantId={tribo.id}
+            signupSlug={tribo.signupSlug}
+            nomeTribo={tribo.nome}
+          />
         ) : (
           Conteudo && <Conteudo modo={modo} />
         )}
