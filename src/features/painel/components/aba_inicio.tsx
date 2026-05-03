@@ -93,7 +93,9 @@ export function AbaInicio({
         </div>
       )}
 
-      {exibirServicos && <SecaoAgendaHoje agendamentos={servico.agendaHoje} />}
+      {exibirServicos && (
+        <SecaoAgendaHoje agendamentos={servico.agendaHoje} driverId={perfil.id} />
+      )}
 
       {exibirMobilidade && dispatch && (
         <CardDispatch
