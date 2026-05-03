@@ -20,6 +20,7 @@ import { SecaoAfiliados } from "@/features/admin/components/secao_afiliados";
 import { SecaoCRM } from "@/features/admin/components/secao_crm";
 import { SecaoCorridas } from "@/features/admin/components/secao_corridas";
 import { SecaoCarteira } from "@/features/admin/components/secao_carteira";
+import { SecaoConvitesAdmin } from "@/features/admin/components/secao_convites_admin";
 import { SecaoIdentidade } from "@/features/admin/components/secao_identidade";
 import { SecaoRegras } from "@/features/admin/components/secao_regras";
 import { SecaoComissoes } from "@/features/admin/components/secao_comissoes";
