@@ -59,8 +59,8 @@ const App = () => (
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
-            <Route path="/cadastro" element={<PaginaCadastro />} />
-            <Route path="/cadastrar" element={<PaginaCadastro />} />
+            <Route path="/cadastro" element={<RedirectCadastroPorTipo />} />
+            <Route path="/cadastrar" element={<RedirectCadastroPorTipo />} />
 
             {/* Links dedicados por perfil — acesso (login) */}
             <Route path="/motorista/acesso" element={<Navigate to="/entrar?modo=motorista" replace />} />
