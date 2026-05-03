@@ -33,6 +33,8 @@ import PaginaLandingServicos from "@/features/triboservicos/pages/pagina_landing
 import PaginaEntrarServicos from "@/features/triboservicos/pages/pagina_entrar_servicos";
 import PaginaCadastroTribo from "@/features/triboservicos/pages/pagina_cadastro_tribo";
 import PaginaCadastroProfissional from "@/features/triboservicos/pages/pagina_cadastro_profissional";
+import PaginaIndiceCategorias from "@/features/cadastro_por_categoria/pages/pagina_indice_categorias";
+import PaginaCadastroComCategoria from "@/features/cadastro_por_categoria/pages/pagina_cadastro_com_categoria";
 import PaginaVitrineTenantServicos from "@/features/triboservicos/pages/pagina_vitrine_tenant_servicos";
 import PaginaPublicaTenant from "@/features/triboservicos/pages/pagina_publica_tenant";
 import PaginaPublicaMobilidade from "@/features/passageiro/pages/pagina_publica_mobilidade";
@@ -94,6 +96,8 @@ const App = () => (
             <Route path="/s/entrar" element={<PaginaEntrarServicos />} />
             <Route path="/s/cadastro/tribo" element={<PaginaCadastroTribo />} />
             <Route path="/s/cadastro/profissional" element={<PaginaCadastroProfissional />} />
+            <Route path="/s/cadastrar" element={<PaginaIndiceCategorias />} />
+            <Route path="/s/cadastrar/:categoria" element={<PaginaCadastroComCategoria />} />
 
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
