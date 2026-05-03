@@ -171,6 +171,83 @@ export type Database = {
           },
         ]
       }
+      commission_ledger: {
+        Row: {
+          base_amount: number
+          commission_amount: number
+          commission_percent: number
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          paid_at: string | null
+          payer_driver_id: string
+          receiver_driver_id: string
+          status: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_amount: number
+          commission_amount: number
+          commission_percent: number
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          paid_at?: string | null
+          payer_driver_id: string
+          receiver_driver_id: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_amount?: number
+          commission_amount?: number
+          commission_percent?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          paid_at?: string | null
+          payer_driver_id?: string
+          receiver_driver_id?: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_ledger_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_payer_driver_id_fkey"
+            columns: ["payer_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_receiver_driver_id_fkey"
+            columns: ["receiver_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_rules: {
         Row: {
           ativo: boolean
@@ -366,11 +443,13 @@ export type Database = {
           id: string
           is_online: boolean
           is_verified: boolean
+          primary_service_category_id: string | null
           professional_type: string
           referral_code: string | null
           service_categories: string[]
           slug: string
-          tenant_id: string
+          tenant_id: string | null
+          tribe_setup_pending: boolean
           updated_at: string
           vehicle_color: string | null
           vehicle_model: string | null
@@ -396,11 +475,13 @@ export type Database = {
           id: string
           is_online?: boolean
           is_verified?: boolean
+          primary_service_category_id?: string | null
           professional_type?: string
           referral_code?: string | null
           service_categories?: string[]
           slug: string
-          tenant_id: string
+          tenant_id?: string | null
+          tribe_setup_pending?: boolean
           updated_at?: string
           vehicle_color?: string | null
           vehicle_model?: string | null
@@ -426,11 +507,13 @@ export type Database = {
           id?: string
           is_online?: boolean
           is_verified?: boolean
+          primary_service_category_id?: string | null
           professional_type?: string
           referral_code?: string | null
           service_categories?: string[]
           slug?: string
-          tenant_id?: string
+          tenant_id?: string | null
+          tribe_setup_pending?: boolean
           updated_at?: string
           vehicle_color?: string | null
           vehicle_model?: string | null
@@ -443,6 +526,13 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_primary_service_category_id_fkey"
+            columns: ["primary_service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
           {
@@ -479,6 +569,83 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "guest_passengers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          amount_won: number | null
+          assigned_driver_id: string | null
+          created_at: string
+          full_name: string
+          id: string
+          notes: string | null
+          service_category_id: string | null
+          source_driver_id: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          whatsapp: string
+          won_at: string | null
+        }
+        Insert: {
+          amount_won?: number | null
+          assigned_driver_id?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          service_category_id?: string | null
+          source_driver_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          whatsapp: string
+          won_at?: string | null
+        }
+        Update: {
+          amount_won?: number | null
+          assigned_driver_id?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          service_category_id?: string | null
+          source_driver_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          whatsapp?: string
+          won_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_source_driver_id_fkey"
+            columns: ["source_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2354,33 +2521,48 @@ export type Database = {
           active_modules: string[]
           created_at: string
           id: string
+          is_owner_provider: boolean
+          is_visible_public: boolean
           name: string
           owner_user_id: string | null
           plan_id: string | null
+          service_category_id: string | null
+          signup_slug: string | null
           slug: string
           status: Database["public"]["Enums"]["tenant_status"]
+          tribe_setup_pending: boolean
           updated_at: string
         }
         Insert: {
           active_modules?: string[]
           created_at?: string
           id?: string
+          is_owner_provider?: boolean
+          is_visible_public?: boolean
           name: string
           owner_user_id?: string | null
           plan_id?: string | null
+          service_category_id?: string | null
+          signup_slug?: string | null
           slug: string
           status?: Database["public"]["Enums"]["tenant_status"]
+          tribe_setup_pending?: boolean
           updated_at?: string
         }
         Update: {
           active_modules?: string[]
           created_at?: string
           id?: string
+          is_owner_provider?: boolean
+          is_visible_public?: boolean
           name?: string
           owner_user_id?: string | null
           plan_id?: string | null
+          service_category_id?: string | null
+          signup_slug?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["tenant_status"]
+          tribe_setup_pending?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -2396,6 +2578,64 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tribe_members: {
+        Row: {
+          commission_percent: number
+          created_at: string
+          driver_id: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          role: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          commission_percent?: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          commission_percent?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tribe_members_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tribe_members_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -2607,6 +2847,7 @@ export type Database = {
         Returns: string
       }
       generate_handle: { Args: { _full_name: string }; Returns: string }
+      generate_signup_slug: { Args: { _base: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
