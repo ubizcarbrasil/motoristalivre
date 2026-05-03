@@ -755,3 +755,22 @@ export function AgendamentoServico({
     </div>
   );
 }
+
+interface BotaoConversarProfissionalProps {
+  bookingId: string;
+  guestId: string;
+  onAbrir: () => void;
+}
+
+function BotaoConversarProfissional({ bookingId, guestId, onAbrir }: BotaoConversarProfissionalProps) {
+  const { naoLidas } = useNaoLidasChat({
+    bookingId,
+    identidade: { papel: "client", guest_id: guestId },
+  });
+  return (
+    <Button onClick={onAbrir} className="w-full h-12 relative">
+      Conversar com profissional
+      {naoLidas > 0 && <BadgeNaoLidas count={naoLidas} className="ml-2" />}
+    </Button>
+  );
+}
