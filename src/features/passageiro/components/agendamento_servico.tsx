@@ -299,7 +299,7 @@ export function AgendamentoServico({
       const originDriverId =
         origemIndicacao && origemIndicacao !== driver.id ? origemIndicacao : null;
 
-      await chamarBookService({
+      const resp = await chamarBookService({
         tenant_id: tenantId,
         driver_id: driver.id,
         service_type_id: servicoAtual.id,
@@ -313,7 +313,13 @@ export function AgendamentoServico({
         factors: Object.keys(valoresFatores).length > 0 ? valoresFatores : undefined,
       });
       if (originDriverId) limparOrigemIndicacao();
-      setConfirmado({ quando: new Date(slotSelecionado.iso), servico: servicoAtual });
+      setConfirmado({
+        quando: new Date(slotSelecionado.iso),
+        servico: servicoAtual,
+        bookingId: resp.booking.id,
+        guestId: resp.booking.guest_passenger_id ?? null,
+        tenantId,
+      });
     } catch (erro: any) {
       const mensagem = String(erro?.message ?? erro?.context?.error ?? "");
       // Edge function retorna 409 com code SLOT_TAKEN
