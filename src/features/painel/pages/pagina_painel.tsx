@@ -177,6 +177,8 @@ export default function PaginaPainel() {
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
+              tribos={tribos}
+              onRecarregarTribos={recarregarTribos}
             />
           )}
           <NavegacaoInferior
@@ -273,6 +275,8 @@ export default function PaginaPainel() {
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}
+          tribos={tribos}
+          onRecarregarTribos={recarregarTribos}
         />
       )}
 
