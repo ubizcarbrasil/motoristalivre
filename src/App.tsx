@@ -9,6 +9,7 @@ import { RotaProtegida } from "@/compartilhados/components/rota_protegida";
 
 import PaginaEntrar from "@/features/autenticacao/pages/pagina_entrar";
 import PaginaCadastro from "@/features/autenticacao/pages/pagina_cadastro";
+import { RedirectCadastroPorTipo } from "@/features/autenticacao/components/redirect_cadastro_por_tipo";
 import PaginaOnboarding from "@/features/onboarding/pages/pagina_onboarding";
 import PaginaPainel from "@/features/painel/pages/pagina_painel";
 // PaginaAdmin removido — admin agora é acessado via /painel?aba=tribo
@@ -58,8 +59,8 @@ const App = () => (
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
-            <Route path="/cadastro" element={<PaginaCadastro />} />
-            <Route path="/cadastrar" element={<PaginaCadastro />} />
+            <Route path="/cadastro" element={<RedirectCadastroPorTipo />} />
+            <Route path="/cadastrar" element={<RedirectCadastroPorTipo />} />
 
             {/* Links dedicados por perfil — acesso (login) */}
             <Route path="/motorista/acesso" element={<Navigate to="/entrar?modo=motorista" replace />} />
