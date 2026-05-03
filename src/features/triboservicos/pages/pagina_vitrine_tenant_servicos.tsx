@@ -144,8 +144,6 @@ export default function PaginaVitrineTenantServicos() {
 
         <SecaoPreviewPortfolioTenant itens={preview} tenantSlug={tenant.slug} />
 
-        <SecaoComoAgendarTenant />
-
         <section
           id="profissionais"
           className="max-w-3xl mx-auto px-4 mt-12 space-y-4 scroll-mt-4"
