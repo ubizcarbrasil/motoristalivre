@@ -47,6 +47,7 @@ import PaginaRedePublica from "@/features/rede_publica/pages/pagina_rede_publica
 import PaginaSolicitarOrcamento from "@/features/orcamentos/pages/pagina_solicitar_orcamento";
 import PaginaAcompanharOrcamento from "@/features/orcamentos/pages/pagina_acompanhar_orcamento";
 import PaginaPerfilPublicoProfissional from "@/features/perfil_publico/pages/pagina_perfil_publico_profissional";
+import PaginaDescobertaTribos from "@/features/descoberta_tribos/pages/pagina_descoberta_tribos";
 // PaginaResolverHandle é renderizado dentro do ResolverPublicoTenant (rota /:slug)
 import NotFound from "./pages/NotFound";
 
@@ -62,6 +63,7 @@ const App = () => (
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
+            <Route path="/tribos" element={<PaginaDescobertaTribos />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
             <Route path="/cadastro" element={<RedirectCadastroPorTipo />} />
             <Route path="/cadastrar" element={<RedirectCadastroPorTipo />} />
