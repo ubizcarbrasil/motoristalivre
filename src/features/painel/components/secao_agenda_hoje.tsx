@@ -103,3 +103,28 @@ export function SecaoAgendaHoje({ agendamentos, driverId }: SecaoAgendaHojeProps
     </section>
   );
 }
+
+interface BotaoChatComBadgeProps {
+  bookingId: string;
+  driverId: string;
+  onAbrir: () => void;
+}
+
+function BotaoChatComBadge({ bookingId, driverId, onAbrir }: BotaoChatComBadgeProps) {
+  const { naoLidas } = useNaoLidasChat({
+    bookingId,
+    identidade: { papel: "driver", user_id: driverId },
+  });
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-7 px-2 text-[11px] relative"
+      onClick={onAbrir}
+    >
+      <MessageCircle className="w-3.5 h-3.5 mr-1" />
+      Chat
+      {naoLidas > 0 && <BadgeNaoLidas count={naoLidas} className="ml-1" />}
+    </Button>
+  );
+}
