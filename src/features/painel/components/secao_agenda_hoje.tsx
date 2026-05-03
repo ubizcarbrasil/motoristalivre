@@ -1,9 +1,13 @@
-import { CalendarClock } from "lucide-react";
+import { useState } from "react";
+import { CalendarClock, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { AgendamentoComCliente } from "@/features/servicos/types/tipos_servicos";
+import { TelaChatServico } from "@/features/chat_servico/components/tela_chat_servico";
 
 interface SecaoAgendaHojeProps {
   agendamentos: AgendamentoComCliente[];
+  driverId: string;
 }
 
 const STATUS_LABEL: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
@@ -26,7 +30,9 @@ function anonimizar(nome: string) {
   return `${partes[0]} ${partes[partes.length - 1].charAt(0)}.`;
 }
 
-export function SecaoAgendaHoje({ agendamentos }: SecaoAgendaHojeProps) {
+export function SecaoAgendaHoje({ agendamentos, driverId }: SecaoAgendaHojeProps) {
+  const [chatAberto, setChatAberto] = useState<AgendamentoComCliente | null>(null);
+
   return (
     <section className="px-4 space-y-2">
       <div className="flex items-center gap-2">
@@ -63,18 +69,38 @@ export function SecaoAgendaHoje({ agendamentos }: SecaoAgendaHojeProps) {
                   <p className="text-sm font-medium text-foreground truncate">{nomeMostrar}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{a.servico_nome}</p>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-1">
                   <p className="text-sm font-semibold text-foreground">
                     R$ {Number(a.price_agreed).toFixed(2)}
                   </p>
-                  <Badge variant={status.variant} className="text-[10px] mt-0.5">
+                  <Badge variant={status.variant} className="text-[10px]">
                     {status.label}
                   </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[11px]"
+                    onClick={() => setChatAberto(a)}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 mr-1" />
+                    Chat
+                  </Button>
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {chatAberto && (
+        <TelaChatServico
+          bookingId={chatAberto.id}
+          tenantId={chatAberto.tenant_id}
+          identidade={{ papel: "driver", user_id: driverId }}
+          tituloOutro={chatAberto.cliente_nome}
+          subtituloOutro={chatAberto.servico_nome}
+          onVoltar={() => setChatAberto(null)}
+        />
       )}
     </section>
   );
