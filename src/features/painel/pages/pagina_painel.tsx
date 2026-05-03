@@ -50,7 +50,7 @@ export default function PaginaPainel() {
   const [dialogoOnboardingAberto, setDialogoOnboardingAberto] = useState(false);
   const [onboardingJaAbriu, setOnboardingJaAbriu] = useState(false);
 
-  const { tribos } = useTribosMotorista(userId);
+  const { tribos, recarregar: recarregarTribos } = useTribosMotorista(userId);
 
   // Define tribo ativa: principal por padrão, ou primeira da lista
   useEffect(() => {
@@ -177,6 +177,8 @@ export default function PaginaPainel() {
               tipoSom={tipoSom}
               onMudarSom={setTipoSom}
               onTestarAlerta={testarAlerta}
+              tribos={tribos}
+              onRecarregarTribos={recarregarTribos}
             />
           )}
           <NavegacaoInferior
@@ -273,6 +275,8 @@ export default function PaginaPainel() {
           tipoSom={tipoSom}
           onMudarSom={setTipoSom}
           onTestarAlerta={testarAlerta}
+          tribos={tribos}
+          onRecarregarTribos={recarregarTribos}
         />
       )}
 

@@ -21,6 +21,8 @@ import { SecaoMinhaDisponibilidade } from "./secao_minha_disponibilidade";
 import { SecaoCategoriasAdmin } from "./secao_categorias_admin";
 import { SecaoPortfolioAdmin } from "./secao_portfolio_admin";
 import { SecaoEquipeAdmin } from "./secao_equipe_admin";
+import { SecaoMinhasTribos } from "./secao_minhas_tribos";
+import type { TriboMotorista } from "../types/tipos_tribos";
 import { BotaoPreviewVitrine } from "./botao_preview_vitrine";
 import { BannerOnboardingProfissional } from "./banner_onboarding_profissional";
 import { BloqueioOnboarding } from "./bloqueio_onboarding";
@@ -51,6 +53,8 @@ interface AbaConfiguracoesProps {
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
   onTestarAlerta?: () => void | Promise<void>;
+  tribos?: TriboMotorista[];
+  onRecarregarTribos?: () => void;
 }
 
 export function AbaConfiguracoes({
@@ -62,6 +66,8 @@ export function AbaConfiguracoes({
   tipoSom,
   onMudarSom,
   onTestarAlerta,
+  tribos = [],
+  onRecarregarTribos,
 }: AbaConfiguracoesProps) {
   const [grupos, setGrupos] = useState<GrupoMotorista[]>([]);
   const [convites, setConvites] = useState<ConviteGrupo[]>([]);
@@ -162,6 +168,10 @@ export function AbaConfiguracoes({
   return (
     <div className="pt-12 pb-24 px-4 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
+
+      {tribos.length > 0 && (
+        <SecaoMinhasTribos tribos={tribos} onAtualizar={onRecarregarTribos ?? (() => {})} />
+      )}
 
       {precisaOnboarding && temServicos && (
         <BannerOnboardingProfissional
