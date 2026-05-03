@@ -1367,6 +1367,42 @@ export type Database = {
         }
         Relationships: []
       }
+      service_booking_messages: {
+        Row: {
+          booking_id: string
+          content: string
+          created_at: string
+          guest_id: string | null
+          id: string
+          read_at: string | null
+          sender_id: string | null
+          sender_role: string
+          tenant_id: string
+        }
+        Insert: {
+          booking_id: string
+          content: string
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_role: string
+          tenant_id: string
+        }
+        Update: {
+          booking_id?: string
+          content?: string
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_role?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       service_bookings: {
         Row: {
           briefing: Json
@@ -2562,6 +2598,10 @@ export type Database = {
         Args: { _owner_type: Database["public"]["Enums"]["wallet_owner_type"] }
         Returns: string
       }
+      enviar_mensagem_chat_guest: {
+        Args: { _booking_id: string; _content: string; _guest_id: string }
+        Returns: string
+      }
       generate_driver_slug: {
         Args: { _full_name: string; _tenant_id: string }
         Returns: string
@@ -2573,6 +2613,30 @@ export type Database = {
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       is_root_admin: { Args: { _user_id: string }; Returns: boolean }
+      listar_mensagens_chat_guest: {
+        Args: { _booking_id: string; _guest_id: string }
+        Returns: {
+          booking_id: string
+          content: string
+          created_at: string
+          guest_id: string | null
+          id: string
+          read_at: string | null
+          sender_id: string | null
+          sender_role: string
+          tenant_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "service_booking_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      marcar_lidas_chat_guest: {
+        Args: { _booking_id: string; _guest_id: string }
+        Returns: number
+      }
       process_recruitment_monthly: {
         Args: never
         Returns: {
