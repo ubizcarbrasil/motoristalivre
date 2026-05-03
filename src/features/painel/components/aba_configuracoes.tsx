@@ -53,7 +53,22 @@ interface AbaConfiguracoesProps {
   tipoSom: TipoSomChamada;
   onMudarSom: (tipo: TipoSomChamada) => void;
   onTestarAlerta?: () => void | Promise<void>;
+  tribos?: TriboMotorista[];
+  onRecarregarTribos?: () => void;
 }
+
+export function AbaConfiguracoes({
+  driverId,
+  tenantId,
+  ehAdmin,
+  activeModules,
+  modo,
+  tipoSom,
+  onMudarSom,
+  onTestarAlerta,
+  tribos = [],
+  onRecarregarTribos,
+}: AbaConfiguracoesProps) {
 
 export function AbaConfiguracoes({
   driverId,
