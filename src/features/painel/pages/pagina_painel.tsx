@@ -50,7 +50,7 @@ export default function PaginaPainel() {
   const [dialogoOnboardingAberto, setDialogoOnboardingAberto] = useState(false);
   const [onboardingJaAbriu, setOnboardingJaAbriu] = useState(false);
 
-  const { tribos } = useTribosMotorista(userId);
+  const { tribos, recarregar: recarregarTribos } = useTribosMotorista(userId);
 
   // Define tribo ativa: principal por padrão, ou primeira da lista
   useEffect(() => {
