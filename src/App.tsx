@@ -102,6 +102,9 @@ const App = () => (
             <Route path="/s/cadastrar/:categoria" element={<PaginaCadastroComCategoria />} />
             <Route path="/s/cadastro/tribo/:signup_slug" element={<PaginaCadastroPorTribo />} />
 
+            {/* Perfil público agregado do profissional (todas as tribos) */}
+            <Route path="/p/:handle" element={<PaginaPerfilPublicoProfissional />} />
+
             {/* TriboServiços — vitrine pública e perfil do profissional */}
             <Route path="/s/:slug" element={<PaginaPublicaTenant />} />
 
