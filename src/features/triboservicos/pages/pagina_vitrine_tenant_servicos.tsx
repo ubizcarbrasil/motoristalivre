@@ -171,6 +171,8 @@ export default function PaginaVitrineTenantServicos() {
             </div>
           )}
         </section>
+
+        <SecaoComoAgendarTenant />
       </main>
     </TemaServicos>
   );
