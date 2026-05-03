@@ -11,6 +11,8 @@ import { buscarReputacao, buscarAvaliacoesRecentes } from "../services/servico_p
 import { SELOS_MOTORISTA } from "../constants/constantes_painel";
 import { CampoUploadImagem } from "@/features/onboarding/components/campo_upload_imagem";
 import { EditorHandleProfissional } from "@/features/triboservicos/components/editor_handle_profissional";
+import { buscarHandle } from "@/features/triboservicos/services/servico_handles";
+import { BotaoCompartilharPerfil } from "./botao_compartilhar_perfil";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 import { ChecklistPublicacao } from "./checklist_publicacao";
 import type { AbaPainel } from "../types/tipos_painel";
