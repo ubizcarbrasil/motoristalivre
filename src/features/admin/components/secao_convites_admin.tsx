@@ -4,9 +4,12 @@ import { BuscaProfissionalAdmin } from "./busca_profissional_admin";
 import { ListaSolicitacoesRecebidas } from "./lista_solicitacoes_recebidas";
 import { ListaConvitesEnviados } from "./lista_convites_enviados";
 import { Loader2 } from "lucide-react";
+import { BotaoLinkRecrutamento } from "@/features/painel/components/botao_link_recrutamento";
 
 interface Props {
   tenantId: string;
+  signupSlug?: string | null;
+  nomeTribo?: string;
 }
 
 type AbaInterna = "convidar" | "solicitacoes" | "enviados";
@@ -17,7 +20,7 @@ const ABAS: { id: AbaInterna; label: string }[] = [
   { id: "enviados", label: "Enviados" },
 ];
 
-export function SecaoConvitesAdmin({ tenantId }: Props) {
+export function SecaoConvitesAdmin({ tenantId, signupSlug, nomeTribo }: Props) {
   const [aba, setAba] = useState<AbaInterna>("convidar");
   const {
     resultadosBusca,
@@ -41,6 +44,11 @@ export function SecaoConvitesAdmin({ tenantId }: Props) {
           Encontre, convide e gerencie profissionais da sua tribo.
         </p>
       </div>
+
+      <BotaoLinkRecrutamento
+        signupSlug={signupSlug ?? null}
+        nomeTribo={nomeTribo ?? "sua tribo"}
+      />
 
       <div className="flex gap-1 border-b border-border">
         {ABAS.map((a) => {
