@@ -56,10 +56,12 @@ export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
 
   const [reputacao, setReputacao] = useState<ReputacaoMotorista | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoRecente[]>([]);
+  const [handle, setHandle] = useState<string | null>(null);
 
   useEffect(() => {
     buscarReputacao(perfil.id).then(setReputacao);
     buscarAvaliacoesRecentes(perfil.id).then(setAvaliacoes);
+    buscarHandle(perfil.id).then(setHandle);
   }, [perfil.id]);
 
   const salvar = async () => {
