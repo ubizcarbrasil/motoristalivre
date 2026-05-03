@@ -120,7 +120,11 @@ export function AgendamentoServico({
   const [confirmado, setConfirmado] = useState<{
     quando: Date;
     servico: TipoServico;
+    bookingId: string;
+    guestId: string | null;
+    tenantId: string;
   } | null>(null);
+  const [chatAberto, setChatAberto] = useState(false);
   const [briefing, setBriefing] = useState<Record<string, unknown>>({});
   const [mapaCategorias, setMapaCategorias] = useState<Map<string, string>>(new Map());
   const [endereco, setEndereco] = useState<EnderecoAtendimento>({});
