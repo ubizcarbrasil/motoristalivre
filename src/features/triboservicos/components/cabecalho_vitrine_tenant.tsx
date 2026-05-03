@@ -1,4 +1,5 @@
 import { Briefcase, MapPin } from "lucide-react";
+import bannerTriboServicos from "@/assets/banner_triboservicos.jpg";
 import type { TenantPublicoServicos } from "../services/servico_vitrine_publica";
 
 interface Props {
@@ -11,31 +12,34 @@ export function CabecalhoVitrineTenant({ tenant }: Props) {
   const cidade = tenant.branding?.city;
   const descricao = tenant.branding?.description;
 
+  const imagemBanner = cover || bannerTriboServicos;
+
   return (
     <header className="relative w-full">
       <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-gradient-to-br from-primary/30 via-primary/10 to-background">
-        {cover ? (
-          <img
-            src={cover}
-            alt={tenant.name}
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center px-6">
-            <div className="text-center space-y-1">
-              <p className="text-xs uppercase tracking-widest text-primary/80 font-semibold">
+        <img
+          src={imagemBanner}
+          alt={tenant.name}
+          className="absolute inset-0 w-full h-full object-cover"
+          width={1536}
+          height={640}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/20 pointer-events-none" />
+        {!cover && (
+          <div className="absolute inset-0 flex items-center justify-start px-6">
+            <div className="space-y-1 max-w-[60%]">
+              <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">
                 TriboServiços
               </p>
-              <p className="text-base sm:text-lg font-semibold text-foreground">
-                Profissionais de confiança, prontos para te atender
+              <p className="text-sm sm:text-base font-semibold text-foreground leading-tight">
+                Profissionais de confiança
               </p>
               <p className="text-xs text-muted-foreground">
-                Agende online ou solicite um orçamento em minutos
+                Agende ou peça orçamento
               </p>
             </div>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 -mt-12 relative">
