@@ -431,12 +431,30 @@ export function AgendamentoServico({
             Adicionar ao calendário
           </Button>
 
+          {confirmado.guestId && (
+            <Button onClick={() => setChatAberto(true)} className="w-full h-12">
+              Conversar com profissional
+            </Button>
+          )}
+
           {onVoltar && (
-            <Button onClick={onVoltar} className="w-full h-12">
+            <Button onClick={onVoltar} variant="ghost" className="w-full h-12">
               Concluir
             </Button>
           )}
         </div>
+
+        {chatAberto && confirmado.guestId && (
+          <TelaChatServico
+            bookingId={confirmado.bookingId}
+            tenantId={confirmado.tenantId}
+            identidade={{ papel: "client", guest_id: confirmado.guestId }}
+            tituloOutro={driver.full_name}
+            subtituloOutro={confirmado.servico.name}
+            avatarOutro={driver.avatar_url}
+            onVoltar={() => setChatAberto(false)}
+          />
+        )}
       </div>
     );
   }
