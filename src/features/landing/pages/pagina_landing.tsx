@@ -4,6 +4,7 @@ import { BeneficiosLanding } from "../components/beneficios_landing";
 import { PlanosLanding } from "../components/planos_landing";
 import { CtaLanding } from "../components/cta_landing";
 import { RodapeLanding } from "../components/rodape_landing";
+import { SecaoDescobertaHome } from "@/features/descoberta_tribos/components/secao_descoberta_home";
 
 export default function PaginaLanding() {
   return (
@@ -12,6 +13,7 @@ export default function PaginaLanding() {
       <main className="pt-14">
         <HeroLanding />
         <BeneficiosLanding />
+        <SecaoDescobertaHome />
         <PlanosLanding />
         <CtaLanding />
       </main>
