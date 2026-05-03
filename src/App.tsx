@@ -63,6 +63,7 @@ const App = () => (
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<PaginaLanding />} />
+            <Route path="/tribos" element={<PaginaDescobertaTribos />} />
             <Route path="/entrar" element={<PaginaEntrar />} />
             <Route path="/cadastro" element={<RedirectCadastroPorTipo />} />
             <Route path="/cadastrar" element={<RedirectCadastroPorTipo />} />
