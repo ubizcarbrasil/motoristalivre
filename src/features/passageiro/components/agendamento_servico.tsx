@@ -45,6 +45,7 @@ import {
 } from "@/features/servicos/utils/calculadora_preco_servico";
 import type { EnderecoAtendimento } from "@/features/servicos/types/tipos_servicos";
 import { listarFatoresPreco } from "@/features/servicos/services/servico_servicos";
+import { TelaChatServico } from "@/features/chat_servico/components/tela_chat_servico";
 
 const STORAGE_KEY_GUEST_DADOS = "tribocar_guest_dados";
 
@@ -120,7 +121,11 @@ export function AgendamentoServico({
   const [confirmado, setConfirmado] = useState<{
     quando: Date;
     servico: TipoServico;
+    bookingId: string;
+    guestId: string | null;
+    tenantId: string;
   } | null>(null);
+  const [chatAberto, setChatAberto] = useState(false);
   const [briefing, setBriefing] = useState<Record<string, unknown>>({});
   const [mapaCategorias, setMapaCategorias] = useState<Map<string, string>>(new Map());
   const [endereco, setEndereco] = useState<EnderecoAtendimento>({});
@@ -295,7 +300,7 @@ export function AgendamentoServico({
       const originDriverId =
         origemIndicacao && origemIndicacao !== driver.id ? origemIndicacao : null;
 
-      await chamarBookService({
+      const resp = await chamarBookService({
         tenant_id: tenantId,
         driver_id: driver.id,
         service_type_id: servicoAtual.id,
@@ -309,7 +314,13 @@ export function AgendamentoServico({
         factors: Object.keys(valoresFatores).length > 0 ? valoresFatores : undefined,
       });
       if (originDriverId) limparOrigemIndicacao();
-      setConfirmado({ quando: new Date(slotSelecionado.iso), servico: servicoAtual });
+      setConfirmado({
+        quando: new Date(slotSelecionado.iso),
+        servico: servicoAtual,
+        bookingId: resp.booking.id,
+        guestId: resp.booking.guest_passenger_id ?? null,
+        tenantId,
+      });
     } catch (erro: any) {
       const mensagem = String(erro?.message ?? erro?.context?.error ?? "");
       // Edge function retorna 409 com code SLOT_TAKEN
@@ -421,12 +432,30 @@ export function AgendamentoServico({
             Adicionar ao calendário
           </Button>
 
+          {confirmado.guestId && (
+            <Button onClick={() => setChatAberto(true)} className="w-full h-12">
+              Conversar com profissional
+            </Button>
+          )}
+
           {onVoltar && (
-            <Button onClick={onVoltar} className="w-full h-12">
+            <Button onClick={onVoltar} variant="ghost" className="w-full h-12">
               Concluir
             </Button>
           )}
         </div>
+
+        {chatAberto && confirmado.guestId && (
+          <TelaChatServico
+            bookingId={confirmado.bookingId}
+            tenantId={confirmado.tenantId}
+            identidade={{ papel: "client", guest_id: confirmado.guestId }}
+            tituloOutro={driver.full_name}
+            subtituloOutro={confirmado.servico.name}
+            avatarOutro={driver.avatar_url}
+            onVoltar={() => setChatAberto(false)}
+          />
+        )}
       </div>
     );
   }
