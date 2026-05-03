@@ -11,6 +11,8 @@ import { buscarReputacao, buscarAvaliacoesRecentes } from "../services/servico_p
 import { SELOS_MOTORISTA } from "../constants/constantes_painel";
 import { CampoUploadImagem } from "@/features/onboarding/components/campo_upload_imagem";
 import { EditorHandleProfissional } from "@/features/triboservicos/components/editor_handle_profissional";
+import { buscarHandle } from "@/features/triboservicos/services/servico_handles";
+import { BotaoCompartilharPerfil } from "./botao_compartilhar_perfil";
 import { useAutenticacao } from "@/features/autenticacao/hooks/hook_autenticacao";
 import { ChecklistPublicacao } from "./checklist_publicacao";
 import type { AbaPainel } from "../types/tipos_painel";
@@ -54,10 +56,12 @@ export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
 
   const [reputacao, setReputacao] = useState<ReputacaoMotorista | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoRecente[]>([]);
+  const [handle, setHandle] = useState<string | null>(null);
 
   useEffect(() => {
     buscarReputacao(perfil.id).then(setReputacao);
     buscarAvaliacoesRecentes(perfil.id).then(setAvaliacoes);
+    buscarHandle(perfil.id).then(setHandle);
   }, [perfil.id]);
 
   const salvar = async () => {
@@ -108,6 +112,8 @@ export function AbaPerfil({ perfil, onAtualizar, onMudarAba }: AbaPerfilProps) {
   return (
     <div className="pt-12 pb-20 px-5 space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Meu perfil</h2>
+
+      <BotaoCompartilharPerfil handle={handle} nome={perfil.nome} />
 
       {perfil.professional_type !== "driver" && (
         <ChecklistPublicacao
