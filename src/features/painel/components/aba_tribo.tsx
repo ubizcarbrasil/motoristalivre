@@ -137,7 +137,7 @@ export function AbaTribo({ tribo, semPerfilDriver, onAtivarMotorista, profession
     );
   }
 
-  const Conteudo = SECOES[secao];
+  const Conteudo = secao === "convites" ? null : SECOES[secao];
 
   return (
     <div className="pb-20">
