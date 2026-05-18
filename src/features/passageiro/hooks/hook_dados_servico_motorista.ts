@@ -55,7 +55,7 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
       const { data: driver } = await supabase
         .from("drivers")
         .select(
-          "professional_type, credential_verified, credential_type, credential_number, avatar_url, cover_url, bio, is_verified, service_categories",
+          "professional_type, credential_verified, credential_type, credential_number, avatar_url, cover_url, bio, is_verified, service_categories, accepting_bookings",
         )
         .eq("id", driverId!)
         .maybeSingle();
