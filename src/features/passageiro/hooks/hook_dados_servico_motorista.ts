@@ -78,6 +78,7 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
             .select("*")
             .eq("driver_id", driverId!)
             .eq("is_active", true)
+            .not("driver_id", "is", null)
             .order("created_at", { ascending: true }),
           supabase
             .from("professional_availability" as any)
@@ -87,7 +88,11 @@ export function useDadosServicoMotorista(driverId: string | null | undefined): D
             .order("day_of_week", { ascending: true })
             .order("start_time", { ascending: true }),
         ]);
-        serviceTypes = (servs ?? []) as unknown as TipoServico[];
+        // Só expõe serviços cujo profissional dono está aceitando agendamentos.
+        const driverAceita = (driver as any)?.accepting_bookings !== false;
+        serviceTypes = driverAceita
+          ? ((servs ?? []) as unknown as TipoServico[])
+          : [];
         availability = (avail ?? []) as unknown as DisponibilidadeProfissional[];
       }
 
