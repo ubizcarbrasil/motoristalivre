@@ -220,8 +220,9 @@ export default function PaginaPerfilProfissionalServicos() {
                   Serviços oferecidos
                 </h2>
                 <ListaServicosOferecidos
-                  servicos={dados.serviceTypes}
+                  servicos={servicosDisponiveis}
                   onSelecionar={(id) => irParaAgendamento(id)}
+                  profissionalPorServico={profissionalPorServico}
                 />
               </section>
             ) : (
