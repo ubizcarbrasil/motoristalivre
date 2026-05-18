@@ -138,8 +138,25 @@ export default function PaginaPerfilProfissionalServicos() {
 
   const tipo = dados.professional_type;
   const ofereceServicos = tipo === "service_provider" || tipo === "both";
-  const temServicosPrecificados = dados.serviceTypes.length > 0;
+  // Serviço só fica disponível ao cliente se houver 1 profissional atribuído
+  // e ativo. Hoje cada service_type tem driver_id obrigatório; filtramos os
+  // que não têm dono carregado (perfil inativo) para não exibir órfãos.
+  const servicosDisponiveis = dados.serviceTypes.filter(
+    (s) => !!s.driver_id && !!dados.full_name,
+  );
+  const temServicosPrecificados = servicosDisponiveis.length > 0;
   const whatsappTenant = tenant.branding?.whatsapp ?? null;
+
+  const profissionalPorServico = Object.fromEntries(
+    servicosDisponiveis.map((s) => [
+      s.id,
+      {
+        nome: dados.full_name,
+        avatar_url: dados.avatar_url,
+        is_owner: true,
+      },
+    ]),
+  );
 
   return (
     <TemaServicos>
@@ -203,8 +220,9 @@ export default function PaginaPerfilProfissionalServicos() {
                   Serviços oferecidos
                 </h2>
                 <ListaServicosOferecidos
-                  servicos={dados.serviceTypes}
+                  servicos={servicosDisponiveis}
                   onSelecionar={(id) => irParaAgendamento(id)}
+                  profissionalPorServico={profissionalPorServico}
                 />
               </section>
             ) : (
