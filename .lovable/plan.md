@@ -1,65 +1,50 @@
 ## Objetivo
 
-Adicionar à home pública (`/`) uma seção de **descoberta de tribos** com busca por nome, filtro por categoria e por cidade, para que visitantes encontrem e ingressem em tribos existentes.
+Na lista "Serviços oferecidos" (página do profissional `/s/:slug/:driver_slug` e demais lugares que usam `ListaServicosOferecidos`), cada card de serviço deve exibir a **foto + nome do profissional responsável** por aquele serviço — seja o próprio profissional do perfil, seja um afiliado da equipe que executa esse serviço. Além disso, serviços sem nenhum profissional ativo atribuído **não devem aparecer** para o cliente.
 
-## O que será entregue
+## Contexto técnico
 
-1. **Nova seção na landing** (`PaginaLanding`) entre Benefícios e Planos: "Encontre uma tribo".
-2. **Página dedicada** `/tribos` com listagem completa, busca por texto, filtros de categoria e cidade.
-3. **Cards de tribo** mostrando logo, nome, cidade, categoria, descrição curta e CTA "Ver tribo" + "Entrar na tribo" (quando houver `signup_slug`).
-4. Ao clicar em "Entrar", leva para `/s/cadastro/tribo/:signup_slug` (fluxo já existente).
-5. Ao clicar em "Ver tribo", leva para a vitrine pública (`/s/:slug` ou `/:slug` conforme módulo ativo).
+- `service_types` tem `driver_id` (profissional dono/responsável) e `is_active`.
+- Hoje `useDadosServicoMotorista(driverId)` carrega só `service_types` com `driver_id = driverId` — não há informação visual do profissional no card.
+- A imagem do usuário mostra cards de serviço sem avatar; o avatar do perfil aparece só no topo (placeholder “P”).
+- `ListaServicosOferecidos` (`src/features/triboservicos/components/lista_servicos_oferecidos.tsx`) é usado em `pagina_perfil_profissional_servicos.tsx`.
 
-## Arquitetura (feature `descoberta_tribos`)
+## Mudanças
 
-```
-src/features/descoberta_tribos/
-├── pages/pagina_descoberta_tribos.tsx
-├── components/
-│   ├── secao_descoberta_home.tsx      # bloco compacto p/ landing (top 6)
-│   ├── barra_filtros_tribos.tsx        # busca + selects categoria/cidade
-│   ├── grid_tribos.tsx
-│   ├── card_tribo_publica.tsx
-│   └── estado_vazio_tribos.tsx
-├── hooks/hook_descoberta_tribos.ts     # estado de filtros + fetch
-├── services/servico_descoberta_tribos.ts
-└── types/tipos_descoberta_tribos.ts
-```
+### 1. `lista_servicos_oferecidos.tsx`
+- Adicionar prop opcional `profissionalPorServico: Record<string, { nome: string; avatar_url: string | null; is_owner: boolean }>`.
+- Em cada card, exibir um pequeno bloco com `Avatar` (24-28px) + nome do profissional logo abaixo do nome do serviço (ou alinhado à esquerda).
+- Quando `is_owner=true`, exibir badge sutil "Profissional" (cor primary). Quando afiliado, badge "Equipe".
+- Fallback: se mapa não vier ou serviço não tem profissional, não renderiza o bloco (mas ver passo 3 — serviço deve sumir antes).
 
-## Dados (somente leitura, sem migrations)
+### 2. `pagina_perfil_profissional_servicos.tsx`
+- Como a lista atual só contém serviços do próprio `driverId`, montar o mapa direto:
+  ```ts
+  const profissionalPorServico = Object.fromEntries(
+    dados.serviceTypes.map(s => [s.id, {
+      nome: dados.full_name,
+      avatar_url: dados.avatar_url,
+      is_owner: true,
+    }])
+  );
+  ```
+- Passar para `<ListaServicosOferecidos>`.
+- Preparado para evolução futura (serviços de afiliados): basta unir mapas.
 
-Service (`servico_descoberta_tribos.ts`):
+### 3. Filtrar serviços sem profissional ativo
+Em `src/features/passageiro/hooks/hook_dados_servico_motorista.ts` (query de `service_types`):
+- Garantir `is_active = true` (verificar se já está) e `driver_id NOT NULL`.
+- Antes de retornar `serviceTypes`, validar que o `driver` correspondente existe e está ativo (`drivers.is_active`/`status`); se não, descartar o serviço.
 
-- `listarTribosPublicas(filtros)` → join `tenants` + `tenant_branding` + `service_categories`.
-  - Filtra por `is_visible_public = true` e `status = 'active'`.
-  - Filtros opcionais: `categoria_slug`, `cidade` (ilike), `busca` (ilike sobre `name`).
-  - Retorna: id, slug, name, signup_slug, active_modules, city, description, logo_url, cover_url, categoria (id/slug/nome).
-- `listarCategoriasComTribos()` → categorias ativas que possuem ao menos uma tribo pública (para popular o filtro).
-- `listarCidadesComTribos()` → cidades distintas de tenant_branding com tribo pública.
+### 4. Esconder a página/CTA quando não sobrar serviço
+- Em `pagina_perfil_profissional_servicos.tsx`, recalcular `temServicosPrecificados` após o filtro (já é derivado de `dados.serviceTypes.length`, então fica automático).
+- Garantir que o estado vazio de `ListaServicosOferecidos` (“Este profissional ainda não publicou serviços”) seja exibido nesse caso.
 
-Tudo via RLS pública já existente (`tenants` é leitura pública para registros visíveis; `tenant_branding` idem; `service_categories` idem).
+## Não faz parte deste plano
+- Criar tabela de afiliação serviço↔profissional (a estrutura atual já vincula via `driver_id`; expansão para múltiplos profissionais por serviço pode ser feita depois).
+- Mexer no agendamento ou cobrança.
 
-## UI
-
-- **`SecaoDescobertaHome`**: header "Encontre sua tribo", input de busca rápido, chips das principais categorias, grid de até 6 cards e botão "Ver todas as tribos" → `/tribos`.
-- **`PaginaDescobertaTribos`**: header com busca, dois selects (categoria, cidade) usando shadcn `Select`, grid responsivo (1/2/3 colunas), estado vazio amigável, skeletons no carregamento.
-- **`CardTriboPublica`**: capa/logo, nome, badge de categoria, cidade com ícone `MapPin`, descrição (line-clamp 2), botões "Ver tribo" e "Entrar".
-- Dark mode, design system existente, IBM Plex Sans, accent #1db865.
-
-## Roteamento
-
-- `App.tsx`: adicionar `<Route path="/tribos" element={<PaginaDescobertaTribos />} />` na seção pública.
-- `RodapeLanding` ganha link "Tribos".
-
-## Comportamento
-
-- Filtros sincronizados com a URL (`?q=&categoria=&cidade=`) para compartilhamento.
-- Debounce de 300ms na busca por texto.
-- Loading com skeleton, vazio com CTA "Criar minha tribo" → `/s/cadastro/tribo`.
-
-## Critérios de aceitação
-
-- Visitante anônimo acessa `/` e vê a seção com tribos públicas.
-- Filtra por categoria e cidade na página `/tribos`, resultados atualizam.
-- Card "Entrar" só aparece quando a tribo tem `signup_slug`.
-- Apenas tribos com `is_visible_public = true` e `status = 'active'` aparecem.
+## Arquivos a alterar
+- `src/features/triboservicos/components/lista_servicos_oferecidos.tsx`
+- `src/features/triboservicos/pages/pagina_perfil_profissional_servicos.tsx`
+- `src/features/passageiro/hooks/hook_dados_servico_motorista.ts`
